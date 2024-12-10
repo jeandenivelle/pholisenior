@@ -11,7 +11,6 @@
 #include "logic/term.h"
 #include "logic/context.h"
 #include "logic/beliefstate.h"
-#include "logic/proofstate.h"
 #include "logic/error.h"
 
 #include "uniquenamestack.h"
@@ -49,6 +48,7 @@ namespace pretty
                context& ctxt, const term& t, 
                attractions attr = attractions( ));
 
+#if 0
    void print( std::ostream& out, const logic::term& tm,
                logic::context& ctxt, logic::proofstate& state, 
                uniquenamestack& names, attractions attr );
@@ -56,6 +56,7 @@ namespace pretty
    void print( std::ostream& out, const logic::term& tm,
                logic::context& ctxt, logic::proofstate& state,
                attractions attr = attractions( ));
+#endif
 
    uniquenamestack 
    getnames( const logic::context& ctxt, size_t ss );
