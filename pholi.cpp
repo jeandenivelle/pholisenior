@@ -13,7 +13,6 @@
 #include "logic/termoperators.h"
 
 #include "logic/structural.h"
-#include "logic/proofstate.h"
 #include "logic/pretty.h"
 
 int main( int argc, char* argv[] )
@@ -30,7 +29,7 @@ int main( int argc, char* argv[] )
    tests::add_settheory( bel );
 
 #endif
-   // tests::typechecking( bel );
+   tests::typechecking( bel );
    std::cout << bel << "\n";
 #if 0
    auto truth = logic::type( logic::type_truthval );

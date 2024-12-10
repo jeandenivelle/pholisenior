@@ -31,7 +31,6 @@
    context.cpp
    position.cpp
    structural.cpp
-   proofstate.cpp
    localname.cpp
    uniquenamestack.cpp
    pretty.cpp
