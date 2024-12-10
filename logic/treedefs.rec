@@ -1,0 +1,189 @@
+
+%dir logic
+   // Directory where class definitions will be written.
+
+%namespace logic
+   // Namespace in which the resulting types will be put.
+
+// 'type' is called 'structural type' in the report.
+// It has been called 'metatype' in the past.
+// In Dec. 2024, I changed the implementation: We will also
+// resolve names in structural types.
+
+%define type ( type_truthval ) 
+%option prim { type_truthval, type_obj } =>
+%option exact { type_exact } => # e : exact
+%option ident { type_unchecked } => # id : identifier
+%option func { type_func } => result : type, [ arg : type ]  
+
+%h_incl {
+	#include "tvm/includes.h"
+	#include "identifier.h"
+        #include "exact.h"
+        #include "proof.h"
+	#include "util/print.h"
+} 
+
+%h_methods
+{
+   void print( std::ostream& out ) const;
+}  
+
+
+%define term ( op_error ) 
+%option exact { op_exact } => # e : exact
+%option debruijn { op_debruijn } => # index : size_t  
+%option ident { op_unchecked } => # id : identifier
+%option nullary { op_false, op_error, op_true } =>
+%option unary { op_not, op_prop } => sub : term  
+%option binary { op_and, op_or, op_implies, op_equiv, 
+                 op_lazy_and, op_lazy_or, op_lazy_implies,
+                 op_equals } => sub1: term, sub2: term 
+%option nary { op_kleene_and, op_kleene_or } => [ sub : term ]
+%option quant { op_forall, op_exists, op_kleene_forall, op_kleene_exists } 
+      => body : term, [ var : vartype ]
+
+%option delta { op_delta } => pref : std::string, val : term, body : term
+%option typeddelta{ op_typeddelta } => var : vartype, val : term, body : term
+
+%option apply { op_apply } => func : term, [ arg : term ] 
+%option lambda { op_lambda } => body : term, [ var : vartype ]
+%option named { op_named } => sub : term, # lab : std::string
+
+%h_incl { 
+	#include "tvm/includes.h" 
+	#include "type.h"
+} 
+
+%h_before {    
+   struct vartype
+   {
+      std::string pref;   // This is a suggestion only
+      type tp; 
+
+      vartype( const std::string& pref, type tp )
+         : pref( pref ), tp( tp )
+      { }
+
+   };
+
+   bool operator == ( const vartype& , const vartype& );
+} 
+
+%h_methods
+{
+   void print( std::ostream& out ) const; 
+}
+
+%h_after {
+   std::ostream& operator << ( std::ostream& , const vartype& );
+} 
+
+%cpp_back {
+
+	bool logic::operator == ( const vartype& vt1, const vartype& vt2 )
+	{
+		return vt1. pref == vt2. pref && vt1. tp. very_equal_to( vt2. tp ); 
+	}
+
+	std::ostream& logic::operator << ( std::ostream& out, const vartype& vt )
+	{
+		out << vt. pref << " : " << vt. tp;
+		return out;
+	}
+} 
+
+
+%define belief ( bel_empty )   
+%prefix name : identifier
+
+%option empty { bel_empty } => 
+%option struct { bel_struct } => def : structdef 
+%option decl { bel_decl } => tp : type 
+%option def { bel_def } => val : term, tp : type
+%option asm { bel_asm } => form : term, prop : proof
+%option thm { bel_thm } => form : term, prop : proof, correct : proof
+%option field { bel_fld } => # tp : type, parenttype : exact, offset : size_t 
+   // The meanings are:
+   //    tp is the declared structural type of the field. 
+   //    parenttype is the exact structural type that the field belongs to,
+   //    and offset is the index of the field in the parent.
+%option constr { bel_constr } => # tp : exact
+   // Constructor, e.g. Seq(O,O(O)). 
+   // tp is the type that we are the constructor of. 
+
+%h_incl {
+   #include "tvm/includes.h"
+   #include "structdef.h" 
+   #include "term.h"
+}
+
+%h_methods
+{
+   void print( std::ostream& out ) const;
+}
+
+
+%define localname ( loc_empty ) 
+
+%option empty { loc_empty } =>
+%option skolfunc { loc_skol } => tp : type 
+%option def { loc_def } => val : term, tp : type, visible : bool
+%option pred { loc_pred } => val : term
+
+%h_incl {
+   #include "tvm/includes.h"
+   #include "util/print.h" 
+   #include "term.h"
+}
+
+%h_methods
+{
+   void print( std::ostream& out ) const;
+}
+
+
+%define error ( err_index )
+
+%option index { err_index } => # index : size_t, contextsize : size_t 
+   // A De Bruijn index out is of range, it must be < contextsize.
+   // This should be impossible with terms created by the parser,
+   // but it can happen with hand created terms. 
+
+%option typediff { err_typediff } => 
+   # usage : std::string, expected : type, received : type 
+ 
+   // When we exactly know what type we expect. 
+   // The string should explain how we wanted to used it.
+
+%option wrongtype { err_wrongtype } => # tp : type, message : std::string
+   // A type is wrong, but we cannot exactly specify what type is needed.
+   // We also create this error when the type itself is not well-formed.
+
+%option overload { err_overload } => [ argtype : type ], 
+                           # message : std::string, ident : size_t
+   // Cannot find a suitable overload for ident applied
+   // on the argtypes. Either there are none,
+   // or there are too many.  
+
+%option wrongfield { err_wrongfield } => 
+   # structname : size_t, fieldname : size_t
+      // Field does not exist.
+
+%option cannotapply { err_cannotapply } => func : type, [ argtype : type ] 
+   // Functional type func, cannot be applied on the arguments.
+
+%option unfinished { err_unfinished } => 
+   // Proof term contains unfinished rule.
+
+%h_incl {
+#include "tvm/includes.h"
+#include "term.h" 
+#include "util/print.h"
+}
+
+%h_methods {
+   void print( std::ostream& out ) const;
+}
+
+
