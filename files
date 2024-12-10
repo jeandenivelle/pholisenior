@@ -1,0 +1,81 @@
+
+%comment PHOLI
+
+%rootdirs 
+   Source = .
+   Lexing = /home/nivelle/programs
+   Tvm = /home/nivelle/programs
+   Maph = /home/nivelle/programs/maphoon2024
+   Treegen = /home/nivelle/programs/treegen2023
+   Util = /home/nivelle/programs
+
+%dir Source
+%exec pholi
+%sources
+   pholi.cpp
+   identifier.cpp
+   tests.cpp
+   errorstack.cpp
+
+%dir Source/logic 
+%sources
+   type.cpp
+   term.cpp
+   selector.cpp
+   belief.cpp
+   beliefstate.cpp
+   structdef.cpp
+   error.cpp
+   printing.cpp
+   kbo.cpp
+   context.cpp
+   position.cpp
+   structural.cpp
+   proofstate.cpp
+   localname.cpp
+   uniquenamestack.cpp
+   pretty.cpp
+
+%options 
+   Wall
+   Wno-switch
+   Wno-invalid-offsetof
+   Wno-unused-function
+   pedantic-errors
+   std=c++20
+
+%includedirs
+   Lexing
+   Util
+   Tvm
+   Source   
+
+%preproc $(Treegen)/treegen logic/treedefs.rec 
+%dir Source/logic
+%in 
+   treedefs.rec
+%out
+   selector.h
+   selector.cpp
+   type.h
+   type.cpp
+   term.h
+   term.cpp
+   belief.h
+   belief.cpp
+   localname.h
+   localname.cpp 
+   error.h 
+   error.cpp
+
+%preproc $(Maph)/maphoon $(Source)/parser/grammar.m $(Source)/parser $(Maph) 
+%dir Source/parser
+%in
+   grammar.m
+%out
+   parser.h
+   parser.cpp
+   symbol.h
+   symbol.cpp 
+   
+
