@@ -1,140 +1,156 @@
 
 #include "pretty.h"
 
-#if 0
-namespace 
+const char* logic::pretty::getcstring( selector sel )
 {
-   std::unordered_map<logic::selector, std::string> operator_reps( )
+   switch( sel ) 
    {
-      std::unordered_map<logic::selector, std::string > table;
-
+#if 0
       // nullary terms:
 
       { logic::sel_false, "False" },
       { logic::sel_true, "True" },
       { logic::sel_emptyset, "{}" },
       { logic::sel_infset, "inf" },
-
-      // unary terms:
-
-      { logic::sel_not, "~" },
-      { logic::sel_union, "union" },
-      { logic::sel_pow, "pow" },
-      { logic::sel_unique, "!" },
-      { logic::prf_and1, "and1" },
-      { logic::prf_and2, "and2" },
-      { logic::prf_taut, "taut" },
-      { logic::prf_ext1, "ext1" },
-      { logic::prf_ext2, "ext2" },
-
-      // binary terms:
-
-      { logic::sel_and, "/\\" },
-      { logic::sel_or, "\\/" },
-      { logic::sel_implies, "->" },
-      { logic::sel_equiv, "<->" },
-      { logic::sel_equals, "=" },
-      { logic::sel_in, "in" },
-      { logic::sel_subset, "subset" },
-      { logic::sel_insert, "" },
-      { logic::sel_sep, "sep" },
-      { logic::sel_repl, "repl" },
-      { logic::prf_inst, "inst" },
-      { logic::prf_abbr, "abbr" },
-      { logic::prf_exists, "exists" },
-
-      // ternary terms:
-
-      { logic::prf_disj, "disj" },
-
-      // quantifier terms
-      { logic::sel_forall, "[]" },
-      { logic::sel_exists, "<>" },
-
-      // appl terms
-      { logic::sel_appl, "" },
-
-      // lambda terms
-      { logic::sel_lambda, "=>" },
-
-      // exp terms
-      { logic::prf_exp, "exp" },
-
-      // unfinished terms
-      { logic::prf_unfinished, "unfinished" }
-   };
-
-   static const std::unordered_map< logic::selector, std::pair< pretty::attraction, pretty::attraction > > l_r_attraction = 
-   {
-      // id terms
-      { logic::sel_ident, { 0, 0 } },
-
-      // debruijn terms
-      { logic::sel_debruijn, { 0, 0 } },
-      
-      // nullary terms
-
-      { logic::sel_false, { 0, 0 } },
-      { logic::sel_true, { 0, 0 } },
-      { logic::sel_emptyset, { 0, 0 } },
-      { logic::sel_infset, { 0, 0 } },
-      
-      // unary terms
-
-      { logic::sel_not, { 71, 71 } },
-      { logic::sel_union, { 0, 0 } },
-      { logic::sel_pow, { 0, 0 } },
-      { logic::sel_unique, { 0, 0 } },
-      { logic::prf_and1, { 0, 0 } },
-      { logic::prf_and2, { 0, 0 } },
-      { logic::prf_taut, { 0, 0 } },
-      { logic::prf_ext1, { 0, 0 } },
-      { logic::prf_ext2, { 0, 0 } },
-
-      // binary terms
-
-      { logic::sel_and, { 60, 61 } },
-      { logic::sel_or, { 50, 51 } },
-      { logic::sel_implies, { 41, 40 } },
-      { logic::sel_equiv, { 41, 41 } },
-      { logic::sel_equals, { 70, 70 } },
-      { logic::sel_in, { 70, 70 } },
-      { logic::sel_subset, { 70, 70 } },
-      { logic::sel_insert, { 0, 0 } },
-      { logic::sel_sep, { 0, 0 } },
-      { logic::sel_repl, { 0, 0 } },
-      { logic::prf_inst, { 0, 0 } },
-      { logic::prf_abbr, { 0, 0 } },
-      { logic::prf_exists, { 0, 0 } },
-
-      // ternary terms
-
-      { logic::prf_disj, { 0, 0 } },
-
-      // quant terms
-      { logic::sel_forall, { 0, 0 } },
-      { logic::sel_exists, { 0, 0 } },
-
-      // appl terms
-      { logic::sel_appl, { 21, 20 } },
-
-      // lambda terms
-      { logic::sel_lambda, { 15, 16 } },
-
-      // exp terms
-      { logic::prf_exp, { 0, 0 } },
-
-      // unfinished terms
-      { logic::prf_unfinished, { 0, 0 } }
-   };
-
 #endif
 
-
+   case op_not:
+      return "~ ";
+   case op_prop:
+      return "#";
 
 #if 0
-void output::print( std::ostream &stream, const logic::type& tp ) 
+	      // binary terms:
+
+	      { logic::sel_and, "/\\" },
+	      { logic::sel_or, "\\/" },
+	      { logic::sel_implies, "->" },
+	      { logic::sel_equiv, "<->" },
+	      { logic::sel_equals, "=" },
+	      { logic::sel_in, "in" },
+	      { logic::sel_subset, "subset" },
+	      { logic::sel_insert, "" },
+	      { logic::sel_sep, "sep" },
+	      { logic::sel_repl, "repl" },
+	      { logic::prf_inst, "inst" },
+	      { logic::prf_abbr, "abbr" },
+	      { logic::prf_exists, "exists" },
+	#endif
+
+   case op_forall:
+   case op_kleene_forall:
+      return "[";
+   case op_exists:
+   case op_kleene_exists:
+      return "<";
+	  
+	#if 0
+	      // ternary terms:
+
+	      { logic::prf_disj, "disj" },
+
+	      // appl terms
+	      { logic::sel_appl, "" },
+
+	      // lambda terms
+	      { logic::sel_lambda, "=>" },
+
+	      // exp terms
+	      { logic::prf_exp, "exp" },
+
+	      // unfinished terms
+	      { logic::prf_unfinished, "unfinished" }
+	#endif
+	   }
+	   std::cout << sel << "\n";
+	   throw std::runtime_error( "dont know c-string" );
+	}
+
+
+logic::pretty::attractions 
+logic::pretty::getattractions( logic::selector sel )
 {
+   switch( sel )
+   {
+#if 0
+	      // id terms
+	      { logic::sel_ident, { 0, 0 } },
+
+	      // debruijn terms
+	      { logic::sel_debruijn, { 0, 0 } },
+	      
+	      // nullary terms
+
+#endif
+   case op_not:
+   case op_prop:
+      return { 0, 150 };
+#if 0
+      // unary terms
+
+	      { logic::sel_union, { 0, 0 } },
+	      { logic::sel_pow, { 0, 0 } },
+	      { logic::sel_unique, { 0, 0 } },
+	      { logic::prf_and1, { 0, 0 } },
+	      { logic::prf_and2, { 0, 0 } },
+	      { logic::prf_taut, { 0, 0 } },
+	      { logic::prf_ext1, { 0, 0 } },
+	      { logic::prf_ext2, { 0, 0 } },
+
+	      // binary terms
+
+	      { logic::sel_and, { 60, 61 } },
+	      { logic::sel_or, { 50, 51 } },
+	      { logic::sel_implies, { 41, 40 } },
+	      { logic::sel_equiv, { 41, 41 } },
+	      { logic::sel_equals, { 70, 70 } },
+	      { logic::sel_in, { 70, 70 } },
+	      { logic::sel_subset, { 70, 70 } },
+	      { logic::sel_insert, { 0, 0 } },
+	      { logic::sel_sep, { 0, 0 } },
+	      { logic::sel_repl, { 0, 0 } },
+	      { logic::prf_inst, { 0, 0 } },
+	      { logic::prf_abbr, { 0, 0 } },
+	      { logic::prf_exists, { 0, 0 } },
+
+	      // ternary terms
+
+	      { logic::prf_disj, { 0, 0 } },
+
+	#endif
+   case op_forall:
+   case op_exists:
+   case op_kleene_forall:
+   case op_kleene_exists:
+      return { 0, 100 };
+
+#if 0
+	      // appl terms
+	      { logic::sel_appl, { 21, 20 } },
+
+	      // lambda terms
+	      { logic::sel_lambda, { 15, 16 } },
+
+	      // exp terms
+	      { logic::prf_exp, { 0, 0 } },
+
+	      // unfinished terms
+	      { logic::prf_unfinished, { 0, 0 } }
+
+#endif
+   }
+   std::cout << sel << "\n";
+   throw std::runtime_error( "dont know attraction" );
+}
+
+
+// One could try to use => :
+
+void logic::pretty::print( std::ostream &out, const beliefstate& blfs,
+			   const type& tp, attractions envattr ) 
+{
+   out << tp; 
+#if 0
    switch ( t. sel( ) ) 
    {
    case logic::sel_set:
@@ -151,83 +167,87 @@ void output::print( std::ostream &stream, const logic::type& tp )
       return;
    case logic::sel_func: 
       {
-         logic::type::const_func func_t = t. view_func( );
-         print( stream, func_t. result( )); 
-         stream << "(";
-         for ( size_t i = 0; i < func_t. size( ); ++i ) 
-         {
-            if(i) stream << ',';
-            print( stream, func_t. arg(i) );
-         }
-         stream << ")";
+	 logic::type::const_func func_t = t. view_func( );
+	 print( stream, func_t. result( )); 
+	 stream << "(";
+	 for ( size_t i = 0; i < func_t. size( ); ++i ) 
+	 {
+	    if(i) stream << ',';
+	    print( stream, func_t. arg(i) );
+	 }
+	 stream << ")";
       }
    }
+#endif
 }
 
-#endif
+
+// The attractions in envattr come from different operators.
+// envattr.right is the left attraction of the operator to the right of us.
+// envattr.left is sthe right attraction of the operator to the left of us.
 
 void 
 logic::pretty::print( std::ostream& out, const beliefstate& blfs,
-            context& ctxt, uniquenamestack& names, 
-            const term& t, attractions attr )       
+          context& ctxt, uniquenamestack& names, 
+          const term& t, attractions envattr )       
 {
+#if 0
    out << ctxt << "\n";
-   out << "pretty: " << t << " " << attr << "\n";
+   out << "pretty: " << t << " " << envattr << "\n";
+#endif
+
+   if( ctxt. size( ) != names. size( ))
+      throw std::runtime_error( "sizes not equal" );
 
    switch( t. sel( ) ) 
    {
 
 #if 0
-      case logic::sel_ident:
+   case logic::sel_ident:
+	 {
+	    auto id_t = t. view_id( );
+	    out << id_t. ident( );
+	    return;
+	 } 
+#endif
+   case op_debruijn:
+      {
+         size_t ind = t. view_debruijn( ). index( );
+
+         if( ind >= names. size( ))
          {
-            auto id_t = t. view_id( );
-            out << id_t. ident( );
-            return;
-         } 
+            out << '#' << ind << "/" << names. size( ) << "\n";
+            throw std::runtime_error( "de bruijn index too big" );
+         }  
+         out << names. getname( ind );
+         return;
+      } 
+#if 0
+	      case logic::sel_false:
+	      case logic::sel_true:
+	      case logic::sel_emptyset:
+	      case logic::sel_infset:
+		 {
+		    out << operator_rep. at( t. sel( ) );
+		    return;
+		 }
 
-      case logic::sel_debruijn:
-         {
-            size_t ind = t. view_debruijn( ). index( );
-
-            if( ind < names. size( ) )
-               out << names. get( ind );
-            else
-               out << '#' << ind;
-            
-            return;  
-         } 
-
-      case logic::sel_false:
-      case logic::sel_true:
-      case logic::sel_emptyset:
-      case logic::sel_infset:
-         {
-            out << operator_rep. at( t. sel( ) );
-            return;
-         }
-
-      case logic::sel_not:
-         {
-            bool is_in_par = false; 
-            auto t_unary = t.view_unary();
-
-            if( left > l_r_attraction. at( t. sel( ) ). first || l_r_attraction. at( t. sel( ) ). second < right )
-            {
-               is_in_par = true;
-               left = 0;
-               right = 0;
-            }
-
-            if( is_in_par ) out << "(";
-
-            out << operator_rep. at( t. sel( ) );
-            print( out, names, t_unary. sub( ), l_r_attraction. at( t. sel( ) ). second, right );
-            
-            if( is_in_par ) out << ")";
-            
-            return;
-         }
-
+	#endif
+   case op_not:
+   case op_prop:
+      {
+	 auto un = t. view_unary( );
+	 parprinter par( out );
+         auto ourattr = getattractions( t. sel( )); 
+	 par. printif( envattr. left >= ourattr. right );
+         out << pretty::getcstring( t. sel( )); 
+          
+         print( out, blfs, ctxt, names, un. sub( ), 
+                { ourattr. right, envattr. left } );
+      }
+      return;
+      
+#if 0
       case logic::sel_union:
       case logic::sel_pow:
       case logic::sel_unique:
@@ -329,36 +349,75 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
             return;
          }
 
-      case logic::sel_forall:
-      case logic::sel_exists:
+#endif
+   case op_forall:
+   case op_exists:
+   case op_kleene_forall:
+   case op_kleene_exists:
+      {
+         auto q = t. view_quant( );
+         const size_t ss = names. size( );
+
+         parprinter par( out );
+
+         auto ourattr = getattractions( t. sel( ));
+         par. printif( ourattr. right <= envattr. left );
+       
+         const char* repr = pretty::getcstring( t. sel( ));
+
+         out << repr; 
+         for( size_t i = 0; i != q. size( ); ++ i )
          {
-            bool is_in_par = false;
-            auto quant = t. view_quant( );
-            const size_t ss = names. size( );
-            auto uname = names. extend( quant. var( ). pref );
-
-            if( left > l_r_attraction. at( t. sel( ) ). first || l_r_attraction. at( t. sel( ) ). second < right )
-            {
-               is_in_par = true;
-               left = 0;
-               right = 0;
-            }
-
-            if( is_in_par ) out << "(";
-
-            out << operator_rep. at( t. sel( ) ). at(0) << uname << ":";
-            pretty::print( out, quant. var( ). tp );
-            out << operator_rep. at( t. sel( ) ). at(1) << ' ';
-            print( out, names, quant. body( ), l_r_attraction. at( t. sel( ) ). second, right );
+            if( i == 0 )
+               out << " ";
+            else
+               out << ", ";
             
-            if( is_in_par ) out << ")";
+            ctxt. extend( q. var(i). pref, q. var(i). tp );
+            out << names. extend( q. var(i). pref );
+            out << " : ";
+            print( out, blfs, q. var(i). tp, attractions(0,0) );
+         }
+   
+         if( repr[0] == '[' ) out << " ] ";
+         if( repr[0] == '>' ) out << " > ";
 
-            names. restore( ss );
+         print( out, blfs, ctxt, names, q. body( ),
+                { ourattr. right, envattr. right } );
+ 
+         ctxt. restore( ss );
+         names. restore( ss );
+
+         return;
+      }
+
+   case op_apply:
+      {
+         auto appl = t. view_apply( );
+
+         if( appl. func( ). sel( ) == op_debruijn ||
+             appl. func( ). sel( ) == op_exact ||
+             appl. func( ). sel( ) == op_unchecked )
+         {
+            print( out, blfs, ctxt, names, appl. func( ), { 0,0 } );
+               // Attraction don't matter for an identifier.
+
+            out << '(';
+            for( size_t i = 0; i != appl. size( ); ++ i )
+            {
+               if( i != 0 )
+                  out << ", ";
+               else
+                  out << ' ';
+               print( out, blfs, ctxt, names, appl. arg(i), { 0,0 } );
+            }
+            out << " )";
             return;
          }
-
-      case logic::sel_appl:
+         else
          {
+            out << "hard\n";
+#if 0
             bool is_in_par = false;
             auto appl_t = t. view_appl( );
             auto op_left = l_r_attraction. at( t. sel( ) ). first;
@@ -392,15 +451,17 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 
             if( is_in_par ) out << ")";
 
-            return;
+#endif
          }
+         return;
+      }
 
-      case logic::sel_lambda:
+   case op_lambda:
       {
-         bool is_in_par = false;
-         auto lambda_t = t. view_lambda( );
+         auto lamb = t. view_lambda( );
          const size_t ss = names. size( );
 
+#if 0
          if( left > l_r_attraction. at( t. sel( ) ). first || l_r_attraction. at( t. sel( ) ). second < right )
             {
                is_in_par = true;
@@ -423,11 +484,12 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
             print( out, names, lambda_t. body( ), l_r_attraction. at( t. sel( ) ). second, right );
             
             if( is_in_par ) out << ")";
-
-            names. restore( ss );
-            return;
-         }
-
+#endif
+         names. restore( ss );
+         return;
+      }
+       
+#if 0
       case logic::prf_exp:
          {
             auto exp_t = t. view_exp( );
@@ -489,6 +551,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
             context& ctxt, const term& t, attractions attr )
 {
    uniquenamestack names;
+   addnames( ctxt, names );
    print( out, blfs, ctxt, names, t, attr );
 }
 
@@ -582,23 +645,22 @@ output::print( std::ostream& out, const logic::context& ctxt )
 }
 #endif
 
-#if 0
-logic::uniquenamestack
-logic::pretty::getnames( const logic::context& ctxt, size_t ss )
+void 
+logic::pretty::addnames( const logic::context& ctxt, 
+                         uniquenamestack& names )
 {
-   if( ss > ctxt. size( ))
-      throw std::runtime_error( "ctxt: ss cannot be bigger than size( )" );
+   if( names. size( ) > ctxt. size( ))
+      throw std::runtime_error( "addnames: names longer than ctxt" );
 
-   uniquenamestack names;
+   // db = 'De Bruijn':
 
-   for( size_t i = 0; i != ss; ++ i ) 
+   size_t db = ctxt. size( ) - names. size( );
+   while( db ) 
    {
-      names. extend( ctxt. getname( ctxt. size( ) - 1 - i )); 
+      -- db;
+      names. extend( ctxt. getname( db )); 
    }
-
-   return names;
 }
-#endif
 
 #if 0
 void output::print( std::ostream& out, const logic::beliefstate& bel )

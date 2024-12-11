@@ -353,7 +353,7 @@ logic::checkandresolve( const beliefstate& blfs,
                         term& t ) 
 {
 
-   std::cout << "finding structural type of " << t << "\n";
+   std::cout << "finding structural type of ";
    std::cout << ctxt << "\n";
 
    pretty::print( std::cout, blfs, ctxt, t );

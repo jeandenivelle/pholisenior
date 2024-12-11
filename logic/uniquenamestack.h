@@ -1,4 +1,6 @@
 
+// Written by Hans de Nivelle, probably Spring 2023.
+
 #ifndef LOGIC_PRETTY_UNIQUENAMESTACK_
 #define LOGIC_PRETTY_UNIQUENAMESTACK_
 
@@ -39,8 +41,7 @@ namespace pretty
    {
       std::vector< uniquename > vect; 
       std::unordered_map< std::string, std::vector< size_t >> bases;
-         // Lists the occurrences of the name (as indices of vect),
-         // per base. 
+         // Lists the occurrences of a name prefix (as indices of vect).
        
    public:
       uniquenamestack( ) noexcept = default;
@@ -53,7 +54,7 @@ namespace pretty
 
       // Correctly looks up a De Bruijn index:
 
-      const uniquename& get( size_t index ) const
+      const uniquename& getname( size_t index ) const
          { return vect[ vect. size( ) - index - 1 ]; }
 
       const uniquename& extend( std::string name );
@@ -68,9 +69,11 @@ namespace pretty
          // Otherwise, a De Bruijn index, which can be used
          // as argument to getname( ).  
 
-      bool contains( const std::string& s ) const  
-         { return find(s) != size( ); } 
- 
+      bool issafe( std::string s ) const;
+         // True if a name is safe, which means that it does
+         // not conflict with a name that we have.
+         // We need to pass by value because we remove the index.
+                   
       void print( std::ostream& out ) const;
    };
 

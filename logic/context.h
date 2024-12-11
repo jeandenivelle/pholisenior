@@ -28,7 +28,7 @@ namespace logic
          // variable name, because printing will remove the index, and
          // create its own. 
          // If you really want an index, you must put an 
-         // underscore behind it. 
+         // underscore behind it, like in 'x1_'.  
 
       void restore( size_t s );
 

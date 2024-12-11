@@ -38,8 +38,37 @@ namespace pretty
          { out << left << '/' << right; } 
    };
 
+   const char* getcstring( selector val );
    attractions getattractions( selector sel );
 
+
+   struct parprinter
+   {
+      std::ostream& out;
+      unsigned int nr;
+    
+      parprinter( std::ostream& out ) noexcept 
+         : out( out ), nr(0)
+      { }
+
+      parprinter( parprinter&& ) = default;
+      parprinter& operator = ( parprinter&& );
+
+      void printif( bool b ) 
+      { 
+         if(b) { out << "( "; ++ nr; } 
+      }
+
+      ~parprinter( )
+      {
+         while( nr -- )
+            out << " )";
+      }
+   };
+
+   void print( std::ostream& out, const beliefstate& blfs, 
+               const type& tp, attractions attr );
+ 
    void print( std::ostream& out, const beliefstate& blfs,
                context& ctxt, uniquenamestack& names,
                const term& t, attractions attr );
@@ -58,14 +87,7 @@ namespace pretty
                attractions attr = attractions( ));
 #endif
 
-   uniquenamestack 
-   getnames( const logic::context& ctxt, size_t ss );
-
-   inline uniquenamestack
-   getnames( const logic::context& ctxt )
-   {
-      return getnames( ctxt, ctxt. size( ));
-   }
+   void addnames( const logic::context& ctxt, uniquenamestack& names );
 
    void print( std::ostream& out, 
                uniquenamestack& names, const logic::belief& );

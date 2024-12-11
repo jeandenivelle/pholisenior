@@ -80,7 +80,9 @@ logic::pretty::uniquenamestack::find( const std::string& s ) const
 {
    size_t start = indexstart(s);
 
-   // We don't allow leading zeroes of the index:
+   // We never create an index with leading zeroes,
+   // so if s contains an index with leading zeroes, we are 
+   // sure that we don't have it. 
 
    if( start < s. size( ) && s[ start ] == '0' )
       return size( ); 
@@ -102,12 +104,22 @@ logic::pretty::uniquenamestack::find( const std::string& s ) const
       return size( ) - 1 - ( p -> second[ index ] ); 
 }
 
+
+bool
+logic::pretty::uniquenamestack::issafe( std::string s ) const
+{
+   size_t ind = indexstart(s);
+   s. erase( s. begin( ) + ind, s. end( )); 
+   return bases. find(s) == bases. end( );
+}
+
 void 
 logic::pretty::uniquenamestack::print( std::ostream& out ) const
 {
-   for( long int ind = 1 - size( ); const auto& u : vect ) 
+   out << "Uniquenamestack:\n";
+   for( ssize_t ind = 1 - size( ); const auto& u : vect ) 
    {
-      out << '#' << ind << " : ";
+      out << "   #" << ind << " : ";
       out << u << "\n";
 
       ++ ind;
