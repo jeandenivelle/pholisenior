@@ -17,7 +17,7 @@ const char* logic::pretty::getcstring( selector sel )
    case op_not:
       return "~ ";
    case op_prop:
-      return "#";
+      return "# ";
 
 #if 0
 	      // binary terms:
@@ -188,16 +188,12 @@ void logic::pretty::print( std::ostream &out, const beliefstate& blfs,
 
 void 
 logic::pretty::print( std::ostream& out, const beliefstate& blfs,
-          context& ctxt, uniquenamestack& names, 
-          const term& t, attractions envattr )       
+          uniquenamestack& names, const term& t, attractions envattr )       
 {
 #if 0
    out << ctxt << "\n";
    out << "pretty: " << t << " " << envattr << "\n";
 #endif
-
-   if( ctxt. size( ) != names. size( ))
-      throw std::runtime_error( "sizes not equal" );
 
    switch( t. sel( ) ) 
    {
@@ -242,7 +238,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 	 par. printif( envattr. left >= ourattr. right );
          out << pretty::getcstring( t. sel( )); 
           
-         print( out, blfs, ctxt, names, un. sub( ), 
+         print( out, blfs, names, un. sub( ), 
                 { ourattr. right, envattr. left } );
       }
       return;
@@ -373,7 +369,6 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
             else
                out << ", ";
             
-            ctxt. extend( q. var(i). pref, q. var(i). tp );
             out << names. extend( q. var(i). pref );
             out << " : ";
             print( out, blfs, q. var(i). tp, attractions(0,0) );
@@ -382,10 +377,9 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          if( repr[0] == '[' ) out << " ] ";
          if( repr[0] == '>' ) out << " > ";
 
-         print( out, blfs, ctxt, names, q. body( ),
+         print( out, blfs, names, q. body( ),
                 { ourattr. right, envattr. right } );
  
-         ctxt. restore( ss );
          names. restore( ss );
 
          return;
@@ -399,7 +393,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
              appl. func( ). sel( ) == op_exact ||
              appl. func( ). sel( ) == op_unchecked )
          {
-            print( out, blfs, ctxt, names, appl. func( ), { 0,0 } );
+            print( out, blfs, names, appl. func( ), { 0,0 } );
                // Attraction don't matter for an identifier.
 
             out << '(';
@@ -409,7 +403,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
                   out << ", ";
                else
                   out << ' ';
-               print( out, blfs, ctxt, names, appl. arg(i), { 0,0 } );
+               print( out, blfs, names, appl. arg(i), { 0,0 } );
             }
             out << " )";
             return;
@@ -548,11 +542,10 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 
 void
 logic::pretty::print( std::ostream& out, const beliefstate& blfs,
-            context& ctxt, const term& t, attractions attr )
+            context& ctxt, const term& t )
 {
-   uniquenamestack names;
-   addnames( ctxt, names );
-   print( out, blfs, ctxt, names, t, attr );
+   uniquenamestack names = getnames( ctxt, ctxt. size( ));
+   print( out, blfs, names, t, attractions(0,0) );
 }
 
 #if 0
@@ -613,29 +606,28 @@ void pretty::print( std::ostream& out,
 }
 #endif
 
-#if 0
-output::uniquenamestack
-output::print( std::ostream& out, const logic::context& ctxt )
+logic::pretty::uniquenamestack
+logic::pretty::print( std::ostream& out, 
+                      const beliefstate& blfs, const logic::context& ctxt )
 {
-   out << "Context:\n";
-   size_t var = ctxt. size( );
-   
+   out << "Context:\n"
+;
+   size_t db = ctxt. size( );
+      // De Bruijn index.
+ 
    uniquenamestack names; 
-   while( var )
+
+   while( db )
    {
-      -- var;
-      const auto& bel = ctxt. getbelief( var );
+      -- db;
 
-      // We need to see the name without extending names,
-      // because assumptions and definitions become effective only
-      // when they are ended.
-
-      auto n = names. nextname( ctxt. getname( var )); 
-      out << "   " << n << " : ";
-      pretty::print( out, names, bel );
-      names. extend( ctxt. getname( var ));
+      out << "   ";
+      out << names. extend( ctxt. getname( db ));   // The name made unique.
+      out << " : ";
+      print( out, blfs, ctxt. gettype( db ), attractions(0,0) );
+      out << '\n';
    }
-   if( false ) 
+   if constexpr( false ) 
    {
       out << "this is the ugly version of this context:\n";
       out << ctxt << "\n";
@@ -643,23 +635,28 @@ output::print( std::ostream& out, const logic::context& ctxt )
 
    return names; 
 }
-#endif
 
-void 
-logic::pretty::addnames( const logic::context& ctxt, 
-                         uniquenamestack& names )
+logic::pretty::uniquenamestack
+logic::pretty::getnames( const logic::context& ctxt, size_t ss )
 {
-   if( names. size( ) > ctxt. size( ))
-      throw std::runtime_error( "addnames: names longer than ctxt" );
+   uniquenamestack names;
+
+   if( ss > ctxt. size( ))
+   {
+      std::cout << "cutoff size " << ss << "/" << ctxt. size( ) << " too big\n";
+      throw std::runtime_error( "too big" );
+   }
 
    // db = 'De Bruijn':
 
-   size_t db = ctxt. size( ) - names. size( );
+   size_t db = ss;
    while( db ) 
    {
       -- db;
       names. extend( ctxt. getname( db )); 
    }
+
+   return names;
 }
 
 #if 0

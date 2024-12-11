@@ -42,6 +42,9 @@ namespace pretty
    attractions getattractions( selector sel );
 
 
+   // Class that helps in printing opening '(', and remembers them.
+   // It prints the corresponding ')' when destroyed.
+
    struct parprinter
    {
       std::ostream& out;
@@ -70,12 +73,11 @@ namespace pretty
                const type& tp, attractions attr );
  
    void print( std::ostream& out, const beliefstate& blfs,
-               context& ctxt, uniquenamestack& names,
+               uniquenamestack& names,
                const term& t, attractions attr );
 
    void print( std::ostream& out, const beliefstate& blfs,
-               context& ctxt, const term& t, 
-               attractions attr = attractions( ));
+               context& ctxt, const term& t );
 
 #if 0
    void print( std::ostream& out, const logic::term& tm,
@@ -87,16 +89,16 @@ namespace pretty
                attractions attr = attractions( ));
 #endif
 
-   void addnames( const logic::context& ctxt, uniquenamestack& names );
+   uniquenamestack getnames( const logic::context& ctxt, size_t ss );
 
    void print( std::ostream& out, 
                uniquenamestack& names, const logic::belief& );
 
-   uniquenamestack
-   print( std::ostream& out, const logic::context& cxt ); 
-      // Because one frequently prints a context together with
-      // a term in this context, it is necessary to know the 
-      // uniquenamestack that was created while printing the context.
+   uniquenamestack print( std::ostream& out, const beliefstate& blfs,
+          const context& cxt ); 
+      // Print a context. Since a term is often printed
+      // with its term, we remember the uniquenamestack,
+      // so that it can be used for printing the term. 
 
    void print( std::ostream& out, const logic::beliefstate& );
 
