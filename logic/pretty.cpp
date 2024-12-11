@@ -1,70 +1,6 @@
 
 #include "pretty.h"
 
-const char* logic::pretty::getcstring( selector sel )
-{
-   switch( sel ) 
-   {
-#if 0
-      // nullary terms:
-
-      { logic::sel_false, "False" },
-      { logic::sel_true, "True" },
-      { logic::sel_emptyset, "{}" },
-      { logic::sel_infset, "inf" },
-#endif
-
-   case op_not:
-      return "~ ";
-   case op_prop:
-      return "# ";
-
-#if 0
-	      // binary terms:
-
-	      { logic::sel_and, "/\\" },
-	      { logic::sel_or, "\\/" },
-	      { logic::sel_implies, "->" },
-	      { logic::sel_equiv, "<->" },
-	      { logic::sel_equals, "=" },
-	      { logic::sel_in, "in" },
-	      { logic::sel_subset, "subset" },
-	      { logic::sel_insert, "" },
-	      { logic::sel_sep, "sep" },
-	      { logic::sel_repl, "repl" },
-	      { logic::prf_inst, "inst" },
-	      { logic::prf_abbr, "abbr" },
-	      { logic::prf_exists, "exists" },
-	#endif
-
-   case op_forall:
-   case op_kleene_forall:
-      return "[";
-   case op_exists:
-   case op_kleene_exists:
-      return "<";
-	  
-	#if 0
-	      // ternary terms:
-
-	      { logic::prf_disj, "disj" },
-
-	      // appl terms
-	      { logic::sel_appl, "" },
-
-	      // lambda terms
-	      { logic::sel_lambda, "=>" },
-
-	      // exp terms
-	      { logic::prf_exp, "exp" },
-
-	      // unfinished terms
-	      { logic::prf_unfinished, "unfinished" }
-	#endif
-	   }
-	   std::cout << sel << "\n";
-	   throw std::runtime_error( "dont know c-string" );
-	}
 
 
 logic::pretty::attractions 
@@ -85,6 +21,17 @@ logic::pretty::getattractions( logic::selector sel )
    case op_not:
    case op_prop:
       return { 0, 150 };
+
+   case op_and:
+      return { 140, 141 };
+   case op_or:
+      return { 130, 131 };
+   case op_implies:
+      return { 121, 120 };
+   case op_equiv:
+      return { 110, 110 };
+   case op_equals:
+      return { 160, 160 }; 
 #if 0
       // unary terms
 
@@ -233,41 +180,57 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
    case op_prop:
       {
 	 auto un = t. view_unary( );
-	 parprinter par( out );
          auto ourattr = getattractions( t. sel( )); 
+	 parprinter par( out );
 	 par. printif( envattr. left >= ourattr. right );
-         out << pretty::getcstring( t. sel( )); 
-          
+         if( t. sel( ) == op_not )
+            out << "! ";
+         if( t. sel( ) == op_prop )
+            out << '#';
+ 
          print( out, blfs, names, un. sub( ), 
                 { ourattr. right, envattr. left } );
       }
       return;
-      
-#if 0
-      case logic::sel_union:
-      case logic::sel_pow:
-      case logic::sel_unique:
-      case logic::prf_and1:
-      case logic::prf_and2:
-      case logic::prf_taut:
-      case logic::prf_ext1:
-      case logic::prf_ext2:
+   
+   case op_false:
+      out << "FALSE"; return;
+   case op_error:
+      out << "ERROR"; return;
+   case op_true:
+      out << "TRUE"; return;
+   
+   case op_and:
+   case op_or:
+   case op_implies:
+   case op_equiv:
+   case op_equals:
+      {
+         auto bin = t. view_binary( );
+         auto ourattr = getattractions( t. sel( ));
+            
+         parprinter par( out );
+         par. printif( envattr. left >= ourattr. left ||
+                       envattr. right >= ourattr. right );
+
+         print( out, blfs, names, bin. sub1( ), 
+                  { envattr. left, ourattr. left } );
+
+         switch( t. sel( ))
          {
-            auto unary_t = t. view_unary( );
-            out << operator_rep. at( t. sel( ) ) << "(";
-            print( out, names, unary_t. sub( ), 0, 0 );
-            out << ")";
-            return;
+         case op_and:     out << " & "; break;
+         case op_or:      out << " | "; break;
+         case op_implies: out << " -> "; break;
+         case op_equiv:   out << " <-> "; break;
+         case op_equals:  out << " = "; break;
+         default: out << " ??? "; break;
          }
 
-      case logic::sel_and:
-      case logic::sel_or:
-      case logic::sel_implies:
-      case logic::sel_equiv:
-      case logic::sel_equals:
-      case logic::sel_in:
-      case logic::sel_subset:
-         {
+         print( out, blfs, names, bin. sub2( ),
+                  { ourattr. right, envattr. left } );
+         return;
+      }
+#if 0
             bool is_in_par = false;
             auto bin = t. view_binary( );
 
@@ -287,7 +250,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
             if( is_in_par ) out << " )";
 
             return;
-         }
+      }
 
       case logic::sel_insert:
          {
@@ -359,9 +322,11 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          auto ourattr = getattractions( t. sel( ));
          par. printif( ourattr. right <= envattr. left );
        
-         const char* repr = pretty::getcstring( t. sel( ));
+         if( t. sel( ) == op_forall )
+            out << "FORALL ";
+         if( t. sel( ) == op_exists )
+            out << "EXISTS ";
 
-         out << repr; 
          for( size_t i = 0; i != q. size( ); ++ i )
          {
             if( i == 0 )
@@ -374,9 +339,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
             print( out, blfs, q. var(i). tp, attractions(0,0) );
          }
    
-         if( repr[0] == '[' ) out << " ] ";
-         if( repr[0] == '>' ) out << " > ";
-
+         out << " : ";
          print( out, blfs, names, q. body( ),
                 { ourattr. right, envattr. right } );
  

@@ -12,17 +12,11 @@ namespace logic
       return term( op_prop, t );
    }
 
-#if 0
    inline term operator ! ( const term& t ) 
-   {
-      return term( op_not, t );
-   }
+      { return term( op_not, t ); }
 
    inline term operator || ( const term& t1, const term& t2 ) 
-   {
-      return term( op_or, t1, t2 );
-   }
-#endif
+      { return term( op_or, t1, t2 ); }
 
    inline term operator && ( const term& t1, const term& t2 )
       { return term( op_and, t1, t2 ); }
@@ -45,18 +39,13 @@ namespace logic
    {
       return term( op_equiv, t1, t2 );
    }
+#endif
 
    inline term operator == ( const term& t1, const term& t2 )
-   {
-      return term( op_equals, t1, t2 );
-   }
+      { return term( op_equals, t1, t2 ); }
 
    inline term operator != ( const term& t1, const term& t2 )
-   {
-      return ! ( t1 == t2 );
-   }
-
-#endif
+      { return ! ( t1 == t2 ); }
 
    inline term forall( std::initializer_list< vartype > vars, const term& t )
       { return term( op_forall, t, vars ); }

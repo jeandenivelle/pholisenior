@@ -1,0 +1,12 @@
+pholi
+*.o
+*/*.o
+logic/selector.h
+logic/selector.cpp
+logic/type.h
+logic/type.cpp
+logic/term.h
+logic/term.cpp
+logic/belief.h
+logic/belief.cpp
+

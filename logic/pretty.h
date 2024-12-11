@@ -38,7 +38,6 @@ namespace pretty
          { out << left << '/' << right; } 
    };
 
-   const char* getcstring( selector val );
    attractions getattractions( selector sel );
 
 

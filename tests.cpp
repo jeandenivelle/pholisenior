@@ -687,6 +687,9 @@ void tests::typechecking( logic::beliefstate& blfs )
 
    auto tm = prod. view_def( ). val( );
 
+   tm = ( term( op_false ) == term( op_true ) );
+   tm = implies( tm, implies( term( op_error ), tm ));
+
    auto res = checkandresolve( blfs, err, ctxt, tm );
 
    if( res. has_value( ))

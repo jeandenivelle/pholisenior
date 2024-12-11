@@ -352,22 +352,14 @@ logic::checkandresolve( const beliefstate& blfs,
                         errorstack& err, context& ctxt, 
                         term& t ) 
 {
-
-   std::cout << "\nfinding structural type\n";
+   if constexpr( true )
    {
+      std::cout << "\n";
+      std::cout << "finding structural type\n";
       auto un = pretty::print( std::cout, blfs, ctxt );
       std::cout << "term:\n   ";
       pretty::print( std::cout, blfs, un, t, {0,0} );
    }
-
-#if 0
-   if constexpr( false ) 
-   {
-      auto names = pretty::getnames( ctxt );
-      std::cout << pos << " ----- checking type of "; 
-      pretty::print( std::cout, names, t ); std::cout << "\n";
-   }
-#endif 
 
    switch ( t. sel( )) 
    {
@@ -420,12 +412,14 @@ logic::checkandresolve( const beliefstate& blfs,
             return tp; 
          } 
       }
+#endif
 
    case op_false:
    case op_error:
    case op_true:
       return type( type_truthval );
 
+#if 0
    case op_not:
    case op_prop:
       {
@@ -452,7 +446,7 @@ logic::checkandresolve( const beliefstate& blfs,
 
          return type( type_truthval );
       }
-
+#endif
    case op_and:
    case op_or:
    case op_implies:
@@ -460,33 +454,26 @@ logic::checkandresolve( const beliefstate& blfs,
    case op_lazy_and:
    case op_lazy_or:
    case op_lazy_implies:
-   case op_kleene_and:
-   case op_kleene_or:
       {
          auto bin = t. view_binary( );
-
-         size_t ss = pos. size( );  
-         pos. extend(0);
 
          std::optional< type > tp1;
          {  
             auto sub1 = bin. extr_sub1( );
-            tp1 = check( ctxt, pos, sub1 );
+            tp1 = checkandresolve( blfs, err, ctxt, sub1 );
             bin. update_sub1( sub1 );
          }
-
-         pos. restore( ss );
-         pos. extend(1);
 
          std::optional< type > tp2; 
          {
             auto sub2 = bin. extr_sub2( );
-            tp2 = check( ctxt, pos, sub2 );
+            tp2 = checkandresolve( blfs, err, ctxt, sub2 );
             bin. update_sub2( sub2 );
          }
 
-         pos. restore( ss );
+         throw std::runtime_error( "not implemented, lalala" );
 
+#if 0
          if( tp1. has_value( ) && tp1. value( ). sel( ) != type_truthval )
          {
             std::cout << t << "\n";
@@ -505,39 +492,41 @@ logic::checkandresolve( const beliefstate& blfs,
          }
 
          return type( type_truthval ); 
+#endif
       }
 
    case op_equals:
       {
          auto bin = t. view_binary( );
 
-         size_t ss = pos. size( );
-         pos. extend(0);
-
          std::optional< type > tp1;
          {
             auto sub1 = bin. extr_sub1( );
-            tp1 = check( ctxt, pos, sub1 );
+            tp1 = checkandresolve( blfs, err, ctxt, sub1 );
             bin. update_sub1( sub1 );
          }
-
-         pos. restore( ss );
-         pos. extend(1);
 
          std::optional< type > tp2;
          {
             auto sub2 = bin. extr_sub2( );
-            tp2 = check( ctxt, pos, sub2 );
+            tp2 = checkandresolve( blfs, err, ctxt, sub2 );
             bin. update_sub2( sub2 );
          }
 
+         std::cout << "we are here\n"; 
          if( tp1. has_value( ) && tp1. value( ). sel( ) != type_obj )
          {
+            err. extend( );
+           auto un = pretty::print( err. back( ), blfs, ctxt );
+           std::cout << "term:\n   ";
+           pretty::print( err. back( ), blfs, un, t, {0,0} );
+
             add_error( pos, error( err_typediff,
                                   "first argument of equality",
                                   type_obj, tp1. value( )) );
          }
 
+#if 0
          if( tp2. has_value( ) && tp2. value( ). sel( ) != type_obj )
          {
             add_error( pos, error( err_typediff,
@@ -547,8 +536,10 @@ logic::checkandresolve( const beliefstate& blfs,
          }
 
          return type( type_truthval ); 
-      }
 #endif
+         throw std::runtime_error( "not done" );
+      }
+
    case op_forall:
    case op_exists:
    case op_kleene_forall:
