@@ -323,9 +323,9 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          par. printif( ourattr. right <= envattr. left );
        
          if( t. sel( ) == op_forall )
-            out << "FORALL ";
+            out << "FORALL";
          if( t. sel( ) == op_exists )
-            out << "EXISTS ";
+            out << "EXISTS";
 
          for( size_t i = 0; i != q. size( ); ++ i )
          {
@@ -335,7 +335,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
                out << ", ";
             
             out << names. extend( q. var(i). pref );
-            out << " : ";
+            out << ": ";
             print( out, blfs, q. var(i). tp, attractions(0,0) );
          }
    

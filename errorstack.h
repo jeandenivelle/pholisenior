@@ -1,5 +1,6 @@
 
 // Written by Hans de Nivelle, Nov. 2024.
+// Changed the interface on 12.12.2024.
 
 #ifndef ERRORSTACK_
 #define ERRORSTACK_
@@ -14,25 +15,37 @@
 
 struct error
 {
-   enum level { warning, serious, header };
+   enum seriousness { warning, serious, header };
 
-   std::ostringstream top;
-   level lev;  
+   std::string top;
+   seriousness ser;  
    mutable bool reported;
       // Meaning is: Everyting that we have, has been reported.
 
    // We have no nice interface, because we expect to be called only
    // from errorstack.
 
-   explicit error( level lev ) :
-      lev( lev ),
-      reported( true )    // Because we have nothing.
+   error( const std::string& top, seriousness ser ) 
+      : top( top ), 
+        ser( ser ),
+        reported( top. empty( )) 
+   { }
+
+   error( std::string&& top, seriousness ser ) 
+      : top( std::move( top )),
+        ser( ser ) 
+   { reported = this -> top. empty( ); }
+
+   error( const char* top, seriousness ser )
+      : top( std::string( top )),
+        ser( ser ),
+        reported( ! *top )
    { }
 
    error( error&& other ) noexcept
    {
       top = std::move( other. top ); other. top. clear( );
-      lev = other. lev; 
+      ser = other. ser; 
       reported = other. reported; other. reported = true; 
    }
 
@@ -42,16 +55,10 @@ struct error
 
    ~error( )
    {
-      if( !reported )
+      if( !reported && !top. empty( ))
          print( std::cout );
    }
  
-   template< typename T > std::ostream& operator << ( const T& t )
-   {
-      top << t;
-      reported = false;
-      return top;
-   }
 };
 
 
@@ -75,36 +82,57 @@ public:
    errorstack( errorstack&& ) noexcept = default;
    errorstack& operator = ( errorstack&& ) noexcept = default;
 
-   void extend( const std::string& cause = "",
-                error::level lev = error::serious )
+   void push( const std::string& meh, 
+              error::seriousness ser = error::serious )
    { 
       sub. push_back( vect. size( ));
-
-      vect. push_back( error( lev ) ); 
-      if( !cause. empty( ))
-         vect. back( ) << cause;
+      vect. emplace_back( meh, ser ); 
    }
 
-   void extend( error::level lev )
-      { extend( "", lev ); }
-
-
-   void addheader( size_t start, const std::string& place = "" )
+   void push( std::string&& meh,
+              error::seriousness ser = error::serious )
    {
-      vect. push_back( error( error::header ));
-      if( !place. empty( ))
-         vect. back( ) << place;
+      sub. push_back( vect. size( ));
+      vect. emplace_back( std::move( meh ), ser );
+   }
+
+   void push( const char* meh,
+              error::seriousness ser = error::serious )
+   {
+      sub. push_back( vect. size( ));
+      vect. emplace_back( meh, ser );
+   }
+
+
+   using builder = std::ostringstream;
+      // You can whine into the builder, and push the builder
+      // when you're done. 
+
+   void push( builder& meh, 
+              error::seriousness ser = error::serious )
+   {
+      sub. push_back( vect. size( ));
+      vect. emplace_back( meh. str( ), ser );
+   }
+
+   void push( builder&& meh,
+              error::seriousness ser = error::serious )
+   {
+      sub. push_back( vect. size( ));
+      vect. emplace_back( std::move(meh). str( ), ser );
+   }
+
+   void addheader( size_t start, const std::string& header )
+   {
+      vect. emplace_back( header, error::header );
       sub. push_back( start );
    }
 
-   error& back( ) 
-      { return vect. back( ); }
-
-   const error& back( ) const
-      { return vect. back( ); }
-
    size_t size( ) const 
       { return vect. size( ); }
+
+   bool isempty( ) const 
+      { return vect. empty( ); }
 
    void print( std::ostream& out ) const
       { print( indentation( ), 0, size( ), out ); }

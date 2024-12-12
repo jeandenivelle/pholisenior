@@ -143,47 +143,4 @@
 }
 
 
-%define error ( err_index )
-
-%option index { err_index } => # index : size_t, contextsize : size_t 
-   // A De Bruijn index out is of range, it must be < contextsize.
-   // This should be impossible with terms created by the parser,
-   // but it can happen with hand created terms. 
-
-%option typediff { err_typediff } => 
-   # usage : std::string, expected : type, received : type 
- 
-   // When we exactly know what type we expect. 
-   // The string should explain how we wanted to used it.
-
-%option wrongtype { err_wrongtype } => # tp : type, message : std::string
-   // A type is wrong, but we cannot exactly specify what type is needed.
-   // We also create this error when the type itself is not well-formed.
-
-%option overload { err_overload } => [ argtype : type ], 
-                           # message : std::string, ident : size_t
-   // Cannot find a suitable overload for ident applied
-   // on the argtypes. Either there are none,
-   // or there are too many.  
-
-%option wrongfield { err_wrongfield } => 
-   # structname : size_t, fieldname : size_t
-      // Field does not exist.
-
-%option cannotapply { err_cannotapply } => func : type, [ argtype : type ] 
-   // Functional type func, cannot be applied on the arguments.
-
-%option unfinished { err_unfinished } => 
-   // Proof term contains unfinished rule.
-
-%h_incl {
-#include "tvm/includes.h"
-#include "term.h" 
-#include "util/print.h"
-}
-
-%h_methods {
-   void print( std::ostream& out ) const;
-}
-
 

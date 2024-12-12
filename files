@@ -25,7 +25,6 @@
    belief.cpp
    beliefstate.cpp
    structdef.cpp
-   error.cpp
    printing.cpp
    kbo.cpp
    context.cpp
@@ -64,8 +63,6 @@
    belief.cpp
    localname.h
    localname.cpp 
-   error.h 
-   error.cpp
 
 %preproc $(Maph)/maphoon $(Source)/parser/grammar.m $(Source)/parser $(Maph) 
 %dir Source/parser

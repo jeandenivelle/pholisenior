@@ -1,6 +1,7 @@
 
 #include "structural.h"
 #include "pretty.h"
+#include "kbo.h"
 
 #if 0
 namespace
@@ -272,7 +273,7 @@ logic::checkproofterm( std::ostream& out, const beliefstate& state,
 #endif
 
 
-bool logic::checkandresolve( const beliefstate& blfs, errorstack& err,
+bool logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
                              context& ctxt, type& tp ) 
 {
    std::cout << "checkedandresolve " << tp << "\n";
@@ -345,20 +346,39 @@ bool logic::checkandresolve( const beliefstate& blfs, errorstack& err,
 }
 
 
-
+namespace logic
+{
+   namespace
+   {
+      errorstack::builder errorheader( const beliefstate& blfs,
+                                       context& ctxt, 
+                                       const term& t )
+      {
+         errorstack::builder res;
+         res << "\n";
+         res << "----------------------------------------------------\n";
+         auto un = pretty::print( res, blfs, ctxt );
+         res << "Term:\n   ";
+         pretty::print( res, blfs, un, t, {0,0} );
+         res << "\n";
+         return res; 
+      }
+   }
+}
 
 std::optional< logic::type > 
 logic::checkandresolve( const beliefstate& blfs, 
-                        errorstack& err, context& ctxt, 
+                        errorstack& errors, context& ctxt, 
                         term& t ) 
 {
    if constexpr( true )
    {
       std::cout << "\n";
-      std::cout << "finding structural type\n";
+      std::cout << "checking type\n";
       auto un = pretty::print( std::cout, blfs, ctxt );
       std::cout << "term:\n   ";
       pretty::print( std::cout, blfs, un, t, {0,0} );
+      std::cout << '\n';
    }
 
    switch ( t. sel( )) 
@@ -397,56 +417,51 @@ logic::checkandresolve( const beliefstate& blfs,
          throw std::runtime_error( "not implemented" );
       }
 
+#endif
    case op_debruijn:
       {
          size_t index = t. view_debruijn( ). index( );
          if( index >= ctxt. size( ) ) 
          {
-            add_error( pos, error( err_index, index, ctxt. size( )) );
-            return { };
+            // This means that the data structure is corrupted.
+            // We don't try to pretty print, because it would crash.
+
+            errorstack::builder err;  
+            err << "De Bruijn index #" << index << " is out of range\n";
+            errors. push( std::move( err ));
+            return { }; 
          }
-         else
-         { 
-            std::cout << index << "\n";
-            auto tp = ctxt. gettype( index ); 
-            return tp; 
-         } 
+         return ctxt. gettype( index ); 
       }
-#endif
 
    case op_false:
    case op_error:
    case op_true:
       return type( type_truthval );
 
-#if 0
    case op_not:
    case op_prop:
       {
          auto un = t. view_unary( );
 
-         size_t ss = pos. size( );
-         pos. extend(0);
-
          std::optional< type > tp;
          {
             auto sub = un. extr_sub( );
-            tp = check( ctxt, pos, sub );
+            tp = checkandresolve( blfs, errors, ctxt, sub );
             un. update_sub( sub );
          }
 
-         pos. restore( ss );
-
          if( tp. has_value( ) && tp. value( ). sel( ) != type_truthval )
          {
-            add_error( pos, error( err_typediff,
-                                  "argument of unary operator",
-                                  type_truthval, tp. value( )) );
+            auto err = errorheader( blfs, ctxt, t );
+            err << "argument of logical operator not ";
+            err << type( type_truthval ) << "\n";
+            errors. push( std::move( err ));
          }
 
          return type( type_truthval );
       }
-#endif
+
    case op_and:
    case op_or:
    case op_implies:
@@ -460,39 +475,34 @@ logic::checkandresolve( const beliefstate& blfs,
          std::optional< type > tp1;
          {  
             auto sub1 = bin. extr_sub1( );
-            tp1 = checkandresolve( blfs, err, ctxt, sub1 );
+            tp1 = checkandresolve( blfs, errors, ctxt, sub1 );
             bin. update_sub1( sub1 );
          }
 
          std::optional< type > tp2; 
          {
             auto sub2 = bin. extr_sub2( );
-            tp2 = checkandresolve( blfs, err, ctxt, sub2 );
+            tp2 = checkandresolve( blfs, errors, ctxt, sub2 );
             bin. update_sub2( sub2 );
          }
 
-         throw std::runtime_error( "not implemented, lalala" );
-
-#if 0
          if( tp1. has_value( ) && tp1. value( ). sel( ) != type_truthval )
          {
-            std::cout << t << "\n";
-
-            add_error( pos, error( err_typediff, 
-                                  "first argument of logic operator",
-                                  type_truthval, tp1. value( )) );
+            auto err = errorheader( blfs, ctxt, t );
+            err << "first argument of logical operator not ";
+            err << type( type_truthval ) << "\n";
+            errors. push( std::move( err ));
          }
 
          if( tp2. has_value( ) && tp2. value( ). sel( ) != type_truthval )
          {
-            add_error( pos, error( err_typediff,
-                                   "second argument of logic operator", 
-                                   type_truthval, tp2. value( )) );
-                                  
+            auto err = errorheader( blfs, ctxt, t );
+            err << "second argument of logical operator not ";
+            err << type( type_truthval ) << "\n";
+            errors. push( std::move( err ));
          }
 
          return type( type_truthval ); 
-#endif
       }
 
    case op_equals:
@@ -502,42 +512,34 @@ logic::checkandresolve( const beliefstate& blfs,
          std::optional< type > tp1;
          {
             auto sub1 = bin. extr_sub1( );
-            tp1 = checkandresolve( blfs, err, ctxt, sub1 );
+            tp1 = checkandresolve( blfs, errors, ctxt, sub1 );
             bin. update_sub1( sub1 );
          }
 
          std::optional< type > tp2;
          {
             auto sub2 = bin. extr_sub2( );
-            tp2 = checkandresolve( blfs, err, ctxt, sub2 );
+            tp2 = checkandresolve( blfs, errors, ctxt, sub2 );
             bin. update_sub2( sub2 );
          }
 
-         std::cout << "we are here\n"; 
          if( tp1. has_value( ) && tp1. value( ). sel( ) != type_obj )
          {
-            err. extend( );
-           auto un = pretty::print( err. back( ), blfs, ctxt );
-           std::cout << "term:\n   ";
-           pretty::print( err. back( ), blfs, un, t, {0,0} );
-
-            add_error( pos, error( err_typediff,
-                                  "first argument of equality",
-                                  type_obj, tp1. value( )) );
+            auto err = errorheader( blfs, ctxt, t ); 
+            err << "first argument of equality not ";
+            err << type( type_obj ) << "\n";
+            errors. push( std::move( err ));
          }
 
-#if 0
          if( tp2. has_value( ) && tp2. value( ). sel( ) != type_obj )
          {
-            add_error( pos, error( err_typediff,
-                                   "second argument of equality",
-                                   type_obj, tp2. value( )) );
-
+            auto err = errorheader( blfs, ctxt, t );
+            err << "second argument of equality not ";
+            err << type( type_obj ) << "\n";
+            errors. push( std::move( err ));
          }
 
          return type( type_truthval ); 
-#endif
-         throw std::runtime_error( "not done" );
       }
 
    case op_forall:
@@ -569,7 +571,7 @@ logic::checkandresolve( const beliefstate& blfs,
 
          {
             auto bod = quant. extr_body( );
-            bodytype = checkandresolve( blfs, err, ctxt, bod ); 
+            bodytype = checkandresolve( blfs, errors, ctxt, bod ); 
             quant. update_body( bod );
          }
 
@@ -578,93 +580,89 @@ logic::checkandresolve( const beliefstate& blfs,
          // If the body has a type, and this type is not T, we need to
          // complain:
 
-#if 0
-         if( bodytype. has_value( ))
+         if( bodytype. has_value( ) &&
+             bodytype. value( ). sel( ) != type_truthval )
          {
-            std::cout << "type of body " << bodytype. value( ) << "\n";
-            if( bodytype. value( ). sel( ) != type_truthval )
-            {
-               add_error( pos, error( err_typediff, "type of body not T",
-                   type_truthval, bodytype. value( )));
-            }
+            auto err = errorheader( blfs, ctxt, t );
+            err << "body of quantifier does have type T: ";
+            pretty::print( err, blfs, bodytype. value( ), {0,0} );
+
          }
+
          // The result is always truthval:
 
          return type_truthval; 
-#endif
+
       }
 
-#if 0
    case op_apply:
       {
          auto ap = t. view_apply( );
          std::vector< type > argtypes;
 
-         // We first typecheck the arguments:
-
-         size_t ss = pos. size( ); 
+         // We first deal with the arguments:
 
          for( size_t i = 0; i != ap. size( ); ++ i )
          {
             auto arg = ap. extr_arg(i);
 
-            pos. extend( i + 1 );
-               // Because the function has index 0.
-
-            auto tp = check( ctxt, pos, arg );
+            auto tp = checkandresolve( blfs, errors, ctxt, arg );
             if( tp. has_value( ))  
                argtypes. push_back( std::move( tp. value( )) ); 
            
             ap. update_arg( i, arg ); 
-
-            pos. restore(ss); 
          }
 
-         // If some subterms do not have a type, we cannot return a type
+         // If some subterms did not have a type, we cannot return a type
          // by ourselves, so we quietly give up. 
 
-         if( argtypes. size( ) != ap. size( ))
+         if( argtypes. size( ) < ap. size( ))
             return { };
 
          // If ap. func( ) is an inexact identifier, we treat this
          // separately, because we have to find the proper overload. 
 
-         if( ap. func( ). sel( ) == op_inexact ||
-             ap. func( ). sel( ) == op_exact ) 
+         if( ap. func( ). sel( ) == op_unchecked )
          {
             auto func = ap. extr_func( ); 
-            auto res = checkidentifier( pos, func, argtypes );
+            auto res = checkidentifier( blfs, errors, func, argtypes );
             ap. update_func( func );  
             return res;
          }
 
-         auto func = ap. extr_func( );
-        
-         pos. extend(0);
-         auto tp = check( ctxt, pos, func );
-         pos. restore( ss );
-
-         ap. update_func( func );  
-
-         if( !tp. has_value( ))
+         std::optional< type > ftype;
          {
-            // We can do nothing at this point,
-            // and pass on the empty optional. 
+            auto func = ap. extr_func( );
+            ftype = checkandresolve( blfs, errors, ctxt, func );
+            ap. update_func( func );  
+         }
 
-            return tp; 
-         } 
+         if( !ftype. has_value( ))
+            return ftype;  // Nothing can be done.
 
-         auto res = try_apply( tp. value( ), argtypes, 0 ); 
+         auto res = try_apply( ftype. value( ), argtypes, 0 ); 
+
          if( res. has_value( ))
             return res;
          else
          { 
-            add_error( pos, error( err_cannotapply, tp. value( ),
-                                   argtypes. begin( ), argtypes. end( )) );
-            return res;
+            auto err = errorheader( blfs, ctxt, t );
+            err << "cannot apply function of type ";
+            pretty::print( err, blfs, ftype. value( ), {0,0} ); 
+            err << " on argument(s)\n";
+            for( size_t i = 0; i != argtypes. size( ); ++ i )
+            {
+               err << "   "; 
+               pretty::print( err, blfs, argtypes[i], {0,0} );
+            }
+            std::cout << err. str( ) << "\n";
+            errors. push( std::move( err ));
+
+            return { };
          }
+
+         throw std::runtime_error( "not implemented" );
       }
-#endif
 
    case op_lambda:
       {
@@ -682,7 +680,7 @@ logic::checkandresolve( const beliefstate& blfs,
 
             // metastructchecker meta( blfs, rk, goalname, lamb. var(i). tp );
 
-            bool b = checkandresolve( blfs, err, ctxt, var. tp );
+            bool b = checkandresolve( blfs, errors, ctxt, var. tp );
 #if 0
             if( !b )
             {
@@ -699,13 +697,12 @@ logic::checkandresolve( const beliefstate& blfs,
 
          {
             auto bod = lamb. extr_body( );
-            bodytype = checkandresolve( blfs, err, ctxt, bod );
+            bodytype = checkandresolve( blfs, errors, ctxt, bod );
             lamb. update_body( bod );
          }
 
          ctxt. restore( contextsize );
 
-#if 0
          if( bodytype. has_value( ))
          {
             bodytype. value( ) = type( type_func, bodytype. value( ), { } );
@@ -715,8 +712,7 @@ logic::checkandresolve( const beliefstate& blfs,
             return bodytype; 
          }
          else
-            return bodytype; 
-#endif
+            return { };
       }
 
 #if 0
@@ -744,19 +740,19 @@ logic::checkandresolve( const beliefstate& blfs,
    throw std::logic_error( "typechecking: selector is not implemented" );
 }
 
-#if 0
 std::optional< logic::type >
-logic::structchecker::checkidentifier( const position& pos, term& id,
-                                       const std::vector< type > & argtypes )
+logic::checkidentifier( const beliefstate& blfs, 
+                        errorstack& errors, term& id,
+                        const std::vector< type > & argtypes )
 {
-#if 0
    std::cout << "checking applicability of " << id << " on\n";
    for( const auto& tp : argtypes )
       std::cout << "   " << tp << "\n";
    std::cout << "\n";
 
+#if 0
    if( id. sel( ) != op_inexact && id. sel( ) != op_exact ) 
-      throw std::runtime_error("checkinexact, not an identifier");
+      throw std::runtime_error( "checkinexact, not an identifier");
 
    normident ident = id. view_ident( ). id( );
 
@@ -843,7 +839,6 @@ logic::structchecker::checkidentifier( const position& pos, term& id,
    return restype;
 #endif
 }
-#endif
 
 #if 0
 std::optional< logic::type >
@@ -880,27 +875,28 @@ logic::try_apply( const belief& bel, const std::vector< type > & argtypes )
 }
 #endif
 
-#if 0
 
 std::optional< logic::type > 
-logic::try_apply( type tp, const std::vector< type > & argtypes, size_t pos )
+logic::try_apply( type ftype, 
+                  const std::vector< type > & argtypes, size_t pos )
 {
    if( pos > argtypes. size( ))
       throw std::logic_error( "pos > size( )" );
 
-   std::cout << "trying to apply " << tp << " on\n";
+   std::cout << "trying to apply " << ftype << " on\n";
    for( size_t i = pos; i != argtypes. size( ); ++ i ) 
       std::cout << "   " << i << " : " << argtypes[i]; 
    std::cout << "\n";
 
    while( pos != argtypes. size( ))
    {
-      if( tp. sel( ) != type_func )
+      if( ftype. sel( ) != type_func )
          return { };
 
-      auto fun = tp. view_func( );
+      auto fun = ftype. view_func( );
 
-      // The required arguments must be there in args:
+      // args [ pos ... ] must be long enough to contain
+      // the required types: 
 
       if( pos + fun. size( ) > argtypes. size( ))
          return { };  
@@ -914,11 +910,11 @@ logic::try_apply( type tp, const std::vector< type > & argtypes, size_t pos )
          ++ pos; 
       }
 
-      tp = fun. result( ); 
+      ftype = fun. result( ); 
    }
-   return tp; 
+
+   return ftype; 
 }
 
-#endif
 
 

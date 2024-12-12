@@ -687,19 +687,22 @@ void tests::typechecking( logic::beliefstate& blfs )
 
    auto tm = prod. view_def( ). val( );
 
-   tm = ( term( op_false ) == term( op_true ) );
+   tm = ( term( op_false ) || term( op_true ) );
    tm = implies( tm, implies( term( op_error ), tm ));
+
+   tm = prod. view_def( ). val( );
 
    auto res = checkandresolve( blfs, err, ctxt, tm );
 
    if( res. has_value( ))
-      std::cout << res. value( ) << "\n";
+      std::cout << "type = " << res. value( ) << "\n";
    else
       std::cout << "(no type)\n";
 
+   if( ctxt. size( ) > 0 )
+      throw std::runtime_error( "context not restored" );
+
    std::cout << "tm after checking = " << tm << "\n";
-   
-   throw std::runtime_error( "stop" );
 
 #if 0 
    logic::structchecker chk( blfs, rk, exactname( identifier( ) + "thm", 0 ), 

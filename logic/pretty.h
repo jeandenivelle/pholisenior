@@ -8,10 +8,9 @@
 #define LOGIC_PRETTY_
 
 #include <iostream>
-#include "logic/term.h"
-#include "logic/context.h"
-#include "logic/beliefstate.h"
-#include "logic/error.h"
+#include "term.h"
+#include "context.h"
+#include "beliefstate.h"
 
 #include "uniquenamestack.h"
 
@@ -93,7 +92,8 @@ namespace pretty
    void print( std::ostream& out, 
                uniquenamestack& names, const logic::belief& );
 
-   uniquenamestack print( std::ostream& out, const beliefstate& blfs,
+   uniquenamestack 
+   print( std::ostream& out, const beliefstate& blfs,
           const context& cxt ); 
       // Print a context. Since a term is often printed
       // with its term, we remember the uniquenamestack,
@@ -101,8 +101,6 @@ namespace pretty
 
    void print( std::ostream& out, const logic::beliefstate& );
 
-   void print( std::ostream& out, 
-               uniquenamestack& , const logic::error& err );
 
 }}
 

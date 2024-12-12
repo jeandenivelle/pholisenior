@@ -37,15 +37,25 @@ namespace logic
    // This is a bit overdone, so we just use bool.
 
    bool
-   checkandresolve( const beliefstate& blfs, errorstack& err,
+   checkandresolve( const beliefstate& blfs, errorstack& errors,
                     context& ctxt, type& tp );
     
    std::optional< type > 
-   checkandresolve( const beliefstate& blfs, errorstack& err,
+   checkandresolve( const beliefstate& blfs, errorstack& errors,
                     context& ctxt, term& t );
       // We check and resolve the overloads. We don't care about
       // dependencies. Dependencies are checked by a separate
       // function. 
+
+   std::optional< type >
+   checkidentifier( const beliefstate& blfs, errorstack& errors,
+                    term& func, const std::vector< type > & argtypes );
+
+   
+   std::optional< type >
+   try_apply( type ftype, const std::vector< type > & argtypes, size_t pos );
+      // Try to apply ftype on argtypes[ pos ... ].
+
 }
 
 #endif

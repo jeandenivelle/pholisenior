@@ -5,7 +5,6 @@
 #include "type.h"
 #include "term.h"
 #include "belief.h"
-#include "error.h"
 #include "localname.h"
 
 void logic::type::print( std::ostream& out ) const
@@ -74,13 +73,14 @@ void logic::term::print( std::ostream& out ) const
             out << '/' << n. index( );
       }
       return;
+#endif
 
    case op_false:
    case op_error:
    case op_true:
       out << sel( );
       return;
-#endif
+
    case op_not:
    case op_prop:
       {
@@ -261,70 +261,5 @@ void logic::localname::print( std::ostream& out ) const
 
 }
 
-void logic::error::print( std::ostream& out ) const
-{
-   // out << "("; printstate( out ); out << "):";
-
-   switch( sel( ))
-   {
-   case err_index:
-      {
-         auto ind = view_index( );
-         out << "De Bruijn index " << ind. index( ) << " is out of range, ";
-         out << "size of the context is " << ind. contextsize( ) << "\n";
-      }
-      return;
- 
-   case err_typediff:
-      {
-         auto diff = view_typediff( );
-         out << diff. usage( ) << " requires ";
-         out << diff. expected( ) << " instead of " << diff. received( );
-      }
-      return;
-
-   case err_wrongtype:
-      {
-         auto wrong = view_wrongtype( );
-         out << wrong. message( ) << ": " << wrong. tp( );
-      }
-      return;
-
-  case err_overload:
-      {
-         auto ov = view_overload( );
-         out << ov. message( ) << " " << ov. ident( );
-         out << " on argument types";
-         for( size_t i = 0; i != ov. size( ); ++ i )
-         {
-            if( i != 0 )
-               out << ", ";
-            else
-               out << " ";
-            out << ov. argtype(i);
-         }
-      }
-      return;
-
- case err_cannotapply:
-      {
-         auto cant = view_cannotapply( );
-         out << "cannot apply value with type " << cant. func( );
-         out << " on argument types";
-         for( size_t i = 0; i != cant. size( ); ++ i )
-         {
-            if( i != 0 )
-               out << ", ";
-            else
-               out << " ";
-            out << cant. argtype(i);
-         }
-      }
-      return;
-
-   }
-   std::cout << "error: " << sel( ) << "\n";
-   throw std::runtime_error( "dont know how to print it" );
-}
 
 

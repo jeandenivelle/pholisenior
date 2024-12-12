@@ -4,7 +4,7 @@
 
 void error::print( std::ostream& out ) const
 {
-   switch( lev )
+   switch( ser )
    {
    case error::header:
       break; 
@@ -18,7 +18,7 @@ void error::print( std::ostream& out ) const
    default: out << "??? "; break;
    }
 
-   out << top. view( ) << '\n';
+   out << top << '\n';
    reported = true;
 }
 
