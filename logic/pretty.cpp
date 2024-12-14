@@ -159,7 +159,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 
          if( ind >= names. size( ))
          {
-            out << '#' << ind << "/" << names. size( ) << "\n";
+            std::cout << '#' << ind << "/" << names. size( ) << "\n";
             throw std::runtime_error( "de bruijn index too big" );
          }  
          out << names. getname( ind );

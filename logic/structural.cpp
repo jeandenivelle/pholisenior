@@ -458,8 +458,8 @@ logic::checkandresolve( const beliefstate& blfs,
          if( tp. has_value( ) && tp. value( ). sel( ) != type_truthval )
          {
             auto err = errorheader( blfs, ctxt, t );
-            err << "argument of logical operator not ";
-            err << type( type_truthval ) << "\n";
+            err << "argument of logical operator has wrong type ";
+            pretty::print( err, blfs, tp. value( ), {0,0} ); 
             errors. push( std::move( err ));
          }
 
@@ -493,16 +493,16 @@ logic::checkandresolve( const beliefstate& blfs,
          if( tp1. has_value( ) && tp1. value( ). sel( ) != type_truthval )
          {
             auto err = errorheader( blfs, ctxt, t );
-            err << "first argument of logical operator not ";
-            err << type( type_truthval ) << "\n";
+            err << "first argument of logical operator has wrong type ";
+            pretty::print( err, blfs, tp1. value( ), {0,0} ); 
             errors. push( std::move( err ));
          }
 
          if( tp2. has_value( ) && tp2. value( ). sel( ) != type_truthval )
          {
             auto err = errorheader( blfs, ctxt, t );
-            err << "second argument of logical operator not ";
-            err << type( type_truthval ) << "\n";
+            err << "second argument of logical operator has wrong type ";
+            pretty::print( err, blfs, tp2. value( ), {0,0} ); 
             errors. push( std::move( err ));
          }
 
@@ -530,16 +530,17 @@ logic::checkandresolve( const beliefstate& blfs,
          if( tp1. has_value( ) && tp1. value( ). sel( ) != type_obj )
          {
             auto err = errorheader( blfs, ctxt, t ); 
-            err << "first argument of equality not ";
-            err << type( type_obj ) << "\n";
+            err << "first argument of equality must be O, but is ";
+            pretty::print( err, blfs, tp1. value( ), {0,0} );
+            err << "\n";
             errors. push( std::move( err ));
          }
 
          if( tp2. has_value( ) && tp2. value( ). sel( ) != type_obj )
          {
             auto err = errorheader( blfs, ctxt, t );
-            err << "second argument of equality not ";
-            err << type( type_obj ) << "\n";
+            err << "second argument of equality must be O, but is ";
+            pretty::print( err, blfs, tp2. value( ), {0,0} ); 
             errors. push( std::move( err ));
          }
 
@@ -572,7 +573,7 @@ logic::checkandresolve( const beliefstate& blfs,
 
          if( !correct )
          {
-            auto err = errorheader( blfs, ctxt, t ); 
+            auto err = errorheader( blfs, ctxt, t );  
             errors. addheader( errstart, std::move( err ));
             return type( type_truthval ); 
          }
@@ -653,7 +654,7 @@ logic::checkandresolve( const beliefstate& blfs,
             std::vector< std::pair< exact, type >> results;
                // These will be the overloads that can be applied
                // with their return types.
- 
+
             for( const auto& cand : overl )
             {
                auto res = try_apply( blfs, cand, argtypes, 0 );
@@ -662,10 +663,39 @@ logic::checkandresolve( const beliefstate& blfs,
             } 
 
             std::cout << "applicable candidates\n";
-            for( const auto& cand : results )
-               std::cout << cand. first << " --> " << cand. second << "\n";
+            for( const auto& cand : results ) 
+            {
+               std::cout << "   " << cand. first << " --> " 
+                         << cand. second << "\n";
+            }
 
-            return { };
+            if( results. size( ) == 0 )
+            {
+               auto err = errorheader( blfs, ctxt, t );
+               err << "no applicable overload found for " << ident;
+               err << " in application term"; 
+               errors. push( std::move( err )); 
+               return { };
+            }
+           
+            if( results. size( ) > 1 )
+            {
+               auto err = errorheader( blfs, ctxt, t );
+               err << "cannot resolve " << ident;
+               err << " in application term\n"; 
+               err << "   candidates are ";
+               for( size_t i = 0; i != results. size( ); ++ i )
+               {
+                  if(i) err << ", ";
+                  err << results[i]. first;
+               }
+               err << "\n";
+               errors. push( std::move( err ));
+               return { };
+            }
+ 
+            ap. update_func( term( op_exact, results. front( ). first )); 
+            return results. front( ). second;
          }
 
          std::optional< type > ftype;
@@ -706,28 +736,29 @@ logic::checkandresolve( const beliefstate& blfs,
       {
          auto lamb = t. view_lambda( );
 
-         size_t contextsize = ctxt. size( );
+         bool correct = true;
+
+         size_t errstart = errors. size( );
 
          for( size_t i = 0; i != lamb. size( ); ++ i ) 
          {
-            auto var = lamb. extr_var(i);
-               // We need to extract, because we may resolve overloads.
+            auto vt = lamb. extr_var(i);
+               // We need to extract, because we must resolve overloads.
 
-            std::cout << "var = " << var << "\n";
-            std::cout << "moved out " << lamb. var(i) << "\n";
+             if( !checkandresolve( blfs, errors, vt. tp ))
+               correct = false;
 
-            // metastructchecker meta( blfs, rk, goalname, lamb. var(i). tp );
-
-            bool b = checkandresolve( blfs, errors, var. tp );
-#if 0
-            if( !b )
-            {
-               for( auto& err : meta. errors )
-                  add_error( pos, std::move( err ));
-            }
-#endif
+            lamb. update_var( i, vartype( vt. pref, vt. tp ));
          }
 
+         if( !correct )
+         {
+            auto err = errorheader( blfs, ctxt, t );  
+            errors. addheader( errstart, std::move( err ));
+            return { };
+         }
+
+         size_t contextsize = ctxt. size( );
          for( size_t i = 0; i != lamb. size( ); ++ i )
             ctxt. extend( lamb. var(i). pref, lamb. var(i). tp );
 
@@ -752,30 +783,10 @@ logic::checkandresolve( const beliefstate& blfs,
          else
             return { };
       }
-
-#if 0
-   case op_constr:
-      {
-         bool ok = true;
-         const auto& sign = table. at( t. sel( ) );
-         auto exp = t. view_exp( );
-         type sub = S;
-
-         pos. extend( 0 );
-         try{ sub = typecheck( ctxt, pos, exp. body( ) ); }
-         catch( const failure& f ) { ok = false; }
-         pos. restore( );
-
-         if( ok && compare( sign. first, { sub }, pos ) )
-            return sign. second;
-
-         throw failure( );
-      }
-#endif 
    }
    
    std::cout << "typechecking: selector = " << t. sel( ) << "\n";
-   throw std::logic_error( "typechecking: selector is not implemented" );
+   throw std::logic_error( "typechecking: selector not implemented" );
 }
 
 
@@ -834,7 +845,6 @@ logic::checkandresolve( const beliefstate& blfs,
    {
       add_error( pos, 
             error( err_overload, argtypes. begin( ), argtypes. end( ),
-                   "there is no overload for", ident ));
       id = term( op_inexact, ident, 0 );
       return { };
    }
@@ -867,7 +877,7 @@ logic::try_apply( type ftype,
 
    std::cout << "trying to apply " << ftype << " on\n";
    for( size_t i = pos; i != argtypes. size( ); ++ i ) 
-      std::cout << "   " << i << " : " << argtypes[i]; 
+      std::cout << "   " << i << " : " << argtypes[i] << "\n";
    std::cout << "\n";
 
    while( pos != argtypes. size( ))
@@ -927,20 +937,52 @@ logic::try_apply( const beliefstate& blfs, exact name,
                 argtypes[ pos ]. sel( ) == type_struct &&
                 argtypes[ pos ]. view_struct( ). def( ) == parenttype )
             {
-               std::cout << "fits\n";
-               const auto& sdef = blfs. at( parenttype ). first;
-                  // the structdef.
+               const belief& parentblf = blfs. at( parenttype ). first;
+                  // The belief in the parent.
 
-               if( sdef. sel( ) != bel_struct )
+               if( parentblf. sel( ) != bel_struct )
                   throw std::runtime_error( "parent type not a structdef" );
         
-               return try_apply(
-                  sdef. view_struct( ). def( ). at( fld. offset( )). tp,
-                  argtypes, pos + 1 );
+               const structdef& parentdef = 
+                  parentblf. view_struct( ). def( ); 
+
+               return try_apply( parentdef. at( fld. offset( )). tp,
+                                 argtypes, pos + 1 );
             }
             return { };
          }  
 
+      case bel_constr:
+         {
+            const auto& structblf = 
+               blfs. at( bel. view_constr( ). tp( )). first;
+                  // Belief in the struct that we are trying to construct.
+
+            if( structblf. sel( ) != bel_struct )
+               throw std::runtime_error( "constructed type not a structdef" );
+
+            const structdef& sdef =
+               structblf. view_struct( ). def( ); 
+
+            std::cout << sdef << "\n";
+
+            if( pos + sdef. size( ) != argtypes. size( ))
+               return { };
+                  // No currying for constructors.
+
+            for( size_t i = 0; i != sdef. size( ); ++ i )
+            {
+               if( !is_eq( kbo::topleftright( sdef. at(i). tp, 
+                                              argtypes[ pos + i ] )))
+               {
+                  return { };
+               }
+
+               std::cout << "check passed " << sdef. at(i). tp << "\n";
+            }
+            
+            return type( type_struct, bel. view_constr( ). tp( )); 
+         }
    }
 
    throw std::runtime_error( "try_apply, belief is not implemented" );

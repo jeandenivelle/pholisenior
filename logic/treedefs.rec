@@ -31,7 +31,7 @@
 
 
 %define term ( op_error ) 
-%option exact { op_exact } => # e : exact
+%option exact { op_exact } => # ex : exact
 %option debruijn { op_debruijn } => # index : size_t  
 %option unchecked { op_unchecked } => # id : identifier
 %option nullary { op_false, op_error, op_true } =>

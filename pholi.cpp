@@ -17,7 +17,6 @@
 
 int main( int argc, char* argv[] )
 {
-
    logic::beliefstate bel;
 
    tests::add_strict_prod( bel ); 

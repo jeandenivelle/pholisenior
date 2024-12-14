@@ -686,6 +686,8 @@ void tests::structural( logic::beliefstate& blfs )
    context ctxt;
 
    type Seq = type( type_unchecked, identifier( ) + "Seq" );
+   type Zig = type( type_unchecked, identifier( ) + "Zig" );
+   type Zag = type( type_unchecked, identifier( ) + "Zag" );
 
    auto tm = apply( "0"_unchecked, { 0_db } );
    tm = apply( "succ"_unchecked, { 0_db, tm } );
@@ -704,11 +706,29 @@ void tests::structural( logic::beliefstate& blfs )
 
    std::cout << err << "\n";
 
-   if( ctxt. size( ) > 0 )
-      throw std::runtime_error( "context not restored" );
-
    std::cout << "tm after checking = " << tm << "\n";
    tm. printstate( std::cout );
+
+   auto tm1 = apply( "0"_unchecked, { 0_db } );
+   auto tm2 = apply( "succ"_unchecked, { 1_db } );
+   tm = apply( "Seq"_unchecked, { tm1, tm2 } );
+   
+   tm = term( op_equals, 0_db, tm );
+
+   tm = lambda( {{ "x", Zig }, { "y", Zag }}, tm );
+   std::cout << "\n\n";
+   std::cout << tm << "\n";
+   res = checkandresolve( blfs, err, ctxt, tm );
+
+   if( res. has_value( ))
+      std::cout << "type = " << res. value( ) << "\n";
+   else
+      std::cout << "(no type)\n";
+
+   std::cout << err << "\n";
+
+   if( ctxt. size( ) > 0 )
+      throw std::runtime_error( "context not restored" );
 
 #if 0 
    logic::structchecker chk( blfs, rk, exactname( identifier( ) + "thm", 0 ), 

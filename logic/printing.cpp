@@ -51,6 +51,14 @@ void logic::term::print( std::ostream& out ) const
 {
    switch( sel( ) )
    {
+
+   case op_exact:
+      {
+         auto e = view_exact( );
+         out << e. ex( );
+      }
+      return;
+
    case op_debruijn:
       { 
          auto p = view_debruijn( );
@@ -64,18 +72,6 @@ void logic::term::print( std::ostream& out ) const
          out << p. id( );  
       }
       return;
-
-#if 0
-   case op_inexact:
-   case op_exact:
-      {
-         auto n = view_ident( );
-         out << n. id( );
-         if( sel( ) == op_exact )
-            out << '/' << n. index( );
-      }
-      return;
-#endif
 
    case op_false:
    case op_error:
