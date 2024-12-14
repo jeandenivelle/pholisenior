@@ -67,6 +67,7 @@ namespace pretty
       }
    };
 
+
    void print( std::ostream& out, const beliefstate& blfs, 
                const type& tp, attractions attr );
  
@@ -100,7 +101,6 @@ namespace pretty
       // so that it can be used for printing the term. 
 
    void print( std::ostream& out, const logic::beliefstate& );
-
 
 }}
 

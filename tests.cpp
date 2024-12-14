@@ -347,11 +347,11 @@ void tests::add_settheory( logic::beliefstate& blfs )
    powset = forall( { "P", O2T }, forall( { "Q", O2T }, powset ));
 
    
-   auto settheory = lambda( { { "t", "settheory"_type } }, 
+   auto settheory = lambda( { { "t", "settheory"_unchecked } }, 
       lazy_conj( typed, empty && singleton && setunion && repl && ext && bij && powset ));
 
    blfs. add( identifier( ) + "settheory", belief( bel_def, settheory, 
-                                     type( type_func, T, { "settheory"_type } ) ));
+                                     type( type_func, T, { "settheory"_unchecked } ) ));
 #endif
 }
 
@@ -370,7 +370,7 @@ tests::always_justification( const logic::beliefstate& bel )
    type O2O = type( type_func, O, { O } );
    type O2T = type( type_func, T, { O } );
 
-   type Seq = type( type_ident, identifier( ) + "Seq" );
+   type Seq = type( type_unchecked, identifier( ) + "Seq" );
 
    auto cls = term( op_kleene_or, { } );
    auto cl_view = cls. view_kleeneprop( );
@@ -704,9 +704,17 @@ void tests::typechecking( logic::beliefstate& blfs )
 
    std::cout << "tm after checking = " << tm << "\n";
 
+   type Seq = type( type_unchecked, identifier( ) + "Seq" );
+   auto tp = type( type_func, type_obj, 
+                   { type_truthval, type_obj, Seq } );
+
+   auto bl = checkandresolve( blfs, err, tp );
+   std::cout << "check and resolve returned " << bl << "\n";
+   std::cout << tp << "\n";
+
 #if 0 
    logic::structchecker chk( blfs, rk, exactname( identifier( ) + "thm", 0 ), 
-      op_false && ! exists( { "s", "Seq"_type }, apply( "succ"_unchecked, { 0_db, 
+      op_false && ! exists( { "s", "Seq"_unchecked }, apply( "succ"_unchecked, { 0_db, 
                                       apply( "0"_unchecked, { 0_db } ) } ) ==
                                    apply( "0"_unchecked, { 0_db } )) );
 

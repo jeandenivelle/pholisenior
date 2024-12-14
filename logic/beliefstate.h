@@ -51,12 +51,19 @@ namespace logic
       identifier2exact structdefs;
          // In PHOLI, an identifier can be declared as type only once, 
          // so there is no need to use a set here. Our approach
-         // is that this a problem of the type checker, not our problem.
-         // We, the beliefstate, are only a dumb data structure. 
+         // is that this is a problem of the type checker, not ours.
+         // We are only a dumb data structure, our job is to store.
          // If we are asked to store something, we just store it without 
          // asking any questions.
 
       identifier2exact formulas;
+
+      std::vector< exact > empty;
+         // This is an empty vector, so that we can return
+         // a reference when somebody tries to look up an identifier
+         // that has no overloads. Since we always return it 
+         // as a const-reference, it is harmless that it will
+         // be shared.
 
    public:  
       beliefstate( ) noexcept = default; 
@@ -75,6 +82,9 @@ namespace logic
          // pattern, it will be added without complaints. It will only 
          // be detected during type checking, when the overlapping 
          // pattern is used, and causes an ambiguous overload.
+
+      const std::vector< exact > & 
+      getstructdefs( const identifier& id ) const;
 
       std::pair< belief, dependencies > & at( exact id )
          { return vect. at( id. nr ); }

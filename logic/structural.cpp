@@ -15,12 +15,10 @@ namespace
 }
 #endif
 
-#if 0
-error_report 
-logic::checkstructure( nameranking& rk, beliefstate& everything )
-{
-   error_report errors;
 
+void logic::checkstructure( beliefstate& everything, errorstack& err )
+{
+#if 0
    for( auto& onename : everything )
    {
       {
@@ -188,9 +186,9 @@ logic::checkstructure( nameranking& rk, beliefstate& everything )
 
    }
    return errors; 
+#endif
 }
 
-#endif
 
 namespace
 {
@@ -273,76 +271,84 @@ logic::checkproofterm( std::ostream& out, const beliefstate& state,
 #endif
 
 
-bool logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
-                             context& ctxt, type& tp ) 
+bool 
+logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
+                        type& tp ) 
 {
-   std::cout << "checkedandresolve " << tp << "\n";
-   return true;
+   if constexpr( false )
+   {
+      std::cout << "checkandresolve ";
+      pretty::print( std::cout, blfs, tp, {0,0} );
+      std::cout << "\n";
+   }
  
    switch( tp. sel( ))
    {
-
-#if 0
    case type_truthval:
    case type_obj:
       return true;
  
-   case type_ident:
+   case type_unchecked:
       {
-         auto id = tp. view_ident( );
-         auto p = blfs. find( id. id( ));
-         if( p == blfs. end( ))
-         {
-            errors. push_back( 
-               error( err_wrongtype, tp, "unknown structname" ));
-            return false; 
-         }
-         size_t def = 0;
-         size_t nrstructs = 0;
-         for( size_t i = 0; i != p -> second. size( ); ++ i )
-         {
-            if( p -> second[i]. sel( ) == bel_struct )
-            {
-               ++ nrstructs;
-               def = i; 
-            }
-         }
+         auto id = tp. view_unchecked( );
+         auto& defs = blfs. getstructdefs( id. id( ));
 
-         if( nrstructs == 0 )
+         if( defs. size( ) == 0 ) 
          {
-            errors. push_back(
-               error( err_wrongtype, tp, "name has no struct definition" ));
+            errorstack::builder bld;
+
+            bld << "identifier used as type has no struct-def: ";
+            bld << id. id( ); 
+            errors. push( std::move( bld ));
+
             return false;
          }
 
-         // A nice error message should be created somewhere else:
-
-         if( nrstructs > 1 )
-            throw std::runtime_error( "repeated struct defs for name" );
-
-         if( !rk. setbelow( exactname( id. id( ), def ), goalname ))
+         if( defs. size( ) > 1 )
          {
-            throw std::runtime_error( "circularity, how to handle ?" );
+            errorstack::builder bld;
+
+            bld << "identifier used as type has " << defs. size( );
+            bld << " struct-defs: ";
+            bld << id. id( ); 
+            errors. push( std::move( bld ));
+
+            return false;
          }
 
+         tp = type( type_struct, defs[0] );
          return true;
       }
 
    case type_func:
       {
+         bool correct = true; 
+
          auto func = tp. view_func( );
-         bool correct = check( func. result( ));
+         {
+            type res = func. extr_result( );
+            bool b = checkandresolve( blfs, errors, res );
+            func. update_result( res );
+
+            correct = correct && b;  
+         }
+           
          for( size_t i = 0; i != func. size( ); ++ i )
          {
-            if( !check( func.arg(i)) )
-               correct = false;
+            type arg = func. extr_arg(i);
+            bool b = checkandresolve( blfs, errors, arg );
+            func. update_arg( i, arg );
+ 
+            correct = correct && b;
+               // We do it like this, because we want to make 
+               // sure that checkandresolve is called on
+               // all arguments. We are harvesting errors.
          }
          return correct;
       }
-#endif
    } 
-   std::cout << "checkandresolve " << tp. sel( ) << "\n";
-   throw std::runtime_error( "not implemented" );
+   std::cout << "checkandresolve: " << tp. sel( ) << "\n";
+   throw std::runtime_error( "not implemented for this case" );
 }
 
 
@@ -365,6 +371,7 @@ namespace logic
       }
    }
 }
+
 
 std::optional< logic::type > 
 logic::checkandresolve( const beliefstate& blfs, 
@@ -680,7 +687,7 @@ logic::checkandresolve( const beliefstate& blfs,
 
             // metastructchecker meta( blfs, rk, goalname, lamb. var(i). tp );
 
-            bool b = checkandresolve( blfs, errors, ctxt, var. tp );
+            bool b = checkandresolve( blfs, errors, var. tp );
 #if 0
             if( !b )
             {

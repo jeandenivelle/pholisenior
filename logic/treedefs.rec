@@ -12,8 +12,8 @@
 
 %define type ( type_truthval ) 
 %option prim { type_truthval, type_obj } =>
-%option exact { type_exact } => # e : exact
-%option ident { type_unchecked } => # id : identifier
+%option struct { type_struct } => # def : exact
+%option unchecked { type_unchecked } => # id : identifier
 %option func { type_func } => result : type, [ arg : type ]  
 
 %h_incl {

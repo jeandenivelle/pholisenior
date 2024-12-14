@@ -1,4 +1,9 @@
 
+// Helper functions that make it easy to construct terms
+// in code. Probably, all of these functions can go away
+// when we have a good (even a temporary) parser with which 
+// the test cases can be entered. 
+
 #ifndef LOGIC_TERMOPERATORS_ 
 #define LOGIC_TERMOPERATORS_  
 
@@ -8,9 +13,7 @@ namespace logic
 {
 
    inline term prop( const term& t ) 
-   {
-      return term( op_prop, t );
-   }
+      { return term( op_prop, t ); }
 
    inline term operator ! ( const term& t ) 
       { return term( op_not, t ); }

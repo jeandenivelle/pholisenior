@@ -27,10 +27,9 @@ int main( int argc, char* argv[] )
 #if 0
    tests::add_unique( bel );
    tests::add_settheory( bel );
-
 #endif
-   tests::typechecking( bel );
    std::cout << bel << "\n";
+   tests::typechecking( bel );
 #if 0
    auto truth = logic::type( logic::type_truthval );
    auto obj = logic::type( logic::type_obj );

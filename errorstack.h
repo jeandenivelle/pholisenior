@@ -22,7 +22,7 @@ struct error
    mutable bool reported;
       // Meaning is: Everyting that we have, has been reported.
 
-   // We have no nice interface, because we expect to be called only
+   // We have no nice interface, because we want to be called only
    // from errorstack.
 
    error( const std::string& top, seriousness ser ) 

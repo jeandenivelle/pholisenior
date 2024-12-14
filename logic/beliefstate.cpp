@@ -71,6 +71,16 @@ logic::exact logic::beliefstate::append( belief&& bl )
 }
 
 
+const std::vector< logic::exact > & 
+logic::beliefstate::getstructdefs( const identifier& id ) const
+{
+   auto p = structdefs. find( id );
+   if( p != structdefs. end( ))
+      return p -> second;
+   else
+      return empty; 
+}
+
 namespace
 {
    void print( std::ostream& out, const std::vector< logic::exact > & uses )

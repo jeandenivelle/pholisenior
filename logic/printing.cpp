@@ -14,18 +14,19 @@ void logic::type::print( std::ostream& out ) const
    case type_truthval:
       out << 'T';
       break;
+
    case type_obj:
       out << 'O';
       break;
-   case type_unchecked:
-      out << view_ident( ).id( );
+
+   case type_struct:
+      out << view_struct( ). def( );
       break;
 
-#if 0
-   case type_ident:
-      out << view_ident( ). id( );
+   case type_unchecked:
+      out << view_unchecked( ). id( );
       break;
-#endif
+
    case type_func:
       {
          auto a = view_func( );
@@ -38,8 +39,9 @@ void logic::type::print( std::ostream& out ) const
          out << ')';
       }
       break;
+
    default:
-      out << "unknown selector in type::print " << sel( ) << "\n";
+      out << "unknown selector in type::print: " << sel( ) << "\n";
       throw std::logic_error( "reached the unreachable" );
    }
 }

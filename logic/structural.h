@@ -16,29 +16,28 @@
 namespace logic
 {
 
-#if 0
-   error_report 
-   checkstructure( nameranking& rk, beliefstate& everything );
-      // Structurally check the beliefs and rank the identifiers. 
-      // The beliefstate is not const, because we resolve
-      // overloads. 
+   void
+   checkstructure( beliefstate& everything, errorstack& err );
+      // Structurally check the beliefs.
+      // The beliefstate cannot be const, 
+      // because we resolve overloads.
 
-#endif
-
+   void uncheck( type& tp );
    void uncheck( term& t );
-      // Make term t unchecked.
+      // Make a term t unchecked.
 
    exact::unordered_set allexact( const term& t );
       // Get the exact names in t.
 
 
-   // Technically seen, we should return std::optional< unit > ,
-   // because a metatype by itself can have only one type.
+   // Technically seen, we should return std::optional< T > ,
+   // where T is some unit type. 
+   // This is because a structural type by itself can have only one type.
    // This is a bit overdone, so we just use bool.
 
    bool
-   checkandresolve( const beliefstate& blfs, errorstack& errors,
-                    context& ctxt, type& tp );
+   checkandresolve( const beliefstate& blfs, errorstack& errors, 
+                    type& tp );
     
    std::optional< type > 
    checkandresolve( const beliefstate& blfs, errorstack& errors,
