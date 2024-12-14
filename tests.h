@@ -21,8 +21,8 @@ namespace tests
 
    void add_unique( logic::beliefstate& );
 
-   void typechecking( logic::beliefstate& );
-      // Tests for type checking.
+   void structural( logic::beliefstate& );
+      // Tests for structural type checking.
  
    void always_justification( const logic::beliefstate& bel );
    

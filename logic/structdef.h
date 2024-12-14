@@ -55,7 +55,7 @@ namespace logic
          return offset;
       }
 
-      // Needed because the thing is used in a tree generated
+      // Needed because the thing is needed in a tree generated
       // by TreeGen:
 
       bool very_equal_to( const structdef& def ) const

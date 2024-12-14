@@ -60,7 +60,7 @@ void logic::term::print( std::ostream& out ) const
 
    case op_unchecked:
       {
-         auto p = view_ident( );
+         auto p = view_unchecked( );
          out << p. id( );  
       }
       return;

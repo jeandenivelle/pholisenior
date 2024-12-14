@@ -22,8 +22,8 @@ struct error
    mutable bool reported;
       // Meaning is: Everyting that we have, has been reported.
 
-   // We have no nice interface, because we want to be called only
-   // from errorstack.
+   // We do not have a nice interface, because we want to be called 
+   // only from errorstack.
 
    error( const std::string& top, seriousness ser ) 
       : top( top ), 
@@ -125,6 +125,12 @@ public:
    void addheader( size_t start, const std::string& header )
    {
       vect. emplace_back( header, error::header );
+      sub. push_back( start );
+   }
+
+   void addheader( size_t start, builder&& bld )
+   {
+      vect. emplace_back( std::move( bld ). str( ), error::header );
       sub. push_back( start );
    }
 

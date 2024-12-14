@@ -675,22 +675,25 @@ void tests::add_seq( logic::beliefstate& blfs )
 }
 
 
-void tests::typechecking( logic::beliefstate& blfs )
+void tests::structural( logic::beliefstate& blfs )
 {
    using namespace logic;
    
    auto prod = blfs. at( exact(0)). first;
-   std::cout << prod << "\n";
+   // std::cout << prod << "\n";
 
    errorstack err; 
    context ctxt;
 
-   auto tm = prod. view_def( ). val( );
+   type Seq = type( type_unchecked, identifier( ) + "Seq" );
 
-   tm = ( term( op_false ) || term( op_true ) );
-   tm = implies( tm, implies( term( op_error ), tm ));
+   auto tm = apply( "0"_unchecked, { 0_db } );
+   tm = apply( "succ"_unchecked, { 0_db, tm } );
+   tm = prop( tm );
+   tm = forall( {{ "x", Seq }}, tm );
 
-   tm = prod. view_def( ). val( );
+   std::cout << tm << "\n";
+   tm. printstate( std::cout );
 
    auto res = checkandresolve( blfs, err, ctxt, tm );
 
@@ -699,18 +702,13 @@ void tests::typechecking( logic::beliefstate& blfs )
    else
       std::cout << "(no type)\n";
 
+   std::cout << err << "\n";
+
    if( ctxt. size( ) > 0 )
       throw std::runtime_error( "context not restored" );
 
    std::cout << "tm after checking = " << tm << "\n";
-
-   type Seq = type( type_unchecked, identifier( ) + "Seq" );
-   auto tp = type( type_func, type_obj, 
-                   { type_truthval, type_obj, Seq } );
-
-   auto bl = checkandresolve( blfs, err, tp );
-   std::cout << "check and resolve returned " << bl << "\n";
-   std::cout << tp << "\n";
+   tm. printstate( std::cout );
 
 #if 0 
    logic::structchecker chk( blfs, rk, exactname( identifier( ) + "thm", 0 ), 

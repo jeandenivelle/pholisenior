@@ -33,18 +33,20 @@
 %define term ( op_error ) 
 %option exact { op_exact } => # e : exact
 %option debruijn { op_debruijn } => # index : size_t  
-%option ident { op_unchecked } => # id : identifier
+%option unchecked { op_unchecked } => # id : identifier
 %option nullary { op_false, op_error, op_true } =>
 %option unary { op_not, op_prop } => sub : term  
 %option binary { op_and, op_or, op_implies, op_equiv, 
                  op_lazy_and, op_lazy_or, op_lazy_implies,
                  op_equals } => sub1: term, sub2: term 
 %option nary { op_kleene_and, op_kleene_or } => [ sub : term ]
-%option quant { op_forall, op_exists, op_kleene_forall, op_kleene_exists } 
+%option quant { op_forall, op_exists, 
+                op_kleene_forall, op_kleene_exists } 
       => body : term, [ var : vartype ]
 
 %option delta { op_delta } => pref : std::string, val : term, body : term
-%option typeddelta{ op_typeddelta } => var : vartype, val : term, body : term
+%option typeddelta{ op_typeddelta } 
+      => var : vartype, val : term, body : term
 
 %option apply { op_apply } => func : term, [ arg : term ] 
 %option lambda { op_lambda } => body : term, [ var : vartype ]

@@ -81,6 +81,16 @@ logic::beliefstate::getstructdefs( const identifier& id ) const
       return empty; 
 }
 
+const std::vector< logic::exact > & 
+logic::beliefstate::getfunctions( const identifier& id ) const
+{
+   auto p = functions. find( id );
+   if( p != functions. end( ))
+      return p -> second;
+   else
+      return empty; 
+}
+
 namespace
 {
    void print( std::ostream& out, const std::vector< logic::exact > & uses )
@@ -131,7 +141,6 @@ void logic::beliefstate::print( std::ostream& out ) const
       out << '\n';
    }
    out << '\n';
-
 }
 
 

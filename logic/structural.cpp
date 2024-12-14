@@ -327,22 +327,19 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
          auto func = tp. view_func( );
          {
             type res = func. extr_result( );
-            bool b = checkandresolve( blfs, errors, res );
-            func. update_result( res );
+            if( !checkandresolve( blfs, errors, res ))
+               correct = false;
 
-            correct = correct && b;  
+            func. update_result( res );
          }
            
          for( size_t i = 0; i != func. size( ); ++ i )
          {
             type arg = func. extr_arg(i);
-            bool b = checkandresolve( blfs, errors, arg );
+            if( !checkandresolve( blfs, errors, arg ))
+               correct = false;
+
             func. update_arg( i, arg );
- 
-            correct = correct && b;
-               // We do it like this, because we want to make 
-               // sure that checkandresolve is called on
-               // all arguments. We are harvesting errors.
          }
          return correct;
       }
@@ -378,7 +375,7 @@ logic::checkandresolve( const beliefstate& blfs,
                         errorstack& errors, context& ctxt, 
                         term& t ) 
 {
-   if constexpr( true )
+   if constexpr( false )
    {
       std::cout << "\n";
       std::cout << "checking type\n";
@@ -557,22 +554,31 @@ logic::checkandresolve( const beliefstate& blfs,
          auto quant = t. view_quant( );
 
          size_t contextsize = ctxt. size( );
-#if 0
-         {
-            metastructchecker meta( blfs, rk, goalname, quant. var( ). tp );
-            bool b = meta. check( ); 
-            if( !b )
-            {
-               for( auto& err : meta. errors )
-                  add_error( pos, std::move( err )); 
-            }
-         }
-#endif
+
+         size_t errstart = errors. size( );
+            // If we produce errors, they start here.
+
+         bool correct = true;
 
          for( size_t i = 0; i != quant. size( ); ++ i )
          {
-            ctxt. extend( quant. var(i). pref, quant. var(i). tp );
+            auto vt = quant. extr_var(i);
+             
+            if( !checkandresolve( blfs, errors, vt. tp ))
+               correct = false;
+
+            quant. update_var( i, vartype( vt. pref, vt. tp ));
          }
+
+         if( !correct )
+         {
+            auto err = errorheader( blfs, ctxt, t ); 
+            errors. addheader( errstart, std::move( err ));
+            return type( type_truthval ); 
+         }
+
+         for( size_t i = 0; i != quant. size( ); ++ i )
+            ctxt. extend( quant. var(i). pref, quant. var(i). tp );
 
          std::optional< type > bodytype; 
 
@@ -593,13 +599,11 @@ logic::checkandresolve( const beliefstate& blfs,
             auto err = errorheader( blfs, ctxt, t );
             err << "body of quantifier does have type T: ";
             pretty::print( err, blfs, bodytype. value( ), {0,0} );
-
          }
 
-         // The result is always truthval:
+         // Whatever happened, the result is always truthval:
 
          return type_truthval; 
-
       }
 
    case op_apply:
@@ -627,14 +631,41 @@ logic::checkandresolve( const beliefstate& blfs,
             return { };
 
          // If ap. func( ) is an inexact identifier, we treat this
-         // separately, because we have to find the proper overload. 
+         // separately, because we cannot simply recurse. 
+         // In order to find the correct overload of an identifier, 
+         // we need to know the types of the arguments.
 
          if( ap. func( ). sel( ) == op_unchecked )
          {
-            auto func = ap. extr_func( ); 
-            auto res = checkidentifier( blfs, errors, func, argtypes );
-            ap. update_func( func );  
-            return res;
+            const identifier& ident = ap. func( ). view_unchecked( ). id( );
+            std::cout << "ident = " << ident << "\n";
+
+            const auto& overl = blfs. getfunctions( ident );
+
+            if( overl. size( ) == 0 )
+            {
+               auto err = errorheader( blfs, ctxt, t );
+               err << "unknown identifier " << ident << " used as function";
+               errors. push( std::move( err ));
+               return { };
+            }
+
+            std::vector< std::pair< exact, type >> results;
+               // These will be the overloads that can be applied
+               // with their return types.
+ 
+            for( const auto& cand : overl )
+            {
+               auto res = try_apply( blfs, cand, argtypes, 0 );
+               if( res. has_value( ))
+                  results. push_back( { cand, std::move( res. value( )) } ); 
+            } 
+
+            std::cout << "applicable candidates\n";
+            for( const auto& cand : results )
+               std::cout << cand. first << " --> " << cand. second << "\n";
+
+            return { };
          }
 
          std::optional< type > ftype;
@@ -747,32 +778,11 @@ logic::checkandresolve( const beliefstate& blfs,
    throw std::logic_error( "typechecking: selector is not implemented" );
 }
 
-std::optional< logic::type >
-logic::checkidentifier( const beliefstate& blfs, 
-                        errorstack& errors, term& id,
-                        const std::vector< type > & argtypes )
-{
-   std::cout << "checking applicability of " << id << " on\n";
-   for( const auto& tp : argtypes )
-      std::cout << "   " << tp << "\n";
-   std::cout << "\n";
 
 #if 0
-   if( id. sel( ) != op_inexact && id. sel( ) != op_exact ) 
-      throw std::runtime_error( "checkinexact, not an identifier");
-
-   normident ident = id. view_ident( ). id( );
-
-   auto it = blfs. find( ident );  
-      // This is an iterator to a pair, the
-      // second part of which is a vector of candidate overloads.
-
-   if( it == blfs. end( ))
+   if( over. empty( ))
    {
-      add_error( pos, error( err_overload, 
-                             argtypes. begin( ), argtypes. end( ),
-                             "unknown identifier", ident )); 
-      return { }; 
+      auto hd = errorheader( blfs, context, 
    }
 
    const auto& cand = it -> second;
@@ -845,42 +855,7 @@ logic::checkidentifier( const beliefstate& blfs,
 
    return restype;
 #endif
-}
 
-#if 0
-std::optional< logic::type >
-logic::try_apply( const belief& bel, const std::vector< type > & argtypes )
-{
-   std::cout << "trying to apply " << bel << " on\n";
-   for( size_t i = 0; i != argtypes. size( ); ++ i )
-      std::cout << "   " << i << " : " << argtypes[i];
-   std::cout << "\n";
-
-   switch( bel. sel( ))
-   {
-      case bel_def: 
-         return try_apply( bel. view_def( ). tp( ), argtypes, 0 );
-
-      case bel_decl:
-         return try_apply( bel. view_decl( ). tp( ), argtypes, 0 );
-#if 0 
-      case bel_fld:
-         {
-            auto fld = bel. view_field( ); 
-
-            if( argtypes. size( ) >= 1 && 
-                argtypes. front( ). sel( ) == type_ident &&
-                argtypes. front( ). view_ident( ). id( ) == fld. parent( ))
-            {
-               return try_apply( fld. tp( ), argtypes, 1 );
-            }
-            return { };
-         }  
-#endif
-   }
-   throw std::runtime_error( "try_apply, belief is not implemented" );
-}
-#endif
 
 
 std::optional< logic::type > 
@@ -924,4 +899,50 @@ logic::try_apply( type ftype,
 }
 
 
+std::optional< logic::type >
+logic::try_apply( const beliefstate& blfs, exact name, 
+                  const std::vector< type > & argtypes, size_t pos )
+{
+   std::cout << "trying to apply belief " << name << " on\n";
+   for( size_t i = pos; i != argtypes. size( ); ++ i )
+      std::cout << "   " << i << " : " << argtypes[i];
+   std::cout << "\n";
+
+   const auto& bel = blfs. at( name ). first;
+   switch( bel. sel( )) 
+   {
+#if 0
+      case bel_def: 
+         return try_apply( bel. view_def( ). tp( ), argtypes, 0 );
+
+      case bel_decl:
+         return try_apply( bel. view_decl( ). tp( ), argtypes, 0 );
+#endif
+      case bel_fld:
+         {
+            auto fld = bel. view_field( ); 
+            auto parenttype = fld. parenttype( );
+           
+            if( pos + 1 <= argtypes. size( ) && 
+                argtypes[ pos ]. sel( ) == type_struct &&
+                argtypes[ pos ]. view_struct( ). def( ) == parenttype )
+            {
+               std::cout << "fits\n";
+               const auto& sdef = blfs. at( parenttype ). first;
+                  // the structdef.
+
+               if( sdef. sel( ) != bel_struct )
+                  throw std::runtime_error( "parent type not a structdef" );
+        
+               return try_apply(
+                  sdef. view_struct( ). def( ). at( fld. offset( )). tp,
+                  argtypes, pos + 1 );
+            }
+            return { };
+         }  
+
+   }
+
+   throw std::runtime_error( "try_apply, belief is not implemented" );
+}
 

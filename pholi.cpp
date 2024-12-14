@@ -17,6 +17,7 @@
 
 int main( int argc, char* argv[] )
 {
+
    logic::beliefstate bel;
 
    tests::add_strict_prod( bel ); 
@@ -29,7 +30,7 @@ int main( int argc, char* argv[] )
    tests::add_settheory( bel );
 #endif
    std::cout << bel << "\n";
-   tests::typechecking( bel );
+   tests::structural( bel );
 #if 0
    auto truth = logic::type( logic::type_truthval );
    auto obj = logic::type( logic::type_obj );
@@ -60,7 +61,6 @@ int main( int argc, char* argv[] )
    // tests::setsimplifications( );
    // tests::kbo( );
    // tests::tokenizer( );
-   // tests::typecheck( );
    // tests::betareduction( ); 
    // tests::naturaldeduction( ); 
    // tests::proofpluscom( );

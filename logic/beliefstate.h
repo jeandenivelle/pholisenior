@@ -86,8 +86,14 @@ namespace logic
       const std::vector< exact > & 
       getstructdefs( const identifier& id ) const;
 
+      const std::vector< exact > & 
+      getfunctions( const identifier& id ) const;
+
       std::pair< belief, dependencies > & at( exact id )
          { return vect. at( id. nr ); }
+
+      const std::pair< belief, dependencies > & at( exact id ) const
+         { return vect. at( id. nr ); } 
  
       void print( std::ostream& out ) const;
    };

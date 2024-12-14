@@ -497,8 +497,8 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          }
 #endif
    default:
-      std::cout << "pretty print, selector = " << t. sel( ) << "\n";
-      throw std::logic_error("no maching selector for in pretty_print(term)");
+      out << "UGLY( " << t << ")";
+      return; 
    }
 }
 

@@ -45,16 +45,14 @@ namespace logic
       // We check and resolve the overloads. We don't care about
       // dependencies. Dependencies are checked by a separate
       // function. 
-
-   std::optional< type >
-   checkidentifier( const beliefstate& blfs, errorstack& errors,
-                    term& func, const std::vector< type > & argtypes );
-
    
    std::optional< type >
    try_apply( type ftype, const std::vector< type > & argtypes, size_t pos );
       // Try to apply ftype on argtypes[ pos ... ].
 
+   std::optional< type >
+   try_apply( const beliefstate& blfs, exact name, 
+              const std::vector< type > & argtypes, size_t pos ); 
 }
 
 #endif
