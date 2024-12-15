@@ -39,7 +39,7 @@
 %option binary { op_and, op_or, op_implies, op_equiv, 
                  op_lazy_and, op_lazy_or, op_lazy_implies,
                  op_equals } => sub1: term, sub2: term 
-%option nary { op_kleene_and, op_kleene_or } => [ sub : term ]
+%option kleene { op_kleene_and, op_kleene_or } => [ sub : term ]
 %option quant { op_forall, op_exists, 
                 op_kleene_forall, op_kleene_exists } 
       => body : term, [ var : vartype ]

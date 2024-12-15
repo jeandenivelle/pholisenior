@@ -17,10 +17,9 @@ namespace logic
 {
 
    void
-   checkstructure( beliefstate& everything, errorstack& err );
+   checkandresolve( beliefstate& everything, errorstack& err );
       // Structurally check the beliefs.
-      // The beliefstate cannot be const, 
-      // because we resolve overloads.
+      // The beliefstate is not const, because we resolve overloads.
 
    void uncheck( type& tp );
    void uncheck( term& t );

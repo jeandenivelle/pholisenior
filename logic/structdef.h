@@ -64,8 +64,14 @@ namespace logic
       using const_iterator = std::vector< fielddef > :: const_iterator;
       const_iterator begin( ) const { return repr. begin( ); }
       const_iterator end( ) const { return repr. end( ); }
+
+      using iterator = std::vector< fielddef > :: iterator;
+      iterator begin( ) { return repr. begin( ); }
+      iterator end( ) { return repr. end( ); }
+      
       size_t size( ) const { return repr. size( ); }
       const fielddef& at( size_t offset ) const { return repr. at( offset ); }
+      fielddef& at( size_t offset ) { return repr. at( offset ); }
 
       void print( std::ostream& out ) const;
    };

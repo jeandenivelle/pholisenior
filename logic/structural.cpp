@@ -3,7 +3,6 @@
 #include "pretty.h"
 #include "kbo.h"
 
-#if 0
 namespace
 {
    // We don't want to type this all the time:
@@ -13,62 +12,48 @@ namespace
       return is_eq( logic::kbo::topleftright( tp1, tp2 ));
    }
 }
-#endif
 
 
-void logic::checkstructure( beliefstate& everything, errorstack& err )
+void logic::checkandresolve( beliefstate& everything, errorstack& err )
 {
-#if 0
-   for( auto& onename : everything )
+   std::cout << "checking the complete belief state\n";
+
+   for( size_t nr = 0; nr != everything. size( ); ++ nr )
    {
+      auto& blf = everything. at( exact( nr )). first; 
+      std::cout << blf << "\n";
+      switch( blf. sel( ))
       {
-         size_t nrstructs = 0; 
- 
-         for( size_t i = 0; i != onename. second. size( ); ++ i )
+
+      case bel_struct:
          {
-            if( onename. second[i]. sel( ) == bel_struct )
-               ++ nrstructs;
-         }
+            auto str = blf. view_struct( ). extr_def( );
+            std::cout << str << "\n";
+               // We need to extract the complete struct def. Frightening! 
 
-         if( nrstructs > 1 )
-         {
-            throw std::runtime_error( "more than one struct def" );
-               // Create a nice error message when it happens.
-         }
-      }
-
-      for( size_t i = 0; i != onename. second. size( ); ++ i )
-      {
-         exactname fullname = exactname( onename. first, i );
-
-         switch( onename. second[i]. sel( ))
-         {
-
-         case bel_struct:
+            for( auto& fld : str )
             {
-               const auto& str = onename.second[i]. view_struct( ). def( );;
-               for( const auto& fld : str )
+               auto ok = checkandresolve( everything, err, fld. tp );
+               if( !ok )
                {
-                  metastructchecker meta( everything, rk, fullname, fld. tp );
+                  throw std::runtime_error( "struct type is not OK" );
 
-                  auto dontcare = meta. check( );
-                  if( !meta. good( ))
-                  {
-                     for( const auto& err : meta. errors )
-                     {
-                        errors. extend( );
-                        errors. last( ) << "checking field " << fld.name;
-                        errors. last( ) << " of " << fullname << " : ";
-                        errors. last( ) << err;
-                     }
-                  }
-               } 
+               }
+            }
  
-               break;
+            const auto& ident = blf. name( );
+            if( everything. getstructdefs( ident ). size( ) > 1 )
+            {
+               throw std::runtime_error( "type has more than one def" );
+
             }
 
-         case bel_decl:
-            {
+            break;
+         }
+
+#if 0
+      case bel_decl:
+         {
                auto decl = onename.second[i]. view_decl( );
                metastructchecker meta( everything, rk, fullname, decl. tp( ));
 
@@ -83,42 +68,39 @@ void logic::checkstructure( beliefstate& everything, errorstack& err )
 
                break; 
             }  
-
-         case bel_def:
+#endif
+      case bel_def:
+         {
+            auto def = blf. view_def( );
             {
-               auto def = onename.second[i]. view_def( );
-              
-               structchecker chk( everything, rk, fullname, 
-                                  def. extr_val( ));  
-               auto bodytype = chk. check( );
-               def. update_val( chk. goal );
-              
-               if( !chk. good( ))
+               auto tp = def. extr_tp( );
+               if( !checkandresolve( everything, err, tp ))
+                  throw std::runtime_error( "def: type is wrong" );
+
+               std::cout << tp << "\n";
+               def. update_tp( tp );
+            }
+
+            {
+               auto tm = def. extr_val( );
+               context ctxt;
+               auto tp = checkandresolve( everything, err, ctxt, tm );
+               if( !tp. has_value( ))
                {
-                  for( const auto& err : chk. errors ) 
-                  {
-                     errors. extend( );
-                     errors. last( ) << "while checking the definition of ";
-                     errors. last( ) << fullname << " : at " << err. first << " " << err. second;
-                  }
+                  throw std::runtime_error( "def : term is ill-typed" );
+
                }
                else
                {
-                  if( !equal( bodytype. value( ), def. tp( )) )
-                  {
-                     std::cout << bodytype. value( ) << "\n";
-                     std::cout << onename.second[i] << "\n";
-                     errors. extend( );
-                     errors. last( ) << "in definition " << fullname << " ";
-                     errors. last( ) << "the true type is "
-                                     << bodytype. value( ) << ", ";
-                     errors. last( ) << "while the declared type is " 
-                                     << def. tp( );  
-                  }
-               }               
-               break;
-            } 
+                  if( !equal( tp. value( ), def. tp( )))
+                     throw std::runtime_error( "the types are different" );
 
+               }
+            }
+
+            break; 
+         } 
+#if 0
          case bel_thm:
             {
                auto thm = onename.second[i]. view_thm( );
@@ -177,16 +159,27 @@ void logic::checkstructure( beliefstate& everything, errorstack& err )
                break;
             }
 
-         default:
-            std::cout << "checkstructure not implemented for ";
-            std::cout << onename. second[i]. sel( ) << "\n";
-            throw std::runtime_error( "quitting" );
-         }
-      }
-
-   }
-   return errors; 
 #endif
+      case bel_constr:
+         {
+            // There is not much to check.
+
+            auto sdef = blf. view_constr( ). tp( );
+            if( everything. at( sdef ). first. sel( ) != bel_struct )
+            {
+               // This means that the data structure is corrupted. 
+               throw std::runtime_error( "constr does not construct struct" );
+            }            
+
+            break;
+         }
+
+      default:
+         std::cout << "checkstructure not implemented for ";
+         std::cout << blf. sel( ) << "\n";
+         throw std::runtime_error( "quitting" );
+      }
+   }
 }
 
 
@@ -275,9 +268,9 @@ bool
 logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
                         type& tp ) 
 {
-   if constexpr( false )
+   if constexpr( true )
    {
-      std::cout << "checkandresolve ";
+      std::cout << "checking type ";
       pretty::print( std::cout, blfs, tp, {0,0} );
       std::cout << "\n";
    }
@@ -375,10 +368,10 @@ logic::checkandresolve( const beliefstate& blfs,
                         errorstack& errors, context& ctxt, 
                         term& t ) 
 {
-   if constexpr( false )
+   if constexpr( true )
    {
       std::cout << "\n";
-      std::cout << "checking type\n";
+      std::cout << "checking term\n";
       auto un = pretty::print( std::cout, blfs, ctxt );
       std::cout << "term:\n   ";
       pretty::print( std::cout, blfs, un, t, {0,0} );
@@ -387,41 +380,43 @@ logic::checkandresolve( const beliefstate& blfs,
 
    switch ( t. sel( )) 
    {
-#if 0
-   case op_inexact:
    case op_exact:
       {
-         auto id = t. view_ident( ); 
-         auto p = blfs. find( id. id( ));
-         if( p == blfs. end( ))
-         {
-            throw std::runtime_error( "not found" ); 
-         }
-        
-         if( t. sel( ) == op_exact )
-         {
-            if( id. index( ) >= p -> second. size( ))
-               throw std::runtime_error( "wrong exact" );
-            else
-            {
-               auto res = try_apply( p -> second[ id. index( ) ], { } ); 
-               if( res. has_value( ))
-                  std::cout << "won " << res. value( ) << "\n";
-               else
-                  std::cout << "lost\n"; 
-            }
- 
-         } 
-         else
-         {
-            std::cout << "inexact\n";
-
-         }
-
-         throw std::runtime_error( "not implemented" );
+         auto err = errorheader( blfs, ctxt, t );
+         err << "Can't check an exact identifier!\n";
+         err << "(The term must be made unchecked first. ";
+         err << "This is an internal problem) \n";
+         errors. push( std::move( err ));
+         return { };
       }
 
-#endif
+   case op_unchecked:
+      {
+         auto un = t. view_unchecked( );
+         const auto& ident = un. id( );
+         const auto& overcands = blfs. getfunctions( ident ); 
+
+         if( overcands. size( ) == 0 )
+         { 
+            auto err = errorheader( blfs, ctxt, t );
+            err << "unknown identifier " << ident << " used as constant";
+            errors. push( std::move( err ));
+            return { };
+         } 
+
+         if( overcands. size( ) > 1 )
+         {
+            auto err = errorheader( blfs, ctxt, t );
+            err << "identifier with multiple overloads ";
+            err << "used without arguments: " << ident << "\n";
+            errors. push( std::move( err ));
+            return { };
+         }
+
+         const std::vector< type > empty;
+         return try_apply( blfs, overcands[0], empty, 0 );
+      }
+
    case op_debruijn:
       {
          size_t index = t. view_debruijn( ). index( );
@@ -547,6 +542,31 @@ logic::checkandresolve( const beliefstate& blfs,
          return type( type_truthval ); 
       }
 
+   case op_kleene_and:
+   case op_kleene_or:
+      {
+         auto kl = t. view_kleene( ); 
+
+         for( size_t i = 0; i != kl. size( ); ++ i )
+         {
+            auto sub = kl. extr_sub(i);
+
+            auto tp = checkandresolve( blfs, errors, ctxt, sub );
+
+            if( tp. has_value( ) && tp. value( ). sel( ) != type_truthval )
+            {
+               auto err = errorheader( blfs, ctxt, t );
+               err << i << "-th argument of equality must be T, but is ";
+               pretty::print( err, blfs, tp. value( ), {0,0} );
+               errors. push( std::move( err ));
+            }
+
+            kl. update_sub( i, sub );
+         }
+
+         return type( type_truthval );
+      }
+
    case op_forall:
    case op_exists:
    case op_kleene_forall:
@@ -639,11 +659,11 @@ logic::checkandresolve( const beliefstate& blfs,
          if( ap. func( ). sel( ) == op_unchecked )
          {
             const identifier& ident = ap. func( ). view_unchecked( ). id( );
-            std::cout << "ident = " << ident << "\n";
 
-            const auto& overl = blfs. getfunctions( ident );
+            const auto& overcands = blfs. getfunctions( ident );
+               // overload candidates.
 
-            if( overl. size( ) == 0 )
+            if( overcands. size( ) == 0 )
             {
                auto err = errorheader( blfs, ctxt, t );
                err << "unknown identifier " << ident << " used as function";
@@ -652,10 +672,10 @@ logic::checkandresolve( const beliefstate& blfs,
             }
 
             std::vector< std::pair< exact, type >> results;
-               // These will be the overloads that can be applied
-               // with their return types.
+               // These will be the overloads that can be applied,
+               // together with their return types.
 
-            for( const auto& cand : overl )
+            for( const auto& cand : overcands )
             {
                auto res = try_apply( blfs, cand, argtypes, 0 );
                if( res. has_value( ))
@@ -790,84 +810,6 @@ logic::checkandresolve( const beliefstate& blfs,
 }
 
 
-#if 0
-   if( over. empty( ))
-   {
-      auto hd = errorheader( blfs, context, 
-   }
-
-   const auto& cand = it -> second;
-      // This is the vector of overload candidates. There must be
-      // exactly one that can be used.
-      // We do not have a 'nearest fit' rule like C++ or Java has.
-
-   size_t nrfits = 0;
-   size_t lastfit = 0;   // Only meaningful when nrfits > 0.
-
-   std::optional< type > restype;
- 
-   for( size_t i = 0; i != cand. size( ); ++ i ) 
-   {
-      std::optional< type > tp = try_apply( cand[i], argtypes );
-      if( tp. has_value( ))
-      { 
-         ++ nrfits; 
-         lastfit = i; 
-         restype = std::move( tp ); 
-      }
-   }
-
-   // If id is an exact identifier, it must contain the overload
-   // that we would have found if we would have been inexact,
-   // otherwise we make it inexact again: 
-
-   if( id. sel( ) == op_exact )
-   {
-      if( nrfits != 1 || lastfit != id. view_ident( ). index( ))
-      {
-         add_error( pos,
-                error( err_overload, argtypes. begin( ), argtypes. end( ),
-                       "wrong exact overload for", ident ));
-
-         id = term( op_inexact, ident, 0 );
-         return { }; 
-      }
-     
-      if( !rk. setbelow( exactname( ident, lastfit ), goalname ))
-         throw std::runtime_error( "circularity" );
-
-      return restype;  
-   }
-
-   // id is not exact :
- 
-   if( nrfits == 0 ) 
-   {
-      add_error( pos, 
-            error( err_overload, argtypes. begin( ), argtypes. end( ),
-      id = term( op_inexact, ident, 0 );
-      return { };
-   }
-
-   if( nrfits > 1 )
-   {
-      add_error( pos,
-          error( err_overload, argtypes. begin( ), argtypes. end( ),
-                 "more than one overload for", ident ));
-      return { }; 
-   }
-
-   // We make id exact, and mark that it should be below goalname. 
-
-   id = term( op_exact, ident, lastfit );
-   if( !rk. setbelow( exactname( ident, lastfit ), goalname ))
-      throw std::runtime_error( "circularity" );
-
-   return restype;
-#endif
-
-
-
 std::optional< logic::type > 
 logic::try_apply( type ftype, 
                   const std::vector< type > & argtypes, size_t pos )
@@ -921,13 +863,18 @@ logic::try_apply( const beliefstate& blfs, exact name,
    const auto& bel = blfs. at( name ). first;
    switch( bel. sel( )) 
    {
-#if 0
       case bel_def: 
-         return try_apply( bel. view_def( ). tp( ), argtypes, 0 );
+         {
+            const auto& tp = bel. view_def( ). tp( ); 
+            return try_apply( tp, argtypes, 0 );
+         }
 
       case bel_decl:
-         return try_apply( bel. view_decl( ). tp( ), argtypes, 0 );
-#endif
+         {
+            const auto& tp = bel. view_decl( ). tp( );
+            return try_apply( tp, argtypes, 0 );
+         }
+
       case bel_fld:
          {
             auto fld = bel. view_field( ); 

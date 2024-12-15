@@ -711,13 +711,14 @@ void tests::structural( logic::beliefstate& blfs )
 
    auto tm1 = apply( "0"_unchecked, { 0_db } );
    auto tm2 = apply( "succ"_unchecked, { 1_db } );
-   tm = apply( "Seq"_unchecked, { tm1, tm2 } );
+   tm = apply( "Seq"_unchecked, { tm1, tm2, term( op_exact, exact(4) ) } );
    
    tm = term( op_equals, 0_db, tm );
 
-   tm = lambda( {{ "x", Zig }, { "y", Zag }}, tm );
+   tm = lambda( {{ "x", Seq }, { "y", Seq }}, tm );
    std::cout << "\n\n";
    std::cout << tm << "\n";
+
    res = checkandresolve( blfs, err, ctxt, tm );
 
    if( res. has_value( ))
@@ -730,26 +731,7 @@ void tests::structural( logic::beliefstate& blfs )
    if( ctxt. size( ) > 0 )
       throw std::runtime_error( "context not restored" );
 
-#if 0 
-   logic::structchecker chk( blfs, rk, exactname( identifier( ) + "thm", 0 ), 
-      op_false && ! exists( { "s", "Seq"_unchecked }, apply( "succ"_unchecked, { 0_db, 
-                                      apply( "0"_unchecked, { 0_db } ) } ) ==
-                                   apply( "0"_unchecked, { 0_db } )) );
-
-   auto pr = chk. check( ); 
-   if( pr. has_value( ))
-      std::cout << "the type is " << pr. value( ) << "\n";
-   else
-      std::cout << "(no type)\n";
-
-   pr = chk. check( );
-   std::cout << "after second time checking " << chk << "\n";
-
-   std::cout << "good = " << chk. good( ) << "\n";
-   std::cout << chk << "\n";
-
-   auto err = checkstructure( rk, blfs );
-#endif
+   checkandresolve( blfs, err );
 }
 
 
