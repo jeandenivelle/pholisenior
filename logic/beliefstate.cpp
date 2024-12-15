@@ -11,6 +11,7 @@ logic::exact logic::beliefstate::append( belief&& bl )
       {
          auto exstruct = exact( vect. size( ));
             // The exact name that the struct will have.
+
          structdefs[ bl. name( ) ]. push_back( exstruct );
 
          // We temporarily insert an empty belief, because we still need
@@ -35,9 +36,7 @@ logic::exact logic::beliefstate::append( belief&& bl )
          {
             auto fieldfunc = belief( logic::bel_fld, 
                                      sdef. at( offset ). name, 
-                                     sdef. at( offset ). tp, 
-                                     exstruct,
-                                     offset );
+                                     exstruct, offset );
             auto exfld = exact( vect. size( ));
             functions[ sdef. at( offset ). name ]. push_back( exfld ); 
             vect. emplace_back( std::move( fieldfunc ), dependencies( ));

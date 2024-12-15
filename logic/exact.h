@@ -28,6 +28,20 @@ namespace logic
       bool operator != ( exact e ) const
          { return nr != e. nr; }
 
+      // exact must be ordered, because of KBO:
+
+      bool operator > ( exact e ) const
+         { return nr > e. nr; }
+
+      bool operator < ( exact e ) const
+         { return nr < e. nr; }
+
+      bool operator >= ( exact e ) const
+         { return nr >= e. nr; }
+
+      bool operator <= ( exact e ) const
+         { return nr <= e. nr; }
+
       struct equal_to
       {
          equal_to( ) = default;

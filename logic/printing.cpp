@@ -239,8 +239,7 @@ void logic::belief::print( std::ostream& out ) const
       {
          auto f = view_field( );
          out << name( ) << " : field at offset " << f. offset( );
-         out << " in " << f. parenttype( );
-         out << " with declared type " << f. tp( );
+         out << " in " << f. sdef( );
       }
       return;
 

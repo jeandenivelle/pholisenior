@@ -17,19 +17,19 @@
 
 int main( int argc, char* argv[] )
 {
-   logic::beliefstate bel;
+   logic::beliefstate blfs;
 
-   tests::add_strict_prod( bel ); 
+   tests::add_strict_prod( blfs ); 
 #if 0
-   tests::add_function( bel );
+   tests::add_function( blfs );
 #endif
-   tests::add_seq( bel );
+   tests::add_seq( blfs );
 #if 0
-   tests::add_unique( bel );
-   tests::add_settheory( bel );
+   tests::add_unique( blfs );
+   tests::add_settheory( blfs );
 #endif
-   std::cout << bel << "\n";
-   tests::structural( bel );
+   std::cout << blfs << "\n";
+   tests::structural( blfs );
 #if 0
    auto truth = logic::type( logic::type_truthval );
    auto obj = logic::type( logic::type_obj );
@@ -39,9 +39,12 @@ int main( int argc, char* argv[] )
    ff = logic::type( logic::type_func, ff, { } ); 
    std::cout << ff << "\n";
 
-   auto state = tests::always_justification( bel );
+   auto state = tests::always_justification( blfs );
    std::cout << state << "\n";
 #endif
+
+   std::cout << blfs << "\n";
+   std::cout << "(after checking)\n";
 
    return 0;
 

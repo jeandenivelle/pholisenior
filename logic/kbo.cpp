@@ -109,24 +109,33 @@ size_t logic::kbo::weight( const term& t )
 #endif
 
 std::strong_ordering
-logic::kbo::topleftright( const type& t1, const type& t2 ) 
+logic::kbo::topleftright( const type& tp1, const type& tp2 ) 
 {
-   if( t1. sel( ) < t2. sel( ))
+   if( tp1. sel( ) < tp2. sel( ))
       return std::strong_ordering::less;
-   if( t1. sel( ) > t2. sel( ))
+   if( tp1. sel( ) > tp2. sel( ))
       return std::strong_ordering::greater;
  
-   switch( t1. sel()) 
+   switch( tp1. sel()) 
    {
    case type_truthval:
    case type_obj:
       return std::strong_ordering::equal;
 
+   case type_struct:
+      {
+         auto s1 = tp1. view_struct( ). def( );
+         auto s2 = tp2. view_struct( ). def( );
+         if( s1 < s2 ) return std::strong_ordering::less;
+         if( s1 > s2 ) return std::strong_ordering::greater;
+         return std::strong_ordering::equal;
+      } 
+  
 #if 0
    case type_ident:
       { 
-         normident n1 = t1. view_ident( ). id( );
-         normident n2 = t2. view_ident( ). id( ); 
+         normident n1 = tp1. view_ident( ). id( );
+         normident n2 = tp2. view_ident( ). id( ); 
 
          if( n1 != n2 )
          {
@@ -138,25 +147,26 @@ logic::kbo::topleftright( const type& t1, const type& t2 )
          return std::strong_ordering::equal;
       }
 #endif
+
    case logic::type_func:
       {
-         auto func_t1 = t1. view_func( );
-         auto func_t2 = t2. view_func( );
+         auto func1 = tp1. view_func( );
+         auto func2 = tp2. view_func( );
 
          std::strong_ordering ord =  
-            topleftright( func_t1. result(), func_t2. result() );
+            topleftright( func1. result(), func2. result() );
 
          if( ord != std::strong_ordering::equal )
             return ord;
 
-         if( func_t1. size( ) < func_t2. size( )) 
+         if( func1. size( ) < func2. size( )) 
             return std::strong_ordering::less;
-         if( func_t1. size( ) > func_t2. size( )) 
+         if( func1. size( ) > func2. size( )) 
             return std::strong_ordering::greater;
 
-         for( size_t i = 0; i < func_t1. size(); ++i ) 
+         for( size_t i = 0; i < func1. size(); ++i ) 
          {
-            ord = topleftright( func_t1. arg(i), func_t2. arg(i) );
+            ord = topleftright( func1. arg(i), func2. arg(i) );
             if( ord != std::strong_ordering::equal )
                return ord;
          }
@@ -165,7 +175,7 @@ logic::kbo::topleftright( const type& t1, const type& t2 )
       }
 
    default:
-      std::cout << "the selector is " << t1. sel( ) << "\n";
+      std::cout << "the selector is " << tp1. sel( ) << "\n";
       throw std::logic_error("unknown selector in topleftright()");
    }
 }

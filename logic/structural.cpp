@@ -21,7 +21,9 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
    for( size_t nr = 0; nr != everything. size( ); ++ nr )
    {
       auto& blf = everything. at( exact( nr )). first; 
-      std::cout << blf << "\n";
+
+      size_t errstart = err. size( );
+
       switch( blf. sel( ))
       {
 
@@ -33,19 +35,19 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
 
             for( auto& fld : str )
             {
-               auto ok = checkandresolve( everything, err, fld. tp );
-               if( !ok )
+               checkandresolve( everything, err, fld. tp );
+               if( err. size( ) > errstart )
                {
                   throw std::runtime_error( "struct type is not OK" );
-
                }
             }
+
+            blf. view_struct( ). update_def( std::move( str ));
  
             const auto& ident = blf. name( );
             if( everything. getstructdefs( ident ). size( ) > 1 )
             {
                throw std::runtime_error( "type has more than one def" );
-
             }
 
             break;
@@ -69,15 +71,13 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
                break; 
             }  
 #endif
+
       case bel_def:
          {
             auto def = blf. view_def( );
             {
                auto tp = def. extr_tp( );
-               if( !checkandresolve( everything, err, tp ))
-                  throw std::runtime_error( "def: type is wrong" );
-
-               std::cout << tp << "\n";
+               checkandresolve( everything, err, tp );
                def. update_tp( tp );
             }
 
@@ -85,81 +85,58 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
                auto tm = def. extr_val( );
                context ctxt;
                auto tp = checkandresolve( everything, err, ctxt, tm );
-               if( !tp. has_value( ))
+               if( tp. has_value( ) && !equal( tp. value( ), def. tp( )))
                {
-                  throw std::runtime_error( "def : term is ill-typed" );
-
+                  throw std::runtime_error( "the types are different" );
                }
-               else
-               {
-                  if( !equal( tp. value( ), def. tp( )))
-                     throw std::runtime_error( "the types are different" );
+               def. update_val( tm );
+            }
 
-               }
+            if( err. size( ) > errstart )
+            {
+               errorstack::builder bld;
+               bld << "in definition of " << blf. name( ) << ":";
+               err. addheader( errstart, std::move( bld ));
+
+            }
+            break; 
+         } 
+
+      case bel_thm:
+         {
+            auto thm = blf. view_thm( );
+            auto form = thm. extr_form( );
+            context ctxt;
+            auto tp = checkandresolve( everything, err, ctxt, form );
+
+            if( tp. has_value( ) && tp. value( ). sel( ) != type_truthval )
+            {
+                  throw std::runtime_error( "theorem not well-typed" );
+            }
+
+            if( err. size( ) > errstart )
+               throw std::runtime_error( "thm: add a header" );
+
+            thm. update_form( form );
+            break;
+         }
+
+      case bel_fld:
+         {
+            // There is not much to check because field functions
+            // are automatically generated from the struct definitions.
+
+            auto sdef = blf. view_field( ). sdef( );
+            if( everything. at( sdef ). first. sel( ) != bel_struct )
+            {
+               // This means that the data structure is corrupted:
+
+               throw std::logic_error( "field does not refer to struct" );
             }
 
             break; 
-         } 
-#if 0
-         case bel_thm:
-            {
-               auto thm = onename.second[i]. view_thm( );
-               structchecker chk( everything, rk, fullname, thm. extr_form( ));
-               chk. check( );
-               thm. update_form( chk. goal ); 
+         }
 
-               if( !chk. good( ))
-               {
-                  for( const auto& err : chk. errors )
-                  {
-                     errors. extend( );
-                     errors. last( ) << "while checking theorem ";
-                     errors. last( ) << fullname << " : at " << err. first << " " << err. second;
-                  }
-               }
-               break;
-            }
-
-         case bel_fld:
-            {
-               auto fld = onename.second[i]. view_field( ); 
-
-               auto p = everything. find( fld. parent( ));
-               if( p == everything. end( ))
-                  throw std::runtime_error( "type not found" );
-
-               size_t def = 0;
-               size_t nrtypes = 0;
-               for( size_t i = 0; i != p -> second. size( ); ++ i )
-               {
-                  if( p -> second[i]. sel( ) == bel_struct )
-                  {
-                     ++ nrtypes;
-                     def = i;
-                  }
-               }
-
-               if( nrtypes != 1 )
-                   throw std::runtime_error( "problem with type definition" );
-
-               const auto& sdef = p -> second[ def ]. view_struct( ). def( );
-
-               if( fld. offset( ) >= sdef. size( ))
-               {
-                  throw std::runtime_error( "struct out of range" );
-               }
- 
-               if( !equal( sdef. at( fld. offset( ) ). tp, fld. tp( )) )
-               {
-                  throw std::runtime_error( "struct types differ" );
-               }
- 
-               rk. setbelow( fullname, exactname( fld. parent( ), def ));
-
-               break;
-            }
-
-#endif
       case bel_constr:
          {
             // There is not much to check.
@@ -268,7 +245,7 @@ bool
 logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
                         type& tp ) 
 {
-   if constexpr( true )
+   if constexpr( false )
    {
       std::cout << "checking type ";
       pretty::print( std::cout, blfs, tp, {0,0} );
@@ -368,7 +345,7 @@ logic::checkandresolve( const beliefstate& blfs,
                         errorstack& errors, context& ctxt, 
                         term& t ) 
 {
-   if constexpr( true )
+   if constexpr( false )
    {
       std::cout << "\n";
       std::cout << "checking term\n";
@@ -878,13 +855,14 @@ logic::try_apply( const beliefstate& blfs, exact name,
       case bel_fld:
          {
             auto fld = bel. view_field( ); 
-            auto parenttype = fld. parenttype( );
-           
+            auto structtype = fld. sdef( );
+
+            std::cout << "going here?\n";           
             if( pos + 1 <= argtypes. size( ) && 
                 argtypes[ pos ]. sel( ) == type_struct &&
-                argtypes[ pos ]. view_struct( ). def( ) == parenttype )
+                argtypes[ pos ]. view_struct( ). def( ) == structtype )
             {
-               const belief& parentblf = blfs. at( parenttype ). first;
+               const belief& parentblf = blfs. at( structtype ). first;
                   // The belief in the parent.
 
                if( parentblf. sel( ) != bel_struct )
@@ -910,8 +888,6 @@ logic::try_apply( const beliefstate& blfs, exact name,
 
             const structdef& sdef =
                structblf. view_struct( ). def( ); 
-
-            std::cout << sdef << "\n";
 
             if( pos + sdef. size( ) != argtypes. size( ))
                return { };

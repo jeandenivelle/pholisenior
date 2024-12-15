@@ -655,8 +655,8 @@ void tests::add_seq( logic::beliefstate& blfs )
       auto f1 = apply( 0_db, { apply( "0"_unchecked, { 2_db } ),
                                apply( "0"_unchecked, { 1_db } ) } );
 
-      auto f2 = apply( "gen"_unchecked, { 3_db, 1_db } ) &&
-                apply( "gen"_unchecked, { 2_db, 0_db } );
+      auto f2 = apply( "gen"_unchecked, { 4_db, 1_db } ) &&
+                apply( "gen"_unchecked, { 3_db, 0_db } );
 
       auto fin = apply( 2_db, { apply( "succ"_unchecked, { 4_db, 1_db } ),
                                 apply( "succ"_unchecked, { 3_db, 0_db } ) } );
@@ -711,7 +711,7 @@ void tests::structural( logic::beliefstate& blfs )
 
    auto tm1 = apply( "0"_unchecked, { 0_db } );
    auto tm2 = apply( "succ"_unchecked, { 1_db } );
-   tm = apply( "Seq"_unchecked, { tm1, tm2, term( op_exact, exact(4) ) } );
+   tm = apply( "Seq"_unchecked, { tm1, tm2 } );
    
    tm = term( op_equals, 0_db, tm );
 
@@ -732,6 +732,7 @@ void tests::structural( logic::beliefstate& blfs )
       throw std::runtime_error( "context not restored" );
 
    checkandresolve( blfs, err );
+   std::cout << err << "\n";
 }
 
 

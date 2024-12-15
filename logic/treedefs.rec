@@ -105,11 +105,10 @@
 %option def { bel_def } => val : term, tp : type
 %option asm { bel_asm } => form : term, prop : proof
 %option thm { bel_thm } => form : term, prop : proof, correct : proof
-%option field { bel_fld } => # tp : type, parenttype : exact, offset : size_t 
+%option field { bel_fld } => sdef : exact, offset : size_t 
    // The meanings are:
-   //    tp is the declared structural type of the field. 
-   //    parenttype is the exact structural type that the field belongs to,
-   //    and offset is the index of the field in the parent.
+   //    structtype is the exact structural type that we belong to,
+   //    and offset is our index in this struct.
 %option constr { bel_constr } => # tp : exact
    // Constructor, e.g. Seq(O,O(O)). 
    // tp is the type that we are the constructor of. 
