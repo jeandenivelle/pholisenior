@@ -1,7 +1,7 @@
 
 #include "kbo.h"
 
-size_t logic::kbo::weight( const type& tp )
+logic::kbo::weight_t logic::kbo::weight( const type& tp )
 {
 #if 0
    switch( tp. sel( )) 
@@ -27,7 +27,7 @@ size_t logic::kbo::weight( const type& tp )
 }
 
 #if 0
-size_t logic::kbo::weight( const term& t ) 
+logic::weight_t logic::kbo::weight( const term& t ) 
 {
    switch( t.sel()) 
    {
@@ -77,7 +77,7 @@ size_t logic::kbo::weight( const term& t )
       }
    case logic::sel_appl: 
       {
-         size_t w = 0;
+         weight_t w = 0;
          auto appl_t = t.view_appl();
          for(size_t i=0; i<appl_t.size(); ++i)
             w += weight(appl_t.arg(i));

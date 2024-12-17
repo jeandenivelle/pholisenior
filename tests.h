@@ -24,11 +24,11 @@ namespace tests
    void structural( logic::beliefstate& );
       // Tests for structural type checking.
  
-   void always_justification( const logic::beliefstate& bel );
+   void add_proof( logic::beliefstate& bel );
    
-#if 0
-   void logicalsimplifications( ); 
+   void transformations( logic::beliefstate& blfs ); 
 
+#if 0
    void kbo( );
 
    void replacements( );

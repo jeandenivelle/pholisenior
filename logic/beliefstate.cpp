@@ -46,6 +46,14 @@ logic::exact logic::beliefstate::append( belief&& bl )
          return exstruct;
       }      
 
+   case bel_decl:
+      {
+         exact ex = exact( vect. size( ));
+         functions[ bl. name( ) ]. push_back( ex );
+         vect. emplace_back( std::move( bl ), dependencies( ));
+         return ex; 
+      }
+
    case bel_def:
       {
          exact ex = exact( vect. size( ));
@@ -54,7 +62,7 @@ logic::exact logic::beliefstate::append( belief&& bl )
          return ex;
       }
 
-   case bel_thm:
+   case bel_form:
       {
          exact ex = exact( vect. size( )); 
          formulas[ bl. name( ) ]. push_back( ex );
@@ -89,6 +97,17 @@ logic::beliefstate::getfunctions( const identifier& id ) const
    else
       return empty; 
 }
+
+const std::vector< logic::exact > & 
+logic::beliefstate::getformulas( const identifier& id ) const
+{
+   auto p = formulas. find( id );
+   if( p != formulas. end( ))
+      return p -> second;
+   else
+      return empty;
+}
+
 
 namespace
 {

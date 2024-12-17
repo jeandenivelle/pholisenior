@@ -102,10 +102,10 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             break; 
          } 
 
-      case bel_thm:
+      case bel_form:
          {
-            auto thm = blf. view_thm( );
-            auto form = thm. extr_form( );
+            auto f = blf. view_form( );
+            auto form = f. extr_form( );
             context ctxt;
             auto tp = checkandresolve( everything, err, ctxt, form );
 
@@ -117,7 +117,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             if( err. size( ) > errstart )
                throw std::runtime_error( "thm: add a header" );
 
-            thm. update_form( form );
+            f. update_form( form );
             break;
          }
 

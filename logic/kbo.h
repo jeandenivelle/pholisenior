@@ -10,10 +10,13 @@
 
 namespace logic
 {
+
    namespace kbo 
    {
-      size_t weight( const type& tp );
-      size_t weight( const term& t );
+      using weight_t = uint_least64_t; 
+
+      weight_t weight( const type& tp );
+      weight_t weight( const term& t );
    
       std::strong_ordering topleftright( const type& tp1, const type& tp2 );
 
@@ -25,8 +28,8 @@ namespace logic
  
       inline std::strong_ordering compare( const term& t1, const term& t2 )
       {
-         size_t w1 = weight( t1 );
-         size_t w2 = weight( t2 );
+         weight_t w1 = weight( t1 );
+         weight_t w2 = weight( t2 );
 
          if( w1 < w2 ) return std::strong_ordering::less;
          if( w1 > w2 ) return std::strong_ordering::greater;

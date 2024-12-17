@@ -89,6 +89,9 @@ namespace logic
       const std::vector< exact > & 
       getfunctions( const identifier& id ) const;
 
+      const std::vector< exact > & 
+      getformulas( const identifier& id ) const;
+
       std::pair< belief, dependencies > & at( exact id )
          { return vect. at( id. nr ); }
 

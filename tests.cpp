@@ -7,8 +7,9 @@
 #include "logic/kbo.h"
 #include "logic/structural.h"
 
+#include "reso/transformations.h"
+
 #if 0
-// #include "logic/simplifications.h"
 // #include "logic/replacements.h" 
 // #include "logic/normalization.h"
 // #include "reso/subst.h"
@@ -241,33 +242,32 @@ void tests::add_settheory( logic::beliefstate& blfs )
    type O2O = type( type_func, O, { O } );
    type O2T = type( type_func, T, { O } );
 
-   logic::structdef seqdef;
-   seqdef. append( identifier( ) + "setlike", type( type_func, T, { O2T } ));
-   seqdef. append( identifier( ) + "mat", type( type_func, O, { O2T } ));
+   logic::structdef setdef;
+   setdef. append( identifier( ) + "setlike", type( type_func, T, { O2T } ));
+   setdef. append( identifier( ) + "mat", type( type_func, O, { O2T } ));
 
-#if 0
-   blfs. add( identifier( ) + "settheory", belief( bel_struct, seq ));
+   blfs. append( belief( bel_struct, identifier( ) + "Settheory", setdef ));
 
-   auto typed = forall( { "P", O2T }, 
+   auto typed = forall( {{ "P", O2T }}, 
       implies( apply( "strict"_unchecked, { 0_db } ), 
          prop( apply( "setlike"_unchecked, { 1_db, 0_db } )) ) );
 
    auto empty = 
-      forall( { "P", O2T },
+      forall( {{ "P", O2T }},
          lazy_implies( apply( "strict"_unchecked, { 0_db } ),
                implies( 
-                  forall( { "x", O }, ! apply( 1_db, { 0_db } )),
+                  forall( {{ "x", O }}, ! apply( 1_db, { 0_db } )),
                   apply( "setlike"_unchecked, { 1_db, 0_db } ))) );
 
    auto singleton =
-      forall( { "P", O2T },
+      forall( {{ "P", O2T }},
          lazy_implies( apply( "strict"_unchecked, { 0_db } ),
-            implies( exists( { "x", O }, forall( { "x1", O },
+            implies( exists( {{ "x", O }}, forall( {{ "x1", O }},
                 implies( apply( 2_db, { 0_db } ), 0_db == 1_db ))),
                 apply( "setlike"_unchecked, { 1_db, 0_db } ) )));
         
    auto setunion =
-      forall( { "P1", O2T }, forall( { "P2", O2T }, forall( { "Q", O2T },
+      forall( {{ "P1", O2T }, { "P2", O2T }, { "Q", O2T }},
          lazy_implies(
             apply( "strict"_unchecked, { 2_db } ) &&
             apply( "strict"_unchecked, { 1_db } ) &&
@@ -276,28 +276,28 @@ void tests::add_settheory( logic::beliefstate& blfs )
                apply( "setlike"_unchecked, { 3_db, 2_db } ) &&
                apply( "setlike"_unchecked, { 3_db, 1_db } ),
                implies(
-                  forall( { "x", O },
+                  forall( {{ "x", O }},
                      implies( apply( 1_db, { 0_db } ),
                               apply( 3_db, { 0_db } ) ||
                               apply( 2_db, { 0_db } ))),
-                     apply( "setlike"_unchecked, { 3_db, 0_db } )))))));
+                     apply( "setlike"_unchecked, { 3_db, 0_db } )))));
 
    auto repl = apply( "setlike"_unchecked, { 3_db, 0_db } );
 
    {
-      auto f1 = forall( { "x", O }, 
+      auto f1 = forall( {{ "x", O }}, 
          implies( apply( 3_db, { 0_db } ), 
                   apply( "setlike"_unchecked, { 4_db, apply( 2_db, { 0_db } ) } )));
 
-      auto f2 = forall( { "x", O }, 
+      auto f2 = forall( {{ "x", O }}, 
          implies( apply( 3_db, { 0_db } ), 
             apply( "setlike"_unchecked, { 4_db, apply( 2_db, { 0_db } ) } )));
 
-      auto f3 = forall( { "y", O },
+      auto f3 = forall( {{ "y", O }},
          implies( apply( 1_db, { 0_db } ), 
-            exists( { "x", O }, 
+            exists( {{ "x", O }}, 
                lazy_conj( apply( 4_db, { 0_db } ), 
-                         apply( 3_db, { 0_db, 1_db } ))) ));
+                          apply( 3_db, { 0_db, 1_db } ))) ));
 
       repl = implies( f3, repl );
       repl = implies( f2, repl );
@@ -306,62 +306,59 @@ void tests::add_settheory( logic::beliefstate& blfs )
       repl = lazy_implies( f1, repl );
       repl = lazy_implies( apply( "strict"_unchecked, { 2_db } ), repl );
 
-      repl = forall( { "Q", O2T }, repl );
-      repl = forall( { "F", type( type_func, O2T, { O } ) }, repl );
-      repl = forall( { "P", O2T }, repl );
+      repl = forall( {{ "Q", O2T }}, repl );
+      repl = forall( {{ "F", type( type_func, O2T, { O } ) }}, repl );
+      repl = forall( {{ "P", O2T }}, repl );
    }
 
    auto ext = apply( "mat"_unchecked, { 2_db, 1_db } ) == 
                  apply( "mat"_unchecked, { 2_db, 0_db } );
 
    {
-      auto eq = forall( { "x", O }, 
+      auto eq = forall( {{ "x", O }}, 
          equiv( apply( 2_db, { 0_db } ),
                 apply( 1_db, { 0_db } )) );
       ext = implies( eq, ext );
       ext = lazy_implies( apply( "strict"_unchecked, { 1_db } ) &&
                           apply( "strict"_unchecked, { 0_db } ), ext );
-      ext = forall( { "P1", O2T }, forall( { "P2", O2T }, ext ));
+      ext = forall( {{ "P1", O2T }, { "P2", O2T }}, ext );
    }
 
-   auto bij =  forall( { "x", O }, equiv( apply( 2_db, { 0_db } ),
-                                          apply( 1_db, { 0_db } )) );
+   auto bij =  forall( {{ "x", O }}, equiv( apply( 2_db, { 0_db } ),
+                                            apply( 1_db, { 0_db } )) );
    bij = implies( apply( "mat"_unchecked, { 2_db, 1_db } ) ==
                   apply( "mat"_unchecked, { 2_db, 0_db } ), bij );
    bij = implies( apply( "setlike"_unchecked, { 2_db, 1_db } ) &&
                   apply( "setlike"_unchecked, { 2_db, 0_db } ), bij );
    bij = lazy_implies( apply( "strict"_unchecked, { 1_db } ) &&
                        apply( "strict"_unchecked, { 0_db } ), bij ); 
-   bij = forall( { "P1", O2T }, forall( { "P2", O2T }, bij )); 
+   bij = forall( {{ "P1", O2T }, { "P2", O2T }}, bij ); 
 
-   auto powset = exists( { "P1", O2T }, apply( "strict"_unchecked, { 0_db } ) &&
-      forall( { "x", O }, implies( apply( 1_db, { 0_db } ), apply( 3_db, { 0_db } )) &&
+   auto powset = exists( {{ "P1", O2T }}, apply( "strict"_unchecked, { 0_db } ) &&
+      forall( {{ "x", O }}, implies( apply( 1_db, { 0_db } ), apply( 3_db, { 0_db } )) &&
           2_db == apply( "mat"_unchecked, { 5_db, 1_db } )));
 
-   powset = forall( { "y", O }, implies( apply( 1_db, { 0_db } ), powset ));
+   powset = forall( {{ "y", O }}, implies( apply( 1_db, { 0_db } ), powset ));
 
    powset = implies( powset, apply( "setlike"_unchecked, { 2_db, 0_db } ));
    powset = implies( apply( "setlike"_unchecked, { 2_db, 1_db } ) &&
                      apply( "setlike"_unchecked, { 2_db, 0_db } ), powset );
    powset = lazy_implies( apply( "strict"_unchecked, { 1_db } ), powset );
-   powset = forall( { "P", O2T }, forall( { "Q", O2T }, powset ));
+   powset = forall( {{ "P", O2T }, { "Q", O2T }}, powset );
 
-   
-   auto settheory = lambda( { { "t", "settheory"_unchecked } }, 
+
+   auto settheory = lambda( {{ "t", type( type_unchecked, identifier( ) + "Settheory" ) }}, 
       lazy_conj( typed, empty && singleton && setunion && repl && ext && bij && powset ));
 
-   blfs. add( identifier( ) + "settheory", belief( bel_def, settheory, 
-                                     type( type_func, T, { "settheory"_unchecked } ) ));
-#endif
+   blfs. append( belief( bel_def, identifier( ) + "settheory", settheory, 
+                                     type( type_func, T, 
+                                     { type( type_unchecked, 
+                                             identifier( ) + "Settheory" ) } ) ));
 }
 
 
-#if 0
-logic::proofstate
-tests::always_justification( const logic::beliefstate& bel )
+void tests::add_proof( logic::beliefstate& blfs )
 {
-   logic::proofstate state; 
-
    using namespace logic;
 
    type O = type( logic::type_obj );
@@ -372,35 +369,54 @@ tests::always_justification( const logic::beliefstate& bel )
 
    type Seq = type( type_unchecked, identifier( ) + "Seq" );
 
-   auto cls = term( op_kleene_or, { } );
-   auto cl_view = cls. view_kleeneprop( );
+   blfs. append( belief( bel_decl, identifier( ) + "s1", Seq ));
+   blfs. append( belief( bel_decl, identifier( ) + "s2", Seq ));
 
-   cl_view. push_back( term( op_apply, "gen"_unchecked, { "s1"_local, 1_db } ));
-   cl_view. push_back( term( op_apply, "gen"_unchecked, { "s2"_local, 0_db } ));
-   cl_view. push_back( term( op_apply, "minhomrel"_unchecked, { 1_db, 0_db } ));
+   // We could create more Skolem constants.
 
-   cl_view. push_back( term( op_apply, "alpha1"_unchecked, { 1_db, 0_db } ));
-   cl_view. push_back( term( op_apply, "alpha2"_unchecked, { 1_db, 0_db } )); 
+   auto cls = term( op_kleene_and, { } );
+   auto cl_view = cls. view_kleene( );
 
-   state. addname( "s1", localname( loc_skol, Seq ));
-   state. addname( "s2", localname( loc_skol, Seq ));
+   cl_view. push_back( 
+       term( op_apply, "gen"_unchecked, { "s1"_unchecked, 1_db } ));
+   cl_view. push_back( 
+       term( op_apply, "gen"_unchecked, { "s2"_unchecked, 0_db } ));
 
-   cls = term( op_kleene_exists, cls, { { "x1", O }, { "x2", O }} );
-   state. addclause( "initial", cls );
+   cl_view. push_back( term( op_apply, "minhomrel"_unchecked, 
+            { "s1"_unchecked, "s2"_unchecked, 1_db, 0_db } ));
 
+   cl_view. push_back( apply( "alpha1"_unchecked, { 1_db, 0_db } ));
+   cl_view. push_back( apply( "alpha2"_unchecked, { 1_db, 0_db } )); 
+
+   cls = term( op_kleene_exists, cls, {{ "x", O }, { "y", O }} );
+
+   blfs. append( belief( bel_form, identifier( ) + "initial", cls, { proof( ) } ));
+#if 0
    cls = term( op_kleene_or, { } );
    cl_view = cls. view_kleeneprop( );
-
-   return state;
+#endif
 }
 
-#endif
-#if 0
 
-void tests::logicalsimplifications( )
+void tests::transformations( logic::beliefstate& blfs )
 {
-   std::cout << "testing logical simplifications\n";
+   std::cout << "testing clause transformations\n";
 
+   using namespace logic;
+
+   const auto& f = blfs. getformulas( identifier( ) + "induction" );
+   if( f. size( ) != 1 )
+      throw std::runtime_error( "cannot continue" );
+
+   auto ind = blfs. at( f[0] ). first;
+   std::cout << "trying to make clause from " << ind << "\n";
+
+   context ctxt;
+   std::cout << "\n\n";
+   std::cout << reso::nnf( blfs, ctxt,  ind. view_form( ). form( ), 
+                           reso::pol_pos, 0 );
+ 
+#if 0
    logic::simplifications::logical log;
    std::cout << log << "\n";
    std::cout << "\n";
@@ -430,7 +446,11 @@ void tests::logicalsimplifications( )
 
       f = !f;
    } 
+#endif
+
 }
+
+#if 0
 
 void tests::tableau( )
 {
@@ -646,7 +666,8 @@ void tests::add_seq( logic::beliefstate& blfs )
       form1 = lazy_implies( form1, implies( form2, implies( form3, form4 )));
       form1 = forall( {{ "s", Seq }, { "Q", O2T }}, form1 );
       
-      blfs. append( belief( bel_thm, identifier( ) + "induction", form1, proof( ), proof( )) ); 
+      blfs. append( belief( bel_form, identifier( ) + "induction", form1, 
+                            { proof( ), proof( ) } ) ); 
    }
 
    // We define a homomorphic relation:

@@ -24,12 +24,8 @@ namespace logic
    inline term operator && ( const term& t1, const term& t2 )
       { return term( op_and, t1, t2 ); }
 
-#if 0
    inline term lazy_conj( const term& t1, const term& t2 )
-   {
-      return term( op_lazy_and, t1, t2 );
-   }
-#endif
+      { return term( op_lazy_and, t1, t2 ); }
 
    inline term implies( const term& t1, const term& t2 )
       { return term( op_implies, t1, t2 ); }
@@ -37,12 +33,8 @@ namespace logic
    inline term lazy_implies( const term& t1, const term& t2 )
       { return term( op_lazy_implies, t1, t2 ); }
 
-#if 0
    inline term equiv( const term& t1, const term& t2 )
-   {
-      return term( op_equiv, t1, t2 );
-   }
-#endif
+      { return term( op_equiv, t1, t2 ); }
 
    inline term operator == ( const term& t1, const term& t2 )
       { return term( op_equals, t1, t2 ); }

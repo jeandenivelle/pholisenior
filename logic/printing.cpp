@@ -5,7 +5,6 @@
 #include "type.h"
 #include "term.h"
 #include "belief.h"
-#include "localname.h"
 
 void logic::type::print( std::ostream& out ) const
 {
@@ -216,7 +215,7 @@ void logic::belief::print( std::ostream& out ) const
       return;
 
    case bel_decl:
-      out << "decl     " << view_decl( ). tp( );
+      out << "decl " << name( ) << " : " << view_decl( ). tp( );
       return;
 
    case bel_def:
@@ -227,12 +226,8 @@ void logic::belief::print( std::ostream& out ) const
       }
       return;
 
-   case bel_asm:
-      out << "assume   " << view_asm( ). form( );
-      return;
-
-   case bel_thm:
-      out << "theorem   " << view_thm( ). form( );
+   case bel_form:
+      out << "form " << name( ) << " : " << view_form( ). form( );
       return;
 
    case bel_fld:
@@ -253,24 +248,6 @@ void logic::belief::print( std::ostream& out ) const
    }
    out << "belief has selector: " << sel( ) << "\n";
    throw std::runtime_error( "wrong selector for belief" );
-}
-
-
-void logic::localname::print( std::ostream& out ) const
-{
-   switch( sel( ))
-   {
-
-   case loc_skol:
-      out << "skolemfunc " << view_skolfunc( ). tp( ); return;
-
-
-
-   }
-
-   std::cout << "localname: " << sel( ) << "\n";
-   throw std::runtime_error( "dont know how to print it" );
-
 }
 
 

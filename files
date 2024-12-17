@@ -30,9 +30,12 @@
    context.cpp
    position.cpp
    structural.cpp
-   localname.cpp
    uniquenamestack.cpp
    pretty.cpp
+
+%dir Source/reso
+%sources
+   transformations.cpp
 
 %options 
    Wall
@@ -61,8 +64,6 @@
    term.cpp
    belief.h
    belief.cpp
-   localname.h
-   localname.cpp 
 
 %preproc $(Maph)/maphoon $(Source)/parser/grammar.m $(Source)/parser $(Maph) 
 %dir Source/parser
