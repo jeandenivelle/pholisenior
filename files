@@ -36,6 +36,7 @@
 %dir Source/reso
 %sources
    transformations.cpp
+   namegenerator.cpp
 
 %options 
    Wall

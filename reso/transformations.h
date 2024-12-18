@@ -3,10 +3,13 @@
 #include "logic/beliefstate.h"
 #include "logic/context.h"
 
+#include "namegenerator.h"
 
 namespace reso
 {
    enum polarity { pol_pos, pol_neg, pol_prop, pol_negprop };
+      // One could replace this by two booleans, one for pos/neg,
+      // and one for prop, but I think that a single enum is nicer.
 
    const char* getcstring( polarity pol );
 
@@ -14,14 +17,21 @@ namespace reso
       { out << getcstring( pol ); return out; }
 
    polarity negate( polarity );  
- 
+
+   logic::selector demorgan( logic::selector sel, polarity pol );
+      // Apply the De Morgan rule if polarity is pol_neg or pol_negprop.
+      // This function works only for Kleene operators.
+
    // Create a definition from the formula:
 
-   logic::term nnf( logic::beliefstate& blfs, logic::context& ctxt, 
-                    logic::term f, polarity pol, unsigned int equivs );
+   logic::term 
+   nnf( logic::beliefstate& blfs, namegenerator& gen,
+        logic::context& ctxt, 
+        logic::term f, const polarity pol, const unsigned int eq );
 
-      // We count the number of equivalences that we are in.
-      // If it gets too big, we introduce a definition.
+      // Variable eq the number of equivalences that we are in.
+      // If it gets too many, we introduce a definition, because
+      // an equivalence generates a positive and a negative copy.
 
    logic::term
    define( logic::beliefstate& blfs, logic::context& ctxt,

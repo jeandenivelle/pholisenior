@@ -16,11 +16,10 @@
 #include "logic/pretty.h"
 
 #include "reso/transformations.h"
+#include "reso/namegenerator.h"
 
 int main( int argc, char* argv[] )
 {
-   std::cout << reso::pol_negprop << "\n";
-
    logic::beliefstate blfs;
 
    tests::add_strict_prod( blfs ); 
