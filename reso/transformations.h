@@ -1,4 +1,7 @@
 
+#ifndef RESO_TRANSFORMATIONS_
+#define RESO_TRANSFORMATIONS_
+
 #include "logic/term.h"
 #include "logic/beliefstate.h"
 #include "logic/context.h"
@@ -22,7 +25,12 @@ namespace reso
       // Apply the De Morgan rule if polarity is pol_neg or pol_negprop.
       // This function works only for Kleene operators.
 
-   // Create a definition from the formula:
+   bool toobig( const logic::term& t, size_t max );
+      // Return true if term t is bigger than max.
+
+   std::vector< size_t > freevars( const logic::term& t );
+      // Counts the free variables in t. 
+
 
    logic::term 
    nnf( logic::beliefstate& blfs, namegenerator& gen,
@@ -33,9 +41,14 @@ namespace reso
       // If it gets too many, we introduce a definition, because
       // an equivalence generates a positive and a negative copy.
 
+   // Create a definition from the formula:
+
    logic::term
    define( logic::beliefstate& blfs, logic::context& ctxt,
            logic::term t, polarity pol );
 
+
 }
-     
+
+#endif
+

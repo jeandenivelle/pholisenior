@@ -30,15 +30,14 @@ namespace tests
 
 #if 0
    void kbo( );
+#endif
 
    void replacements( );
 
    void betareduction( );
       // Test beta reduction, using Church numerals.
       // I am also interested in performance.
-
-   void naturaldeduction( );
-
+#if 0
    void proofchecking( );
 
    void unification( );

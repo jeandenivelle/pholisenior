@@ -15,13 +15,17 @@
 #include "logic/structural.h"
 #include "logic/pretty.h"
 
+#include "logic/replacements.h"
+
 #include "reso/transformations.h"
 #include "reso/namegenerator.h"
 
 int main( int argc, char* argv[] )
 {
-   logic::beliefstate blfs;
+   tests::replacements( );
+   return 0;
 
+   logic::beliefstate blfs; 
    tests::add_strict_prod( blfs ); 
 #if 0
    tests::add_function( blfs );

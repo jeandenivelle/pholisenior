@@ -9,10 +9,10 @@
 
 #include "reso/transformations.h"
 
+#include "logic/replacements.h" 
+
 #if 0
-// #include "logic/replacements.h" 
 // #include "logic/normalization.h"
-// #include "reso/subst.h"
 #endif
 
 void tests::add_strict_prod( logic::beliefstate& bel )
@@ -121,7 +121,8 @@ void tests::add_strict_prod( logic::beliefstate& bel )
    // prod3 :
 
    {
-      auto prod3 = apply( 5_db, { 2_db } ) && apply( 4_db, { 1_db } ) && apply( 3_db, { 0_db } );
+      auto prod3 = apply( 5_db, { 2_db } ) && apply( 4_db, { 1_db } ) && 
+                   apply( 3_db, { 0_db } );
       prod3 = lambda( {{ "x1", O }, { "x2", O }, { "x3", O }}, prod3 );
       prod3 = lambda( {{ "P1", O2T }, { "P2", O2T }, { "P3", O2T }}, prod3 ); 
 
@@ -412,9 +413,12 @@ void tests::transformations( logic::beliefstate& blfs )
    std::cout << "trying to make clause from " << ind << "\n";
 
    context ctxt;
+   reso::namegenerator gen; 
    std::cout << "\n\n";
-   std::cout << reso::nnf( blfs, ctxt,  ind. view_form( ). form( ), 
-                           reso::pol_pos, 0 );
+   auto cls = reso::nnf( blfs, gen, ctxt, ind. view_form( ). form( ), 
+                         reso::pol_pos, 0 );
+
+   std::cout << "clause is: " << cls << "\n";
  
 #if 0
    logic::simplifications::logical log;
@@ -550,36 +554,60 @@ void tests::kbo( )
    logic::term not2 = logic::term(logic::sel_not, b);
    logic::term not3 = logic::term(logic::sel_not, not1);
 
-   logic::term and1 = logic::term(logic::sel_and, a, b);
-   logic::term and2 = logic::term(logic::sel_and, b, c);
-   logic::term and3 = logic::term(logic::sel_and, and1, c);
+   logic::term and1 = logic::term(logic::op_and, a, b);
+   logic::term and2 = logic::term(logic::op_and, b, c);
+   logic::term and3 = logic::term(logic::op_and, and1, c);
 
-   logic::term appl1 = logic::term(logic::sel_appl, logic::term(logic::sel_and, 0_db, 1_db ), {a, b});
-   logic::term appl2 = logic::term(logic::sel_appl, logic::term(logic::sel_and, 0_db, 1_db ), {b, c});
-   logic::term appl3 = logic::term(logic::sel_appl, logic::term(logic::sel_and, logic::term(logic::sel_not, 1_db )), {a, b} );
-   logic::term appl4 = logic::term(logic::sel_appl, logic::term(logic::sel_and, 0_db, logic::term(logic::sel_or, 1_db, 1_db )), {a, b, c});
+   logic::term appl1 = logic::term(logic::sel_appl, logic::term(logic::op_and, 0_db, 1_db ), {a, b});
+   logic::term appl2 = logic::term(logic::sel_appl, logic::term(logic::op_and, 0_db, 1_db ), {b, c});
+   logic::term appl3 = logic::term(logic::sel_appl, logic::term(logic::op_and, logic::term(logic::sel_not, 1_db )), {a, b} );
+   logic::term appl4 = logic::term(logic::sel_appl, logic::term(logic::op_and, 0_db, logic::term(logic::sel_or, 1_db, 1_db )), {a, b, c});
    
 }
 
+#endif
+
 void tests::replacements( ) 
 {
-   logic::type S = logic::type( logic::sel_set );
-   logic::type T = logic::type( logic::sel_truthval );
-   logic::type B = logic::type( logic::sel_belief );
 
-   logic::term simp = logic::term( logic::sel_and,
-                         logic::term( logic::sel_debruijn, 4 ),
-                         logic::term( logic::sel_debruijn, 7 ));
+   using namespace logic;
 
-   simp = logic::term( logic::sel_implies, simp, "xxxx"_ident );
+   type O = type( logic::type_obj );
+   type T = type( logic::type_truthval );
+   
+   type O2O = type( type_func, O, { O } );
+   type O2T = type( type_func, T, { O } );
+   
+   type Seq = type( type_unchecked, identifier( ) + "Seq" );
 
-   simp = logic::term( logic::sel_forall, { "x", S }, simp );
-   simp = logic::term( logic::sel_exists, { "y", T }, simp );
+   term simp = 4_db && 7_db;
 
-   simp = logic::term( logic::sel_lambda, simp, { { "v0", S }, { "v1", T } } );
+   simp = term( op_implies, simp, "xxxx"_unchecked );
+
+   simp = term( op_forall, simp, {{ "x", O }} );
+   simp = term( op_exists, simp, {{ "y", T }} );
+
+   simp = term( op_lambda, simp, { { "v0", O }, { "v1", T } } );
 
    std::cout << simp << "\n";
 
+   substitution subst;
+   subst. push( term( op_true ));
+   // subst. push( simp ); 
+   std::cout << subst << "\n";
+
+   lifter lift(3);
+   std::cout << lift << "\n";
+
+   bool change = false; 
+   simp. printstate( std::cout ); 
+   auto simped = topdown( lift, std::move(simp), 0, change );
+
+   std::cout << "simped = " << simped << "\n";
+   simped. printstate( std::cout );
+   std::cout << "change = " << change << "\n";
+
+#if 0
    logic::equalitysystem eq( { { 0_db, 1_db } } ); 
    std::cout << eq << "\n"; 
 
@@ -588,10 +616,9 @@ void tests::replacements( )
 
    std::cout << "simp2 = " << simp2 << "\n";
    std::cout << "changes = " << changes << "\n"; 
+#endif
 
 }
-
-#endif
 
 void tests::add_seq( logic::beliefstate& blfs ) 
 {

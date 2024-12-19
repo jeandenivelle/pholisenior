@@ -23,14 +23,15 @@
    term.cpp
    selector.cpp
    belief.cpp
-   beliefstate.cpp
    structdef.cpp
-   printing.cpp
+   beliefstate.cpp
+   replacements.cpp
    kbo.cpp
    context.cpp
    position.cpp
    structural.cpp
    uniquenamestack.cpp
+   printing.cpp
    pretty.cpp
 
 %dir Source/reso
