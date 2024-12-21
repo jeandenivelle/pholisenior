@@ -297,8 +297,8 @@ void tests::add_settheory( logic::beliefstate& blfs )
       auto f3 = forall( {{ "y", O }},
          implies( apply( 1_db, { 0_db } ), 
             exists( {{ "x", O }}, 
-               lazy_conj( apply( 4_db, { 0_db } ), 
-                          apply( 3_db, { 0_db, 1_db } ))) ));
+               lazy_and( apply( 4_db, { 0_db } ), 
+                         apply( 3_db, { 0_db, 1_db } ))) ));
 
       repl = implies( f3, repl );
       repl = implies( f2, repl );
@@ -349,7 +349,7 @@ void tests::add_settheory( logic::beliefstate& blfs )
 
 
    auto settheory = lambda( {{ "t", type( type_unchecked, identifier( ) + "Settheory" ) }}, 
-      lazy_conj( typed, empty && singleton && setunion && repl && ext && bij && powset ));
+      lazy_and( typed, empty && singleton && setunion && repl && ext && bij && powset ));
 
    blfs. append( belief( bel_def, identifier( ) + "settheory", settheory, 
                                      type( type_func, T, 
@@ -405,7 +405,7 @@ void tests::transformations( logic::beliefstate& blfs )
 
    using namespace logic;
 
-   const auto& f = blfs. getformulas( identifier( ) + "induction" );
+   const auto& f = blfs. getformulas( identifier( ) + "just" );
    if( f. size( ) != 1 )
       throw std::runtime_error( "cannot continue" );
 
@@ -416,7 +416,7 @@ void tests::transformations( logic::beliefstate& blfs )
    reso::namegenerator gen; 
    std::cout << "\n\n";
    auto cls = reso::nnf( blfs, gen, ctxt, ind. view_form( ). form( ), 
-                         reso::pol_pos, 0 );
+                         reso::pol_neg, 0 );
 
    std::cout << "clause is: " << cls << "\n";
  
@@ -720,6 +720,83 @@ void tests::add_seq( logic::beliefstate& blfs )
       blfs. append( belief( bel_def, identifier( ) + "homrel", fin,
                 type( type_func, type( type_func, T, { OO2T } ), { Seq, Seq } )));
    }
+
+   // minhomrel( s1, s2 : Seq ) ( x1, x2 : O ) :=
+   //    [ P : T(O,O) ] { stricton( prod( s1. gen, s2. gen ), P ) } 
+   //        -> homrel( s1, s2, P ) -> P( x1, x2 ).
+ 
+
+   {
+      auto stricton =
+         apply( "stricton"_unchecked,
+            { apply( "prod"_unchecked, 
+               { apply( "gen"_unchecked, { 4_db } ),
+                 apply( "gen"_unchecked, { 3_db } ) 
+               }),
+             0_db });
+
+      auto homrel = apply( "homrel"_unchecked, { 4_db, 3_db, 0_db } );
+
+      auto body = lazy_implies( stricton, 
+                     implies( homrel, 
+                        apply( 0_db, { 2_db, 1_db } )));
+      
+      // It remains to add the quantifiers and lambdas: 
+
+      body = forall( {{ "P", OO2T }}, body );
+      body = lambda( {{ "x1", O }, { "x2", O }}, body );
+      body = lambda( {{ "s1", Seq }, { "s2", Seq }}, body );
+
+      blfs. append( belief( bel_def, identifier( ) + "minhomrel", body,
+                type( type_func, OO2T, { Seq, Seq } )));
+
+   }
+ 
+   // [ s1, s2 : Seq ] [ x1, x2 : O ]
+   // { s1. gen(x) & s2. gen(x) } -> minhomrel( s1, s2, x1, x2 ) ->
+   //    ( x1 = s1.0 & x2 = s2. 0 ) |
+   //    < y1, y2 : O > { s1. gen(y1) & s2. gen(y2) } &
+   //      minhomrel( s1, s2, y1, y2 ) & x1 = s1.succ(y1) & x2 = s2. succ(y2)
+
+   {
+      auto e1 = ( 3_db == apply( "succ"_unchecked, { 5_db, 1_db } ) );
+      auto e2 = ( 2_db == apply( "succ"_unchecked, { 4_db, 0_db } ) );
+
+      auto e = apply( "minhomrel"_unchecked, { 5_db, 4_db, 1_db, 0_db } );
+      e = e && e1 && e2;
+      
+      auto ex = lazy_and(
+         apply( "gen"_unchecked, { 5_db, 1_db } ) &&
+         apply( "gen"_unchecked, { 4_db, 0_db } ),
+         e );
+
+      ex = exists( {{ "y1", O }, { "y2", O }}, ex );
+     
+      // x1 = s1.0 & x2 = s2. 0:
+ 
+      auto conj = ( 1_db == apply( "0"_unchecked, { 3_db } ) &&
+                    0_db == apply( "0"_unchecked, { 2_db } ) );
+     
+      auto impl = implies( 
+         apply( "minhomrel"_unchecked, { 3_db, 2_db, 1_db, 0_db } ),
+         conj || ex ); 
+
+      // add: s1. gen(x1) && s2. gen( x2 ) :
+
+      impl = lazy_implies(
+         apply( "gen"_unchecked, { 3_db, 1_db } ) &&
+         apply( "gen"_unchecked, { 2_db, 0_db } ),
+         impl );
+
+      // It remains to add the quantifiers:
+
+      impl = forall( {{ "x1", O }, { "x2", O }}, impl );
+      impl = forall( {{ "s1", Seq }, { "s2", Seq }}, impl );
+
+      blfs. append( belief( bel_form, identifier( ) + "just", impl,
+                            { proof( ), proof( ) } ) ); 
+
+   }
 }
 
 
@@ -731,6 +808,7 @@ void tests::structural( logic::beliefstate& blfs )
    // std::cout << prod << "\n";
 
    errorstack err; 
+#if 0
    context ctxt;
 
    type Seq = type( type_unchecked, identifier( ) + "Seq" );
@@ -778,9 +856,9 @@ void tests::structural( logic::beliefstate& blfs )
 
    if( ctxt. size( ) > 0 )
       throw std::runtime_error( "context not restored" );
+#endif
 
    checkandresolve( blfs, err );
-   std::cout << err << "\n";
 }
 
 

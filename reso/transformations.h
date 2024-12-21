@@ -47,6 +47,12 @@ namespace reso
    define( logic::beliefstate& blfs, logic::context& ctxt,
            logic::term t, polarity pol );
 
+   logic::term
+   clausify( logic::beliefstate& blfs, namegenerator& gen,
+             logic::context& ctxt, logic::term& f, unsigned int level );
+      // Term f must have Kleene operations only, and in NNF.
+      // Even level means and/forall.
+      // Odd level means or/exists.
 
 }
 

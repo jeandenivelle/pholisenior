@@ -55,6 +55,8 @@ logic::selector reso::demorgan( logic::selector sel, polarity pol )
       case logic::op_kleene_forall:
          return logic::op_kleene_exists;
 
+      case logic::op_kleene_exists:
+         return logic::op_kleene_forall;
       }
    }
 
@@ -67,10 +69,10 @@ reso::nnf( logic::beliefstate& blfs, namegenerator& gen,
            logic::context& ctxt, logic::term f, const polarity pol, 
            const unsigned int eq )
 {
-   if( false )
+   if( true )
    {
       std::cout << ctxt << "\n";
-      std::cout << pol << " :   " << f << "\n";
+      std::cout << pol << ":   " << f << "\n";
       std::cout << "eq = " << eq << "\n";
    }
 
@@ -92,7 +94,26 @@ reso::nnf( logic::beliefstate& blfs, namegenerator& gen,
             return logic::term( demorgan( logic::op_kleene_or, pol ),
                                 { sub1, sub2 } );
          }
- 
+
+      case logic::op_and:
+      case logic::op_or:
+      case logic::op_lazy_and:
+         {
+            auto bin = f. view_binary( );
+            auto sub1 = nnf( blfs, gen, ctxt, bin. sub1( ), pol, eq );
+            auto sub2 = nnf( blfs, gen, ctxt, bin. sub2( ), pol, eq );
+
+            auto kleenop = f. sel( );
+            if( f. sel( ) == logic::op_and )
+               kleenop = logic::op_kleene_and;
+            if( f. sel( ) == logic::op_or )
+               kleenop = logic::op_kleene_or;
+            if( f. sel( ) == logic::op_lazy_and )
+               kleenop = logic::op_kleene_and;
+
+            return logic::term( demorgan( kleenop, pol ), { sub1, sub2 } );   
+         } 
+
       case logic::op_forall:
       case logic::op_kleene_forall:
       case logic::op_exists:

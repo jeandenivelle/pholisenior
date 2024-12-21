@@ -85,9 +85,20 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
                auto tm = def. extr_val( );
                context ctxt;
                auto tp = checkandresolve( everything, err, ctxt, tm );
+
+               if( ctxt. size( ) > 0 )
+                  throw std::runtime_error( "context after check not empty" );
+
                if( tp. has_value( ) && !equal( tp. value( ), def. tp( )))
                {
-                  throw std::runtime_error( "the types are different" );
+                  errorstack::builder bld;
+                  bld << "Declared type differs from true type:\n";
+                  bld << "Declared :   "; 
+                  pretty::print( bld, everything, def. tp( ), {0,0} );
+                  bld << "\n";
+                  bld << "True :   ";
+                  pretty::print( bld, everything, tp. value( ), {0,0} ); 
+                  err. push( std::move( bld ));   
                }
                def. update_val( tm );
             }
@@ -95,9 +106,8 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             if( err. size( ) > errstart )
             {
                errorstack::builder bld;
-               bld << "in definition of " << blf. name( ) << ":";
+               bld << "In the definition of " << blf. name( ) << ":";
                err. addheader( errstart, std::move( bld ));
-
             }
             break; 
          } 
@@ -108,6 +118,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             auto form = f. extr_form( );
             context ctxt;
             auto tp = checkandresolve( everything, err, ctxt, form );
+            f. update_form( form );
 
             if( tp. has_value( ) && tp. value( ). sel( ) != type_truthval )
             {
@@ -115,9 +126,12 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             }
 
             if( err. size( ) > errstart )
-               throw std::runtime_error( "thm: add a header" );
+            {
+               errorstack::builder bld;
+               bld << "In formula " << blf. name( ) << ": ";
+               err. addheader( errstart, std::move( bld ));
+            }
 
-            f. update_form( form );
             break;
          }
 
@@ -209,33 +223,6 @@ logic::checkproofterm( std::ostream& out, const beliefstate& state,
 
    context ctxt;
    position pos;
-   try
-   {
-      const auto& tp = check. typecheck( ctxt, pos, proof );
-
-      if( tp. sel( ) != sel_func || 
-          tp. view_func( ). result( ). sel( ) != sel_contr || 
-          tp. view_func( ). size( ) != 1 ||
-          tp. view_func( ). arg(0). sel( ) != sel_belief ) 
-      {
-         uniquenamestack names;
-         pretty::print( out, names,
-            error( err_typediff, 
-                   type( sel_func, type( sel_contr ), { type( sel_belief ) } ), tp, 
-                   "proof term has wrong type" ));
-
-         ++ corr. type_errors; 
-      }
-   }
-   catch( const failure& f )
-   {
-      ctxt. restore(0);
-      check. print_errors( out, ctxt );
-      corr. type_errors += check. nr_errors( ); 
-   }
-
-   corr. unfinisheds += check. nr_unfinished( ); 
-   return corr; 
 }
 
 #endif
@@ -659,12 +646,14 @@ logic::checkandresolve( const beliefstate& blfs,
                   results. push_back( { cand, std::move( res. value( )) } ); 
             } 
 
+#if 0
             std::cout << "applicable candidates\n";
             for( const auto& cand : results ) 
             {
                std::cout << "   " << cand. first << " --> " 
                          << cand. second << "\n";
             }
+#endif
 
             if( results. size( ) == 0 )
             {
@@ -832,10 +821,12 @@ std::optional< logic::type >
 logic::try_apply( const beliefstate& blfs, exact name, 
                   const std::vector< type > & argtypes, size_t pos )
 {
+#if 0
    std::cout << "trying to apply belief " << name << " on\n";
    for( size_t i = pos; i != argtypes. size( ); ++ i )
       std::cout << "   " << i << " : " << argtypes[i];
    std::cout << "\n";
+#endif
 
    const auto& bel = blfs. at( name ). first;
    switch( bel. sel( )) 
@@ -857,7 +848,6 @@ logic::try_apply( const beliefstate& blfs, exact name,
             auto fld = bel. view_field( ); 
             auto structtype = fld. sdef( );
 
-            std::cout << "going here?\n";           
             if( pos + 1 <= argtypes. size( ) && 
                 argtypes[ pos ]. sel( ) == type_struct &&
                 argtypes[ pos ]. view_struct( ). def( ) == structtype )

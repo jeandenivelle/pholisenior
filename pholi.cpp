@@ -22,8 +22,8 @@
 
 int main( int argc, char* argv[] )
 {
-   tests::replacements( );
-   return 0;
+   // tests::replacements( );
+   // return 0;
 
    logic::beliefstate blfs; 
    tests::add_strict_prod( blfs ); 

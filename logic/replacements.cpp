@@ -24,7 +24,7 @@ logic::lifter::operator( ) ( term t, size_t vardepth, bool& change ) const
 void 
 logic::lifter::print( std::ostream& out ) const
 {
-   out << "lifter( " << dist << " )";
+   out << "lifter(" << dist << ")";
 }
 
 

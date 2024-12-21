@@ -108,13 +108,6 @@ public:
       // You can whine into the builder, and push the builder
       // when you're done. 
 
-   void push( builder& meh, 
-              error::seriousness ser = error::serious )
-   {
-      sub. push_back( vect. size( ));
-      vect. emplace_back( meh. str( ), ser );
-   }
-
    void push( builder&& meh,
               error::seriousness ser = error::serious )
    {

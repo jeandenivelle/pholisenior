@@ -24,7 +24,7 @@ namespace logic
    inline term operator && ( const term& t1, const term& t2 )
       { return term( op_and, t1, t2 ); }
 
-   inline term lazy_conj( const term& t1, const term& t2 )
+   inline term lazy_and( const term& t1, const term& t2 )
       { return term( op_lazy_and, t1, t2 ); }
 
    inline term implies( const term& t1, const term& t2 )
