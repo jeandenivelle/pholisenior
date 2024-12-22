@@ -96,7 +96,13 @@ logic::pretty::getattractions( logic::selector sel )
 void logic::pretty::print( std::ostream &out, const beliefstate& blfs,
 			   const type& tp, attractions envattr ) 
 {
-   out << tp; 
+   if (tp.sel() == type_struct) {
+      auto some = blfs.at(tp.view_struct().def()); 
+      out << some.first.name();
+   } else{
+      out << tp; 
+   }
+
 #if 0
    switch ( t. sel( ) ) 
    {
@@ -210,11 +216,17 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          auto ourattr = getattractions( t. sel( ));
             
          parprinter par( out );
-         par. printif( envattr. left >= ourattr. left ||
-                       envattr. right >= ourattr. right );
+         
+         bool attracted_left = (envattr. left >= ourattr. left);
+         bool attracted_right = (envattr. right >= ourattr. right);
+         
+         par.printif( attracted_left || attracted_right );
 
-         print( out, blfs, names, bin. sub1( ), 
-                  { envattr. left, ourattr. left } );
+         if (attracted_left) {
+            print( out, blfs, names, bin. sub1( ), { 0, ourattr. right } );
+         } else{
+            print( out, blfs, names, bin. sub1( ), { envattr.left, ourattr.right } );
+         }
 
          switch( t. sel( ))
          {
@@ -225,9 +237,13 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          case op_equals:  out << " = "; break;
          default: out << " ??? "; break;
          }
+         
+         if (attracted_right) {
+            print( out, blfs, names, bin. sub2( ), { ourattr.left, 0 } );
+         } else {
+            print( out, blfs, names, bin. sub2( ), { ourattr.left, envattr.right } );
+         }
 
-         print( out, blfs, names, bin. sub2( ),
-                  { ourattr. right, envattr. left } );
          return;
       }
 #if 0
@@ -372,8 +388,13 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
             return;
          }
          else
-         {
-            out << "hard\n";
+         { 
+            while (appl.func().sel() != op_debruijn &&
+                   appl.func().sel() != op_exact &&
+                   appl.func().sel() != op_unchecked) {
+                  appl = appl.func().view_apply();
+            }
+            print(out, blfs, names, appl.func(), envattr);
 #if 0
             bool is_in_par = false;
             auto appl_t = t. view_appl( );
@@ -496,8 +517,16 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
             return; 
          }
 #endif
+   case op_unchecked: {
+      out << t.view_unchecked().id();
+      break;
+   }
+   case op_exact: {
+      out << blfs.at(t.view_exact().ex()).first.name();
+      break;
+   }
    default:
-      out << "UGLY( " << t << ")";
+      out << "UGLY( " << t << ")" << "Sel:" << t.sel();
       return; 
    }
 }
