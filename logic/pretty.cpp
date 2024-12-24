@@ -32,6 +32,14 @@ logic::pretty::getattractions( logic::selector sel )
       return { 110, 110 };
    case op_equals:
       return { 160, 160 }; 
+
+   case op_lazy_and:
+      return { 140, 141 };
+   case op_lazy_or:
+      return { 130, 131 };
+   case op_lazy_implies:
+      return { 121, 120 };
+
 #if 0
       // unary terms
 
@@ -211,6 +219,11 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
    case op_implies:
    case op_equiv:
    case op_equals:
+
+   case op_lazy_implies:
+   case op_lazy_and:
+   case op_lazy_or:
+
       {
          auto bin = t. view_binary( );
          auto ourattr = getattractions( t. sel( ));
@@ -222,19 +235,28 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          
          par.printif( attracted_left || attracted_right );
 
+         if (t.sel() == op_lazy_and || t.sel() == op_lazy_or || t.sel() == op_lazy_implies) {
+            out << "{";
+         }
+
          if (attracted_left) {
             print( out, blfs, names, bin. sub1( ), { 0, ourattr. right } );
          } else{
             print( out, blfs, names, bin. sub1( ), { envattr.left, ourattr.right } );
          }
 
+         if (t.sel() == op_lazy_and || t.sel() == op_lazy_or || t.sel() == op_lazy_implies) {
+            out << "}";
+         }
+
          switch( t. sel( ))
          {
-         case op_and:     out << " & "; break;
-         case op_or:      out << " | "; break;
-         case op_implies: out << " -> "; break;
-         case op_equiv:   out << " <-> "; break;
-         case op_equals:  out << " = "; break;
+         case op_and: case op_lazy_and:         out << " & "; break;
+         case op_or: case op_lazy_or:           out << " | "; break;
+         case op_implies: case op_lazy_implies: out << " -> "; break;
+         case op_equiv:                         out << " <-> "; break;
+         case op_equals:                        out << " = "; break;
+
          default: out << " ??? "; break;
          }
          
