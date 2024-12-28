@@ -14,8 +14,8 @@
 
 #include "logic/structural.h"
 #include "logic/pretty.h"
-
 #include "logic/replacements.h"
+#include "logic/counting.h"
 
 #include "reso/transformations.h"
 #include "reso/namegenerator.h"

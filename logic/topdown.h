@@ -13,8 +13,8 @@ namespace logic
 
    template< typename F >
    concept replacement =
-      requires( F f, term t, size_t s, bool& c )
-         { { f(t,s,c) } -> std::same_as< term > ; };
+      requires( F f, term t, size_t d, bool& c )
+         { { f( t, d, c ) } -> std::same_as< term > ; };
 
       // I would like to enforce that c is a reference, but that  
       // seems not possible.

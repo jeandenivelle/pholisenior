@@ -1,69 +1,6 @@
 
 #include "transformations.h"
 
-const char* reso::getcstring( polarity pol )
-{
-   switch( pol )
-   {
-   case pol_pos:       return "pos"; 
-   case pol_neg:       return "neg";
-   case pol_prop:      return "prop";
-   case pol_negprop:   return "neg-prop";
-   default:            return "???";
-   }
-}
-
-reso::polarity reso::negate( reso::polarity pol )
-{
-   switch( pol )
-   {
-   case pol_pos:       return pol_neg;
-   case pol_neg:       return pol_pos;
-   case pol_prop:      return pol_negprop;
-   case pol_negprop:   return pol_prop;
-   }
-   std::cout << pol << "\n";
-   throw std::logic_error( "cannot negate" ); 
-}
-
-logic::selector reso::demorgan( logic::selector sel, polarity pol )
-{
-   if( pol == pol_pos || pol == pol_prop )
-   {
-      // We still check:
-
-      switch( sel )
-      {
-      case logic::op_kleene_and:
-      case logic::op_kleene_or:
-      case logic::op_kleene_forall:
-      case logic::op_kleene_exists:
-         return sel;
-      }
-
-   }
-   else
-   {
-      switch( sel )
-      {
-      case logic::op_kleene_and:
-         return logic::op_kleene_or;
- 
-      case logic::op_kleene_or:
-         return logic::op_kleene_and; 
-
-      case logic::op_kleene_forall:
-         return logic::op_kleene_exists;
-
-      case logic::op_kleene_exists:
-         return logic::op_kleene_forall;
-      }
-   }
-
-   std::cout << "demorgan " << sel << " / " << pol << "\n";
-   throw std::runtime_error( "De Morgan: unhandled case" ); 
-}
-
 logic::term 
 reso::nnf( logic::beliefstate& blfs, namegenerator& gen,
            logic::context& ctxt, logic::term f, const polarity pol, 
@@ -250,6 +187,103 @@ reso::nnf( logic::beliefstate& blfs, namegenerator& gen,
    }
 }
 
+namespace
+{
+   void flatten_disj( std::vector< logic::term > & res,
+                      logic::context& ctxt, logic::term f )
+   {
+      std::cout << ctxt << "\n";
+      std::cout << "flatten_disj: " << f << "\n";
 
+      if( f. sel( ) == logic::op_kleene_exists )
+      {
+         auto ex = f. view_quant( );
+         size_t csize = ctxt. size( );
+         for( size_t i = 0; i != ex. size( ); ++ i )
+            ctxt. extend( ex. var(i). pref, ex. var(i). tp );  
+         flatten_disj( res, ctxt, ex. body( ));
+         throw std::runtime_error( "good luck" );
+      }
+
+      f = reso::flatten( std::move(f)); 
+
+      throw std::runtime_error( "must add the quantifier" );
+   }
+                    
+
+   void flatten_conj( std::vector< logic::term > & res,
+                      logic::context& ctxt, logic::term f )
+   {
+      std::cout << ctxt << "\n";
+      std::cout << "flatten_conj: " << f << "\n";
+
+      if( f. sel( ) == logic::op_kleene_forall )
+      {
+         auto ex = f. view_quant( );
+         size_t csize = ctxt. size( );
+         for( size_t i = 0; i != ex. size( ); ++ i )
+            ctxt. extend( ex. var(i). pref, ex. var(i). tp );
+         flatten_conj( res, ctxt, ex. body( ));
+         throw std::runtime_error( "bad luck" );
+      }
+
+      if( f. sel( ) == logic::op_kleene_and )
+      {
+         auto kl = f. view_kleene( );
+         for( size_t i = 0; i != kl. size( ); ++ i ) 
+            flatten_conj( res, ctxt, kl. sub(i));
+         return; 
+      }
+
+      f = reso::flatten( std::move(f));
+
+      throw std::runtime_error( "must add the quantifier" );
+   }
+   
+
+
+}
+
+
+logic::term
+reso::flatten( logic::term f )
+{
+   switch( f. sel( ))
+   {
+   case logic::op_kleene_or:
+   case logic::op_kleene_exists:
+      {
+         std::vector< logic::term > disj;
+         logic::context ctxt;
+         flatten_disj( disj, ctxt, f );
+         throw std::runtime_error( "unfinished" );
+      }   
+
+   case logic::op_kleene_and:
+   case logic::op_kleene_forall:
+      {
+         std::vector< logic::term > conj;
+         logic::context ctxt;
+         flatten_conj( conj, ctxt, f );
+         throw std::runtime_error( "not finished" );
+      }
+
+   case logic::op_apply:
+      return f;
+   }
+
+   throw std::runtime_error( "cannot handle" ); 
+}
+
+
+logic::term
+reso::definesubform( logic::beliefstate& blfs, namegenerator& gen,
+                     logic::context& ctxt, logic::term t )
+{
+
+
+
+
+}
 
 

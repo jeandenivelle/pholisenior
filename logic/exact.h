@@ -5,6 +5,7 @@
 #define LOGIC_EXACT_
 
 #include <unordered_set>
+#include <unordered_map>
 
 #include "util/print.h"
 
@@ -58,6 +59,9 @@ namespace logic
 
       using unordered_set =
       std::unordered_set< exact, exact::hash, exact::equal_to > ;
+
+      template< typename V > using unordered_map = 
+      std::unordered_map< exact, V, exact::hash, exact::equal_to > ;
 
    };
 }

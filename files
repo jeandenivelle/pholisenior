@@ -26,6 +26,7 @@
    structdef.cpp
    beliefstate.cpp
    replacements.cpp
+   counting.cpp
    kbo.cpp
    context.cpp
    position.cpp
@@ -36,6 +37,7 @@
 
 %dir Source/reso
 %sources
+   polarity.cpp
    transformations.cpp
    namegenerator.cpp
 

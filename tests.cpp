@@ -420,6 +420,8 @@ void tests::transformations( logic::beliefstate& blfs )
 
    std::cout << "clause is: " << cls << "\n";
  
+   cls = reso::flatten( cls );
+
 #if 0
    logic::simplifications::logical log;
    std::cout << log << "\n";
