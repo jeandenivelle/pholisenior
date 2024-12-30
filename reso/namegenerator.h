@@ -4,31 +4,27 @@
 
 #include <iostream>
 #include <string>
-#include <unordered_map>
 
 namespace reso
 {
    // Intended for the introduction of Skolem functions, or
    // subformula definitions 
 
-   struct namegenerator
+   class namegenerator
    {
-      std::unordered_map< std::string, std::string > bases;
-         // Maps known bases to the current next index.
-         // Instead of using numbers and converting those to strings, 
-         // we count directly with strings.
+      std::string base;
+      std::string index; 
 
-      namegenerator( ) noexcept = default;
+   public:
+      namegenerator( const std::string& base, 
+                     const std::string& index = "0000" )
+         : base( base ),
+           index( index )
+      { }
 
-      std::string create( const std::string& base );
-         // Get the next name for the given base,
-         // and increase its index after that.
-         // It may be still necessary to check that the name is
-         // not used somewhere else.
- 
+      std::string next( );
+
       void print( std::ostream& out ) const;
-         // Print current state. 
-
    };
 } 
 

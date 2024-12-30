@@ -7,6 +7,7 @@
 #include "util/print.h"
 
 #include <vector>
+#include <unordered_map>
 
 namespace logic
 {
@@ -45,8 +46,8 @@ namespace logic
          // I don't know where they come form. 
          // I have no wish to make a polymorphic constructor. 
 
-      void push( const term& t ) { values. push_back(t); }
-      void push( term&& t ) { values. push_back( std::move(t)); }
+      void push_back( const term& t ) { values. push_back(t); }
+      void push_back( term&& t ) { values. push_back( std::move(t)); }
 
       size_t size( ) const { return values. size( ); }
 
@@ -58,20 +59,19 @@ namespace logic
 
    // A sparse subst assigns values to some, but not
    // necessarily all, De Bruijn indices. 
-   // In the implementation below, we assume that the
-   // De Bruijn indices are ordered in increasing order, 
-   // that means from nearest to farthest.
 
    struct sparse_subst
    {
-      std::vector< std::pair< size_t, term >> repl;
+      std::unordered_map< size_t, term > repl;
 
       sparse_subst( ) = default;
 
-      void assign( size_t var, const term& val )
-         { repl. push_back( std::pair( var, val )); }
-      void assign( size_t var, term&& val )
-         { repl. push_back( std::pair( var, std::move( val ))); }
+      void append( size_t var, const term& val )
+         { repl. insert( std::pair( var, val )); }
+      void append( size_t var, term&& val )
+         { repl. insert( std::pair( var, std::move( val ))); }
+
+      term operator( ) ( term t, size_t vardepth, bool& change ) const;
  
       void print( std::ostream& out ) const;      
    };

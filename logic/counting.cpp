@@ -19,3 +19,10 @@ void logic::debruijn_counter::operator( ) ( const term& t, size_t vardepth )
    }
 }
 
+void logic::debruijn_counter::print( std::ostream& out ) const
+{
+   out << "De Bruijn Counter:\n";
+   for( const auto& p : occ )
+      out << "   #" << p. first << " : " << p. second << "\n";
+}
+

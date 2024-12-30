@@ -3,6 +3,7 @@
 
 namespace
 {
+
    void increase( std::string& val )
    {
       const char first = '0';
@@ -26,22 +27,19 @@ namespace
 }
 
 
-std::string reso::namegenerator::create( const std::string& base )
+std::string 
+reso::namegenerator::next( )
 {
-   auto p = bases. try_emplace( base, "00" ). first;
-
-   auto res = base + ( p -> second );
-   increase( p -> second );
+   auto res = base + index;
+   increase( index );
    return res; 
 }
 
 
 void reso::namegenerator::print( std::ostream& out ) const
 {
-   out << "Namegenerator\n";
-   for( const auto& p : bases )
-      out << "   " << p. first << " : " << p. second << "\n";
-   out << "\n";
+   out << "Namegenerator:\n";
+   out << "   " << base << " : " << index << "\n";
 }
 
 

@@ -4,7 +4,7 @@
 #include "logic/replacements.h"
 
 logic::term 
-reso::nnf( logic::beliefstate& blfs, namegenerator& gen,
+reso::nnf( logic::beliefstate& blfs, namegenerators& gen,
            logic::context& ctxt, logic::term f, const polarity pol, 
            const unsigned int eq )
 {
@@ -330,43 +330,108 @@ reso::flatten( logic::term f )
 
 logic::term
 reso::introduce_predicate( logic::beliefstate& blfs, 
-                           namegenerator& gen,
-                           logic::context& ctxt, logic::term t )
+                           namegenerators& gen,
+                           logic::context& ctxt, logic::term ff )
 {
-   std::map< size_t, size_t > freevars = count_debruijn(t);
+   auto freevars = count_debruijn( ff );
       // In increasing order. That means that the 
       // nearest variable comes first.
 
-   for( const auto& p : freevars )
-      std::cout << p. first << " " << p. second << "\n";
+   std::cout << freevars << "\n";
 
-   // Create the predicate:
+   // Create the new predicate:
 
-   auto alpha = gen. create( "alpha" );
+   identifier pred = identifier( ) + gen. pred. next( );
 
-   // Create the type of alpha:
+   while( blfs. getfunctions( pred ). size( ) ||
+          blfs. getstructdefs( pred ). size( ))
+   {
+      pred = identifier( ) + gen. predisprop. next( );
+   }
+ 
+   // Create the type of pred:
 
    auto T = logic::type( logic::type_truthval ); 
    auto atype = logic::type( logic::type_func, T, {} );
 
    logic::sparse_subst subst; 
   
-   auto it = freevars. end( );
-   while( it != freevars. begin( ))
+   for( auto it = freevars. end( ); it != freevars. begin( ); )
    {
       -- it; 
-      std::cout << ( it -> first ) << "\n";
       atype. view_func( ). push_back( ctxt. gettype( it -> first ));
    }
 
    std::cout << atype << "\n"; 
 
-   // Add the declaration of alpha:
+   // Add the declaration of pred:
 
-   blfs. append( logic::belief( logic::bel_decl, 
-                                identifier( ) + alpha, atype ));
+   blfs. append( logic::belief( logic::bel_decl, pred, atype ));
 
+   // Create forall( x1, ..., xn ) # pred( x1, ..., xn ) :
+
+   auto atom = logic::term( logic::op_unchecked, pred );
+   atom = logic::term( logic::op_apply, atom, 
+                       std::initializer_list< logic::term > ( ));
+
+   std::cout << "atom = " << atom << "\n";
+
+   for( size_t i = freevars. size( ); i; )
+   {
+      -- i;
+      atom. view_apply( ). push_back( logic::term( logic::op_debruijn, i ));
+   }
+
+   auto forall = logic::term( logic::op_kleene_forall, 
+                       logic::term( logic::op_prop, atom ),
+                       std::initializer_list< logic::vartype > ( ));
+
+   for( auto it = freevars. end( ); it != freevars. begin( ); )
+   {
+      -- it;
+      forall. view_quant( ). push_back( { "xx", ctxt. gettype( it -> first ) } );
+   }
+
+   blfs. append( logic::belief( logic::bel_form, identifier( ) + 
+                 gen. predisprop. next( ), forall, { } ));
+
+   logic::sparse_subst norm;
+   {
+      auto it = freevars. begin( );
+      size_t var = 0;
+      while( it != freevars. end( ))
+      {
+         norm. append( it -> first, logic::term( logic::op_debruijn, var )); 
+         ++ it; ++ var;
+      }
+   }
+
+   std::cout << "norm = " << norm << "\n";
+
+   bool change = false; 
+   ff = topdown( norm, std::move( ff ), 0, change );
+
+   forall. view_quant( ). update_body( 
+      logic::term( logic::op_kleene_or, {
+         logic::term( logic::op_not, atom ), ff } ));
+     
+   blfs. append( logic::belief( logic::bel_form, identifier( ) +
+                 gen. preddef. next( ), forall, { } ));
+
+
+   atom = logic::term( logic::op_apply, 
+                       logic::term( logic::op_unchecked, pred ),
+                       std::initializer_list< logic::term > ( ));
+
+   for( auto it = freevars. end( ); it != freevars. begin( ); )
+   {
+      -- it;
+      atom. view_apply( ). push_back( logic::term( logic::op_debruijn, it -> first ));
+   }
+ 
    std::cout << blfs << "\n"; 
+   std::cout << "the atom is " << atom << "\n";
+   return ff;
 }
 
 

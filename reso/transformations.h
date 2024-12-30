@@ -6,7 +6,7 @@
 #include "logic/beliefstate.h"
 #include "logic/context.h"
 
-#include "namegenerator.h"
+#include "namegenerators.h"
 #include "polarity.h"
 
 namespace reso
@@ -18,7 +18,7 @@ namespace reso
       // in constant time.
 
    logic::term 
-   nnf( logic::beliefstate& blfs, namegenerator& gen,
+   nnf( logic::beliefstate& blfs, namegenerators& gen,
         logic::context& ctxt, 
         logic::term f, const polarity pol, const unsigned int eq );
 
@@ -39,11 +39,11 @@ namespace reso
    // Create a definition for the formula:
 
    logic::term
-   introduce_predicate( logic::beliefstate& blfs, namegenerator& gen,
+   introduce_predicate( logic::beliefstate& blfs, namegenerators& gen,
                         logic::context& ctxt, logic::term t );
 
    logic::term
-   clausify( logic::beliefstate& blfs, namegenerator& gen,
+   clausify( logic::beliefstate& blfs, namegenerators& gen,
              logic::context& ctxt, logic::term& f, unsigned int alt );
       // Term f must have Kleene operations only, and in NNF.
       // Even level means and/forall.

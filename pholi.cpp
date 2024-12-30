@@ -18,12 +18,14 @@
 #include "logic/counting.h"
 
 #include "reso/transformations.h"
-#include "reso/namegenerator.h"
+#include "reso/namegenerators.h"
 
 int main( int argc, char* argv[] )
 {
    logic::beliefstate blfs;
-   reso::namegenerator gen;
+   reso::namegenerators gen;
+   std::cout << gen << "\n";
+
    logic::context ctxt;
 
    ctxt. append( "aa", logic::type( logic::type_unchecked, 
@@ -36,7 +38,6 @@ int main( int argc, char* argv[] )
    std::cout << fm << "\n";
 
    fm = introduce_predicate( blfs, gen, ctxt, std::move(fm));
-   
    return 0;
 
    // tests::replacements( );

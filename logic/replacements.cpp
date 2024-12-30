@@ -78,6 +78,29 @@ void logic::vector_subst::print( std::ostream& out ) const
 }
 
 
+logic::term
+logic::sparse_subst::operator( ) ( term t, size_t vardepth, 
+                                   bool& change ) const
+{
+   std::cout << "sparse subst " << t << "[ " << vardepth << " ]\n";
+   if( t. sel( ) == op_debruijn )
+   {
+      size_t ind = t. view_debruijn( ). index( );
+      if( ind >= vardepth )
+      {
+         ind -= vardepth;
+         auto p = repl. find( ind );
+         if( p != repl. end( ))
+         {
+            change = true;
+            return p -> second; 
+         }
+      }
+   }
+
+   return t;
+}
+
 void logic::sparse_subst::print( std::ostream& out ) const
 {
    out << "Sparse-subst:\n";

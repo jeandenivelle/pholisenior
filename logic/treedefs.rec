@@ -107,7 +107,7 @@
 %option struct { bel_struct } => def : structdef 
 %option decl { bel_decl } => tp : type 
 %option def { bel_def } => val : term, tp : type
-%option form { bel_form } => form : term, prf : std::vector< proof > 
+%option form { bel_form } => form : term, [ prf : proof ] 
     // 0,1,2 proofs. The first proves #form, the second proves form itself.
 
 %option field { bel_fld } => sdef : exact, offset : size_t 

@@ -99,14 +99,25 @@ namespace logic
          // order as they are quantified in the surrounding scope. 
 
       void operator( ) ( const term& t, size_t vardepth );
+
+      debruijn_counter( ) = default;
+      debruijn_counter( debruijn_counter&& ) = default;
+      debruijn_counter& operator = ( debruijn_counter&& ) = default;
+         // Blocking coincidental copying.
+
+      size_t size( ) const { return occ. size( ); }
+      using const_iterator = std::map< size_t, size_t > :: const_iterator;
+      const_iterator begin( ) const { return occ. begin( ); }
+      const_iterator end( ) const { return occ. end( ); }
+
       void print( std::ostream& out ) const;
    };
 
-   inline std::map< size_t, size_t > count_debruijn( const term& t )
+   inline debruijn_counter count_debruijn( const term& t )
    {
       debruijn_counter db;
       count( db, t, 0 );
-      return db. occ;
+      return db;
    }
 
 
