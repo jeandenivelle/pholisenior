@@ -1,5 +1,7 @@
 
 #include "transformations.h"
+#include "logic/counting.h"
+#include "logic/replacements.h"
 
 logic::term 
 reso::nnf( logic::beliefstate& blfs, namegenerator& gen,
@@ -60,7 +62,7 @@ reso::nnf( logic::beliefstate& blfs, namegenerator& gen,
 
             size_t ss = ctxt. size( );
             for( size_t i = 0; i != q. size( ); ++ i )
-               ctxt. extend( q. var(i). pref, q. var(i). tp );
+               ctxt. append( q. var(i). pref, q. var(i). tp );
 
             auto res = nnf( blfs, gen, ctxt, q. body( ), pol, eq );
 
@@ -152,7 +154,7 @@ reso::nnf( logic::beliefstate& blfs, namegenerator& gen,
 
             size_t ss = ctxt. size( );
             for( size_t i = 0; i != q. size( ); ++ i )
-               ctxt. extend( q. var(i). pref, q. var(i). tp );
+               ctxt. append( q. var(i). pref, q. var(i). tp );
 
             auto res = nnf( blfs, gen, ctxt, q. body( ), pol, eq );
 
@@ -189,6 +191,7 @@ reso::nnf( logic::beliefstate& blfs, namegenerator& gen,
 
 namespace
 {
+  
    void flatten_disj( std::vector< logic::term > & res,
                       logic::context& ctxt, logic::term f )
    {
@@ -200,14 +203,36 @@ namespace
          auto ex = f. view_quant( );
          size_t csize = ctxt. size( );
          for( size_t i = 0; i != ex. size( ); ++ i )
-            ctxt. extend( ex. var(i). pref, ex. var(i). tp );  
+            ctxt. append( ex. var(i). pref, ex. var(i). tp );  
          flatten_disj( res, ctxt, ex. body( ));
-         throw std::runtime_error( "good luck" );
+         ctxt. restore( csize );  
+         return; 
+      }
+
+      if( f. sel( ) == logic::op_kleene_or )
+      {
+         auto kl = f. view_kleene( );
+         for( size_t i = 0; i != kl. size( ); ++ i )
+            flatten_disj( res, ctxt, kl. sub(i));
+         return;
       }
 
       f = reso::flatten( std::move(f)); 
 
-      throw std::runtime_error( "must add the quantifier" );
+      if( ctxt. size( ) > 0 )
+      {
+         f = logic::term( logic::op_kleene_exists, f, 
+                          std::initializer_list< logic::vartype > ( ));
+         size_t ind = ctxt. size( );
+         while( ind )
+         {
+            -- ind;
+            f. view_quant( ). push_back( logic::vartype( ctxt. getname( ind ),
+                                                 ctxt. gettype( ind ))); 
+         } 
+      }
+
+      res. push_back( std::move(f) );
    }
                     
 
@@ -222,9 +247,10 @@ namespace
          auto ex = f. view_quant( );
          size_t csize = ctxt. size( );
          for( size_t i = 0; i != ex. size( ); ++ i )
-            ctxt. extend( ex. var(i). pref, ex. var(i). tp );
+            ctxt. append( ex. var(i). pref, ex. var(i). tp );
          flatten_conj( res, ctxt, ex. body( ));
-         throw std::runtime_error( "bad luck" );
+         ctxt. restore( csize );
+         return;  
       }
 
       if( f. sel( ) == logic::op_kleene_and )
@@ -237,11 +263,22 @@ namespace
 
       f = reso::flatten( std::move(f));
 
-      throw std::runtime_error( "must add the quantifier" );
+      if( ctxt. size( ) > 0 )
+      {
+         f = logic::term( logic::op_kleene_forall, f,
+                          std::initializer_list< logic::vartype > ( ));
+         size_t ind = ctxt. size( );
+         while( ind )
+         {
+            -- ind;
+            f. view_quant( ). push_back( logic::vartype( ctxt. getname( ind ),
+                                                 ctxt. gettype( ind )));
+         }
+      }
+
+      res. push_back( std::move(f) );
    }
    
-
-
 }
 
 
@@ -256,7 +293,16 @@ reso::flatten( logic::term f )
          std::vector< logic::term > disj;
          logic::context ctxt;
          flatten_disj( disj, ctxt, f );
-         throw std::runtime_error( "unfinished" );
+ 
+         // If the resulting disjunction contains only
+         // one element, we don't build it.
+         // Not sure if this should be done.
+
+         if( disj. size( ) == 1 )
+            return disj. front( );
+         else
+            return logic::term( logic::op_kleene_or, 
+                                disj. begin( ), disj. end( )); 
       }   
 
    case logic::op_kleene_and:
@@ -265,10 +311,16 @@ reso::flatten( logic::term f )
          std::vector< logic::term > conj;
          logic::context ctxt;
          flatten_conj( conj, ctxt, f );
-         throw std::runtime_error( "not finished" );
+         if( conj. size( ) == 1 )
+            return conj. front( );
+         else
+            return logic::term( logic::op_kleene_and,
+                                conj. begin( ), conj. end( )); 
       }
 
    case logic::op_apply:
+   case logic::op_equals:
+   case logic::op_not:
       return f;
    }
 
@@ -277,13 +329,44 @@ reso::flatten( logic::term f )
 
 
 logic::term
-reso::definesubform( logic::beliefstate& blfs, namegenerator& gen,
-                     logic::context& ctxt, logic::term t )
+reso::introduce_predicate( logic::beliefstate& blfs, 
+                           namegenerator& gen,
+                           logic::context& ctxt, logic::term t )
 {
+   std::map< size_t, size_t > freevars = count_debruijn(t);
+      // In increasing order. That means that the 
+      // nearest variable comes first.
 
+   for( const auto& p : freevars )
+      std::cout << p. first << " " << p. second << "\n";
 
+   // Create the predicate:
 
+   auto alpha = gen. create( "alpha" );
 
+   // Create the type of alpha:
+
+   auto T = logic::type( logic::type_truthval ); 
+   auto atype = logic::type( logic::type_func, T, {} );
+
+   logic::sparse_subst subst; 
+  
+   auto it = freevars. end( );
+   while( it != freevars. begin( ))
+   {
+      -- it; 
+      std::cout << ( it -> first ) << "\n";
+      atype. view_func( ). push_back( ctxt. gettype( it -> first ));
+   }
+
+   std::cout << atype << "\n"; 
+
+   // Add the declaration of alpha:
+
+   blfs. append( logic::belief( logic::bel_decl, 
+                                identifier( ) + alpha, atype ));
+
+   std::cout << blfs << "\n"; 
 }
 
 

@@ -31,13 +31,16 @@ namespace logic
    };
 
 
-   // The vector gives the value for 
+   // A vector substitution assigns values to all
+   // De Bruijn indices from #0 to #(s-1). 
+   // Because of this, it can be represented by a 
+   // vector of values.
 
-   struct substitution
+   struct vector_subst 
    {
       std::vector< term > values; 
 
-      substitution( ) = default; 
+      vector_subst( ) = default; 
          // You may add the values by yourself.
          // I don't know where they come form. 
          // I have no wish to make a polymorphic constructor. 
@@ -50,6 +53,27 @@ namespace logic
       term operator( ) ( term t, size_t vardepth, bool& change ) const;
 
       void print( std::ostream& out ) const;
+   };
+
+
+   // A sparse subst assigns values to some, but not
+   // necessarily all, De Bruijn indices. 
+   // In the implementation below, we assume that the
+   // De Bruijn indices are ordered in increasing order, 
+   // that means from nearest to farthest.
+
+   struct sparse_subst
+   {
+      std::vector< std::pair< size_t, term >> repl;
+
+      sparse_subst( ) = default;
+
+      void assign( size_t var, const term& val )
+         { repl. push_back( std::pair( var, val )); }
+      void assign( size_t var, term&& val )
+         { repl. push_back( std::pair( var, std::move( val ))); }
+ 
+      void print( std::ostream& out ) const;      
    };
 
 

@@ -93,6 +93,10 @@ namespace logic
    struct debruijn_counter
    {
       std::map< size_t, size_t > occ;
+         // It must be an ordered map. We use the debruijn counter 
+         // to introduce a new predicate for a subformula, and we want 
+         // the variables to be ordered in this predicate in the same 
+         // order as they are quantified in the surrounding scope. 
 
       void operator( ) ( const term& t, size_t vardepth );
       void print( std::ostream& out ) const;
@@ -106,8 +110,7 @@ namespace logic
    }
 
 
-   std::map< exact, size_t > count_beliefs( const term& t );
-      // Same above. We could have used a set too.
+   exact::unordered_map< size_t > count_beliefs( const term& t );
 
 }
 

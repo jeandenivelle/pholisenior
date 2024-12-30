@@ -421,6 +421,7 @@ void tests::transformations( logic::beliefstate& blfs )
    std::cout << "clause is: " << cls << "\n";
  
    cls = reso::flatten( cls );
+   std::cout << "flattened: " << cls << "\n";
 
 #if 0
    logic::simplifications::logical log;
@@ -593,7 +594,7 @@ void tests::replacements( )
 
    std::cout << simp << "\n";
 
-   substitution subst;
+   vector_subst subst;
    subst. push( term( op_true ));
    // subst. push( simp ); 
    std::cout << subst << "\n";

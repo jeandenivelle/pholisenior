@@ -22,10 +22,27 @@
 
 int main( int argc, char* argv[] )
 {
+   logic::beliefstate blfs;
+   reso::namegenerator gen;
+   logic::context ctxt;
+
+   ctxt. append( "aa", logic::type( logic::type_unchecked, 
+                                    identifier( ) + "three" ));
+   ctxt. append( "aa", logic::type( logic::type_truthval ));
+   ctxt. append( "aa", logic::type( logic::type_obj ));
+   ctxt. append( "aa", logic::type( logic::type_obj ));
+
+   auto fm = 2_db && 3_db;
+   std::cout << fm << "\n";
+
+   fm = introduce_predicate( blfs, gen, ctxt, std::move(fm));
+   
+   return 0;
+
    // tests::replacements( );
    // return 0;
 
-   logic::beliefstate blfs; 
+   // logic::beliefstate blfs; 
    tests::add_strict_prod( blfs ); 
 #if 0
    tests::add_function( blfs );

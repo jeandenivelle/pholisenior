@@ -29,12 +29,18 @@ namespace reso
       // and add definitions. 
 
    logic::term flatten( logic::term f );
-
+      // The formula must be in NNF, which implies that it contains
+      // only Kleene operators.
+      // Factor forall x P(X) & Q(X) --> forall X P(X) & forall X Q(X)
+      //        exists x P(X) | Q(x) --> exists X P(X) | exists X Q(X).
+      //        Merge nested | and & 
+      //        Merge nested forall and exist.
+ 
    // Create a definition for the formula:
 
    logic::term
-   definesubform( logic::beliefstate& blfs, namegenerator& gen,
-                  logic::context& ctxt, logic::term t );
+   introduce_predicate( logic::beliefstate& blfs, namegenerator& gen,
+                        logic::context& ctxt, logic::term t );
 
    logic::term
    clausify( logic::beliefstate& blfs, namegenerator& gen,
