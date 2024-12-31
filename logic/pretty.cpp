@@ -780,7 +780,6 @@ logic::pretty::print( std::ostream& out,
       out << names. extend( ctxt. getname( db ));   // The name made unique.
       out << " : ";
       print( out, blfs, ctxt. gettype( db ), {0,0} );
-      print( out, blfs, ctxt. gettype( db ), {0,0} );
       out << '\n';
    }
    if constexpr( false ) 
