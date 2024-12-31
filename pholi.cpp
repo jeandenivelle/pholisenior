@@ -10,6 +10,7 @@
 #include "logic/term.h"
 #include "logic/context.h"
 #include "logic/kbo.h"
+#include "logic/pretty.h"
 #include "logic/termoperators.h"
 
 #include "logic/structural.h"
@@ -38,6 +39,20 @@ int main( int argc, char* argv[] )
    std::cout << fm << "\n";
 
    fm = introduce_predicate( blfs, gen, ctxt, std::move(fm));
+
+   {
+      auto O = logic::type( logic::type_obj );
+      auto T = logic::type( logic::type_truthval );
+      auto OOT2T = logic::type( logic::type_func, T, { O, O, T } );
+      auto hello = logic::type( logic::type_unchecked, 
+                                identifier( ) + "hello" + "world" );
+      auto three = logic::type( logic::type_struct, logic::exact(2) );
+
+      auto tp = logic::type( logic::type_func, three, { OOT2T, hello, OOT2T } );
+      logic::pretty::print( std::cout, blfs, tp, {0,0} );
+
+      std::cout << "\n";
+   }
    return 0;
 
    // tests::replacements( );

@@ -154,7 +154,7 @@ logic::kbo::topleftright( const type& tp1, const type& tp2 )
          auto func2 = tp2. view_func( );
 
          std::strong_ordering ord =  
-            topleftright( func1. result(), func2. result() );
+            topleftright( func1. result( ), func2. result( ) );
 
          if( ord != std::strong_ordering::equal )
             return ord;

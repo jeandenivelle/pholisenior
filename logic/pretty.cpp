@@ -1,8 +1,6 @@
 
 #include "pretty.h"
 
-
-
 logic::pretty::attractions 
 logic::pretty::getattractions( logic::selector sel )
 {
@@ -18,6 +16,7 @@ logic::pretty::getattractions( logic::selector sel )
 	      // nullary terms
 
 #endif
+
    case op_not:
    case op_prop:
       return { 0, 150 };
@@ -91,41 +90,110 @@ logic::pretty::getattractions( logic::selector sel )
 }
 
 
-// One could try to use => :
+bool
+logic::pretty::parentheses::check( attractions attr,
+                              std::pair< unsigned int, unsigned int > env )
+{
+   // std::cout << "checking " << attr << " in environment " << env << "\n";
+
+   if( env. first || env. second )
+   {
+      if( attr. left <= env. first )
+      {
+         ++ nr;
+         return true;
+      }
+
+      if( attr. right <= env. second )
+      {
+         ++ nr;
+         return true;
+      }
+      return false;
+   }
+   else
+      return false;     // Environment cannot attract anything.
+}
+
+void 
+logic::pretty::parentheses::open( std::ostream& out ) const
+{
+   for( unsigned int i = 0; i != nr; ++ i )
+      out << "( ";
+}
+
+void 
+logic::pretty::parentheses::close( std::ostream& out ) const
+{
+   for( unsigned int i = 0; i != nr; ++ i )
+      out << " )";
+}
 
 void logic::pretty::print( std::ostream &out, const beliefstate& blfs,
-			   const type& tp, attractions envattr ) 
+			   const type& tp, 
+                           std::pair< unsigned int, unsigned int > env ) 
 {
-   out << tp; 
-#if 0
-   switch ( t. sel( ) ) 
+   if constexpr( false )
+      out << tp; 
+   else
    {
-   case logic::sel_set:
-      stream << "S";
-      return;
-   case logic::sel_truthval:
-      stream << "T";
-      return;
-   case logic::sel_belief:
-      stream << "B";
-      return;
-   case logic::sel_contr:
-      stream << "C";
-      return;
-   case logic::sel_func: 
+      switch ( tp. sel( )) 
       {
-	 logic::type::const_func func_t = t. view_func( );
-	 print( stream, func_t. result( )); 
-	 stream << "(";
-	 for ( size_t i = 0; i < func_t. size( ); ++i ) 
-	 {
-	    if(i) stream << ',';
-	    print( stream, func_t. arg(i) );
-	 }
-	 stream << ")";
+      case logic::type_obj:
+         out << "O";
+         return;
+
+      case logic::type_truthval:
+         out << "T";
+         return;
+
+      case logic::type_struct:
+         out << blfs. at( tp. view_struct( ). def( )). first. name( );
+         return;
+
+      case logic::type_unchecked:
+         out << tp. view_unchecked( ). id( );
+         return;
+ 
+      case logic::type_func: 
+         {
+            const attractions arrow_attr = { 121, 120 };
+            const attractions prod_attr = { 500, 501 }; 
+
+            parentheses par;
+            par. check( arrow_attr, env ); 
+            if( par ) env = {0,0}; 
+
+            par. open( out );
+
+	    auto f = tp. view_func( );
+
+            if( f. size( ) == 0 )
+               out << "( )";
+
+            if( f. size( ) == 1 )
+               print( out, blfs, f. arg(0), between( env, arrow_attr ));
+          
+            if( f. size( ) >= 2 ) 
+            {
+               print( out, blfs, f. arg(0), between( env, prod_attr ));
+               out << " * ";
+               for( size_t i = 1; i+1 < f. size( ); ++ i )
+               {
+                  print( out, blfs, f. arg(i), between( prod_attr, prod_attr ));
+                  out << " * ";
+               }
+
+               print( out, blfs, f. arg( f. size( ) - 1 ),  
+                      between( prod_attr, arrow_attr ));
+            }
+
+            out << " -> ";
+            print( out, blfs, f. result( ), between( arrow_attr, env ));
+            par. close( out );
+         }
       }
    }
-#endif
 }
 
 
@@ -176,17 +244,20 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 		 }
 
 	#endif
+
    case op_not:
    case op_prop:
       {
 	 auto un = t. view_unary( );
          auto ourattr = getattractions( t. sel( )); 
-	 parprinter par( out );
+	 // parprinter par( out );
+#if 0
 	 par. printif( envattr. left >= ourattr. right );
          if( t. sel( ) == op_not )
             out << "! ";
          if( t. sel( ) == op_prop )
             out << '#';
+#endif
  
          print( out, blfs, names, un. sub( ), 
                 { ourattr. right, envattr. left } );
@@ -209,9 +280,11 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          auto bin = t. view_binary( );
          auto ourattr = getattractions( t. sel( ));
             
-         parprinter par( out );
+         // parprinter par( out );
+#if 0
          par. printif( envattr. left >= ourattr. left ||
                        envattr. right >= ourattr. right );
+#endif
 
          print( out, blfs, names, bin. sub1( ), 
                   { envattr. left, ourattr. left } );
@@ -317,15 +390,17 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          auto q = t. view_quant( );
          const size_t ss = names. size( );
 
-         parprinter par( out );
+         // parprinter par( out );
 
          auto ourattr = getattractions( t. sel( ));
+#if 0
          par. printif( ourattr. right <= envattr. left );
        
          if( t. sel( ) == op_forall )
             out << "FORALL";
          if( t. sel( ) == op_exists )
             out << "EXISTS";
+#endif
 
          for( size_t i = 0; i != q. size( ); ++ i )
          {
@@ -336,7 +411,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
             
             out << names. extend( q. var(i). pref );
             out << ": ";
-            print( out, blfs, q. var(i). tp, attractions(0,0) );
+            print( out, blfs, q. var(i). tp, {0,0} );
          }
    
          out << " : ";
@@ -587,7 +662,7 @@ logic::pretty::print( std::ostream& out,
       out << "   ";
       out << names. extend( ctxt. getname( db ));   // The name made unique.
       out << " : ";
-      print( out, blfs, ctxt. gettype( db ), attractions(0,0) );
+      print( out, blfs, ctxt. gettype( db ), {0,0} );
       out << '\n';
    }
    if constexpr( false ) 
