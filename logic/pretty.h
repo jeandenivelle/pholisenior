@@ -85,7 +85,7 @@ namespace pretty
  
    void print( std::ostream& out, const beliefstate& blfs,
                uniquenamestack& names,
-               const term& t, attractions attr );
+               const term& t, std::pair< unsigned int, unsigned int > env );
 
    void print( std::ostream& out, const beliefstate& blfs,
                context& ctxt, const term& t );
@@ -117,4 +117,3 @@ namespace pretty
 }}
 
 #endif
-
