@@ -35,45 +35,57 @@ namespace pretty
 
       void print( std::ostream& out ) const
          { out << left << '/' << right; } 
+
    };
 
    attractions getattractions( selector sel );
 
+   inline 
+   std::ostream& operator << ( std::ostream& out, 
+                               std::pair< unsigned int , unsigned int > env )
+   { 
+      out << env. first << '/' << env. second; 
+      return out; 
+   }
 
-   // Class that helps in printing opening '(', and remembers them.
-   // It prints the corresponding ')' when destroyed.
+   std::pair< unsigned int, unsigned int > 
+   inline 
+   between( std::pair< unsigned int, unsigned int > env , attractions attr )
+      { return { env. first, attr. left }; }
+      
+   std::pair< unsigned int, unsigned int >
+   inline between( attractions attr1 , attractions attr2 )
+      { return { attr1. right, attr2. left }; }
 
-   struct parprinter
+   std::pair< unsigned int, unsigned int >
+   inline
+   between( attractions attr, std::pair< unsigned int , unsigned int > env )
+      { return { attr. right, env. second }; }
+
+   struct parentheses
    {
-      std::ostream& out;
       unsigned int nr;
     
-      parprinter( std::ostream& out ) noexcept 
-         : out( out ), nr(0)
+      parentheses( ) noexcept 
+         : nr(0)
       { }
 
-      parprinter( parprinter&& ) = default;
-      parprinter& operator = ( parprinter&& );
+      operator bool( ) const { return nr; }
 
-      void printif( bool b ) 
-      { 
-         if(b) { out << "( "; ++ nr; } 
-      }
+      bool check( attractions attr,
+                  std::pair< unsigned, unsigned int > env );
 
-      ~parprinter( )
-      {
-         while( nr -- )
-            out << " )";
-      }
+      void open( std::ostream& out ) const;
+      void close( std::ostream& out ) const;
    };
 
 
    void print( std::ostream& out, const beliefstate& blfs, 
-               const type& tp, attractions attr );
+               const type& tp, std::pair< unsigned int, unsigned int > env );
  
    void print( std::ostream& out, const beliefstate& blfs,
                uniquenamestack& names,
-               const term& t, attractions attr );
+               const term& t, std::pair< unsigned int, unsigned int > env );
 
    void print( std::ostream& out, const beliefstate& blfs,
                context& ctxt, const term& t );
@@ -105,4 +117,3 @@ namespace pretty
 }}
 
 #endif
-
