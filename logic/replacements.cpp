@@ -29,7 +29,8 @@ logic::lifter::print( std::ostream& out ) const
 
 
 logic::term
-logic::substitution::operator( ) ( term t, size_t vardepth, bool& change ) const
+logic::vector_subst::operator( ) ( term t, size_t vardepth, 
+                                   bool& change ) const
 {
    if( t. sel( ) == op_debruijn )
    {
@@ -66,14 +67,45 @@ logic::substitution::operator( ) ( term t, size_t vardepth, bool& change ) const
 }
 
 
-void logic::substitution::print( std::ostream& out ) const
+void logic::vector_subst::print( std::ostream& out ) const
 {
-   out << "Substitution:\n";
+   out << "Vector-subst:\n";
    for( ssize_t i = 1 - values. size( ); const auto& v: values ) 
    {
       out << "   #" << i << " := " << v << "\n";
       ++ i; 
    }
+}
+
+
+logic::term
+logic::sparse_subst::operator( ) ( term t, size_t vardepth, 
+                                   bool& change ) const
+{
+   std::cout << "sparse subst " << t << "[ " << vardepth << " ]\n";
+   if( t. sel( ) == op_debruijn )
+   {
+      size_t ind = t. view_debruijn( ). index( );
+      if( ind >= vardepth )
+      {
+         ind -= vardepth;
+         auto p = repl. find( ind );
+         if( p != repl. end( ))
+         {
+            change = true;
+            return p -> second; 
+         }
+      }
+   }
+
+   return t;
+}
+
+void logic::sparse_subst::print( std::ostream& out ) const
+{
+   out << "Sparse-subst:\n";
+   for( const auto& r : repl )
+      out << "   #" << r. first << " := " << r. second << "\n";
 }
 
 

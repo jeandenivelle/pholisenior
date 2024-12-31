@@ -26,9 +26,9 @@ namespace logic
       size_t rank;
       exact::unordered_set successors;
          // Direct successors (which must have higher rank).
-         // I am not sure what should be stored here. It seems more natural
-         // to store predecessors, but it makes the ranking algorithm
-         // less efficient. Maybe one needs two indices. 
+         // I am not sure what should be stored here. It seems more
+         // natural to store predecessors, but it makes the ranking 
+         // algorithm less efficient. Maybe one needs two indices. 
 
       dependencies( ) 
          : rank(0)

@@ -22,7 +22,7 @@ namespace logic
       context( context&& ) noexcept = default;
       context& operator = ( context&& ) noexcept = default; 
 
-      void extend( const std::string& name, const type& tp )
+      void append( const std::string& name, const type& tp )
          { vect. push_back( std::pair( name, tp )); } 
          // Note that is completely useless to append digits to a suggested
          // variable name, because printing will remove the index, and

@@ -413,13 +413,16 @@ void tests::transformations( logic::beliefstate& blfs )
    std::cout << "trying to make clause from " << ind << "\n";
 
    context ctxt;
-   reso::namegenerator gen; 
+   reso::namegenerators gen;
    std::cout << "\n\n";
    auto cls = reso::nnf( blfs, gen, ctxt, ind. view_form( ). form( ), 
                          reso::pol_neg, 0 );
 
    std::cout << "clause is: " << cls << "\n";
  
+   cls = reso::flatten( cls );
+   std::cout << "flattened: " << cls << "\n";
+
 #if 0
    logic::simplifications::logical log;
    std::cout << log << "\n";
@@ -591,8 +594,8 @@ void tests::replacements( )
 
    std::cout << simp << "\n";
 
-   substitution subst;
-   subst. push( term( op_true ));
+   vector_subst subst;
+   subst. push_back( term( op_true ));
    // subst. push( simp ); 
    std::cout << subst << "\n";
 

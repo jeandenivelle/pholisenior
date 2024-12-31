@@ -1,8 +1,6 @@
 
 #include "pretty.h"
 
-
-
 logic::pretty::attractions 
 logic::pretty::getattractions( logic::selector sel )
 {
@@ -18,6 +16,7 @@ logic::pretty::getattractions( logic::selector sel )
 	      // nullary terms
 
 #endif
+
    case op_not:
    case op_prop:
       return { 0, 150 };
@@ -276,6 +275,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 		 }
 
 	#endif
+
    case op_not:
    case op_prop:
       {
@@ -779,6 +779,7 @@ logic::pretty::print( std::ostream& out,
       out << "   ";
       out << names. extend( ctxt. getname( db ));   // The name made unique.
       out << " : ";
+      print( out, blfs, ctxt. gettype( db ), {0,0} );
       print( out, blfs, ctxt. gettype( db ), {0,0} );
       out << '\n';
    }

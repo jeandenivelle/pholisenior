@@ -563,7 +563,7 @@ logic::checkandresolve( const beliefstate& blfs,
          }
 
          for( size_t i = 0; i != quant. size( ); ++ i )
-            ctxt. extend( quant. var(i). pref, quant. var(i). tp );
+            ctxt. append( quant. var(i). pref, quant. var(i). tp );
 
          std::optional< type > bodytype; 
 
@@ -746,7 +746,7 @@ logic::checkandresolve( const beliefstate& blfs,
 
          size_t contextsize = ctxt. size( );
          for( size_t i = 0; i != lamb. size( ); ++ i )
-            ctxt. extend( lamb. var(i). pref, lamb. var(i). tp );
+            ctxt. append( lamb. var(i). pref, lamb. var(i). tp );
 
          std::optional< type > bodytype;
 

@@ -7,6 +7,7 @@
 #include "util/print.h"
 
 #include <vector>
+#include <unordered_map>
 
 namespace logic
 {
@@ -31,25 +32,48 @@ namespace logic
    };
 
 
-   // The vector gives the value for 
+   // A vector substitution assigns values to all
+   // De Bruijn indices from #0 to #(s-1). 
+   // Because of this, it can be represented by a 
+   // vector of values.
 
-   struct substitution
+   struct vector_subst 
    {
       std::vector< term > values; 
 
-      substitution( ) = default; 
+      vector_subst( ) = default; 
          // You may add the values by yourself.
          // I don't know where they come form. 
          // I have no wish to make a polymorphic constructor. 
 
-      void push( const term& t ) { values. push_back(t); }
-      void push( term&& t ) { values. push_back( std::move(t)); }
+      void push_back( const term& t ) { values. push_back(t); }
+      void push_back( term&& t ) { values. push_back( std::move(t)); }
 
       size_t size( ) const { return values. size( ); }
 
       term operator( ) ( term t, size_t vardepth, bool& change ) const;
 
       void print( std::ostream& out ) const;
+   };
+
+
+   // A sparse subst assigns values to some, but not
+   // necessarily all, De Bruijn indices. 
+
+   struct sparse_subst
+   {
+      std::unordered_map< size_t, term > repl;
+
+      sparse_subst( ) = default;
+
+      void append( size_t var, const term& val )
+         { repl. insert( std::pair( var, val )); }
+      void append( size_t var, term&& val )
+         { repl. insert( std::pair( var, std::move( val ))); }
+
+      term operator( ) ( term t, size_t vardepth, bool& change ) const;
+ 
+      void print( std::ostream& out ) const;      
    };
 
 

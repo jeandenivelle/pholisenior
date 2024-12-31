@@ -1,71 +1,10 @@
 
 #include "transformations.h"
-
-const char* reso::getcstring( polarity pol )
-{
-   switch( pol )
-   {
-   case pol_pos:       return "pos"; 
-   case pol_neg:       return "neg";
-   case pol_prop:      return "prop";
-   case pol_negprop:   return "neg-prop";
-   default:            return "???";
-   }
-}
-
-reso::polarity reso::negate( reso::polarity pol )
-{
-   switch( pol )
-   {
-   case pol_pos:       return pol_neg;
-   case pol_neg:       return pol_pos;
-   case pol_prop:      return pol_negprop;
-   case pol_negprop:   return pol_prop;
-   }
-   std::cout << pol << "\n";
-   throw std::logic_error( "cannot negate" ); 
-}
-
-logic::selector reso::demorgan( logic::selector sel, polarity pol )
-{
-   if( pol == pol_pos || pol == pol_prop )
-   {
-      // We still check:
-
-      switch( sel )
-      {
-      case logic::op_kleene_and:
-      case logic::op_kleene_or:
-      case logic::op_kleene_forall:
-      case logic::op_kleene_exists:
-         return sel;
-      }
-
-   }
-   else
-   {
-      switch( sel )
-      {
-      case logic::op_kleene_and:
-         return logic::op_kleene_or;
- 
-      case logic::op_kleene_or:
-         return logic::op_kleene_and; 
-
-      case logic::op_kleene_forall:
-         return logic::op_kleene_exists;
-
-      case logic::op_kleene_exists:
-         return logic::op_kleene_forall;
-      }
-   }
-
-   std::cout << "demorgan " << sel << " / " << pol << "\n";
-   throw std::runtime_error( "De Morgan: unhandled case" ); 
-}
+#include "logic/counting.h"
+#include "logic/replacements.h"
 
 logic::term 
-reso::nnf( logic::beliefstate& blfs, namegenerator& gen,
+reso::nnf( logic::beliefstate& blfs, namegenerators& gen,
            logic::context& ctxt, logic::term f, const polarity pol, 
            const unsigned int eq )
 {
@@ -123,7 +62,7 @@ reso::nnf( logic::beliefstate& blfs, namegenerator& gen,
 
             size_t ss = ctxt. size( );
             for( size_t i = 0; i != q. size( ); ++ i )
-               ctxt. extend( q. var(i). pref, q. var(i). tp );
+               ctxt. append( q. var(i). pref, q. var(i). tp );
 
             auto res = nnf( blfs, gen, ctxt, q. body( ), pol, eq );
 
@@ -215,7 +154,7 @@ reso::nnf( logic::beliefstate& blfs, namegenerator& gen,
 
             size_t ss = ctxt. size( );
             for( size_t i = 0; i != q. size( ); ++ i )
-               ctxt. extend( q. var(i). pref, q. var(i). tp );
+               ctxt. append( q. var(i). pref, q. var(i). tp );
 
             auto res = nnf( blfs, gen, ctxt, q. body( ), pol, eq );
 
@@ -250,6 +189,249 @@ reso::nnf( logic::beliefstate& blfs, namegenerator& gen,
    }
 }
 
+namespace
+{
+  
+   void flatten_disj( std::vector< logic::term > & res,
+                      logic::context& ctxt, logic::term f )
+   {
+      std::cout << ctxt << "\n";
+      std::cout << "flatten_disj: " << f << "\n";
 
+      if( f. sel( ) == logic::op_kleene_exists )
+      {
+         auto ex = f. view_quant( );
+         size_t csize = ctxt. size( );
+         for( size_t i = 0; i != ex. size( ); ++ i )
+            ctxt. append( ex. var(i). pref, ex. var(i). tp );  
+         flatten_disj( res, ctxt, ex. body( ));
+         ctxt. restore( csize );  
+         return; 
+      }
+
+      if( f. sel( ) == logic::op_kleene_or )
+      {
+         auto kl = f. view_kleene( );
+         for( size_t i = 0; i != kl. size( ); ++ i )
+            flatten_disj( res, ctxt, kl. sub(i));
+         return;
+      }
+
+      f = reso::flatten( std::move(f)); 
+
+      if( ctxt. size( ) > 0 )
+      {
+         f = logic::term( logic::op_kleene_exists, f, 
+                          std::initializer_list< logic::vartype > ( ));
+         size_t ind = ctxt. size( );
+         while( ind )
+         {
+            -- ind;
+            f. view_quant( ). push_back( logic::vartype( ctxt. getname( ind ),
+                                                 ctxt. gettype( ind ))); 
+         } 
+      }
+
+      res. push_back( std::move(f) );
+   }
+                    
+
+   void flatten_conj( std::vector< logic::term > & res,
+                      logic::context& ctxt, logic::term f )
+   {
+      std::cout << ctxt << "\n";
+      std::cout << "flatten_conj: " << f << "\n";
+
+      if( f. sel( ) == logic::op_kleene_forall )
+      {
+         auto ex = f. view_quant( );
+         size_t csize = ctxt. size( );
+         for( size_t i = 0; i != ex. size( ); ++ i )
+            ctxt. append( ex. var(i). pref, ex. var(i). tp );
+         flatten_conj( res, ctxt, ex. body( ));
+         ctxt. restore( csize );
+         return;  
+      }
+
+      if( f. sel( ) == logic::op_kleene_and )
+      {
+         auto kl = f. view_kleene( );
+         for( size_t i = 0; i != kl. size( ); ++ i ) 
+            flatten_conj( res, ctxt, kl. sub(i));
+         return; 
+      }
+
+      f = reso::flatten( std::move(f));
+
+      if( ctxt. size( ) > 0 )
+      {
+         f = logic::term( logic::op_kleene_forall, f,
+                          std::initializer_list< logic::vartype > ( ));
+         size_t ind = ctxt. size( );
+         while( ind )
+         {
+            -- ind;
+            f. view_quant( ). push_back( logic::vartype( ctxt. getname( ind ),
+                                                 ctxt. gettype( ind )));
+         }
+      }
+
+      res. push_back( std::move(f) );
+   }
+   
+}
+
+
+logic::term
+reso::flatten( logic::term f )
+{
+   switch( f. sel( ))
+   {
+   case logic::op_kleene_or:
+   case logic::op_kleene_exists:
+      {
+         std::vector< logic::term > disj;
+         logic::context ctxt;
+         flatten_disj( disj, ctxt, f );
+ 
+         // If the resulting disjunction contains only
+         // one element, we don't build it.
+         // Not sure if this should be done.
+
+         if( disj. size( ) == 1 )
+            return disj. front( );
+         else
+            return logic::term( logic::op_kleene_or, 
+                                disj. begin( ), disj. end( )); 
+      }   
+
+   case logic::op_kleene_and:
+   case logic::op_kleene_forall:
+      {
+         std::vector< logic::term > conj;
+         logic::context ctxt;
+         flatten_conj( conj, ctxt, f );
+         if( conj. size( ) == 1 )
+            return conj. front( );
+         else
+            return logic::term( logic::op_kleene_and,
+                                conj. begin( ), conj. end( )); 
+      }
+
+   case logic::op_apply:
+   case logic::op_equals:
+   case logic::op_not:
+      return f;
+   }
+
+   throw std::runtime_error( "cannot handle" ); 
+}
+
+
+logic::term
+reso::introduce_predicate( logic::beliefstate& blfs, 
+                           namegenerators& gen,
+                           logic::context& ctxt, logic::term ff )
+{
+   auto freevars = count_debruijn( ff );
+      // In increasing order. That means that the 
+      // nearest variable comes first.
+
+   std::cout << freevars << "\n";
+
+   // Create the new predicate:
+
+   identifier pred = identifier( ) + gen. pred. next( );
+
+   while( blfs. getfunctions( pred ). size( ) ||
+          blfs. getstructdefs( pred ). size( ))
+   {
+      pred = identifier( ) + gen. predisprop. next( );
+   }
+ 
+   // Create the type of pred:
+
+   auto T = logic::type( logic::type_truthval ); 
+   auto atype = logic::type( logic::type_func, T, {} );
+
+   logic::sparse_subst subst; 
+  
+   for( auto it = freevars. end( ); it != freevars. begin( ); )
+   {
+      -- it; 
+      atype. view_func( ). push_back( ctxt. gettype( it -> first ));
+   }
+
+   std::cout << atype << "\n"; 
+
+   // Add the declaration of pred:
+
+   blfs. append( logic::belief( logic::bel_decl, pred, atype ));
+
+   // Create forall( x1, ..., xn ) # pred( x1, ..., xn ) :
+
+   auto atom = logic::term( logic::op_unchecked, pred );
+   atom = logic::term( logic::op_apply, atom, 
+                       std::initializer_list< logic::term > ( ));
+
+   std::cout << "atom = " << atom << "\n";
+
+   for( size_t i = freevars. size( ); i; )
+   {
+      -- i;
+      atom. view_apply( ). push_back( logic::term( logic::op_debruijn, i ));
+   }
+
+   auto forall = logic::term( logic::op_kleene_forall, 
+                       logic::term( logic::op_prop, atom ),
+                       std::initializer_list< logic::vartype > ( ));
+
+   for( auto it = freevars. end( ); it != freevars. begin( ); )
+   {
+      -- it;
+      forall. view_quant( ). push_back( { "xx", ctxt. gettype( it -> first ) } );
+   }
+
+   blfs. append( logic::belief( logic::bel_form, identifier( ) + 
+                 gen. predisprop. next( ), forall, { } ));
+
+   logic::sparse_subst norm;
+   {
+      auto it = freevars. begin( );
+      size_t var = 0;
+      while( it != freevars. end( ))
+      {
+         norm. append( it -> first, logic::term( logic::op_debruijn, var )); 
+         ++ it; ++ var;
+      }
+   }
+
+   std::cout << "norm = " << norm << "\n";
+
+   bool change = false; 
+   ff = topdown( norm, std::move( ff ), 0, change );
+
+   forall. view_quant( ). update_body( 
+      logic::term( logic::op_kleene_or, {
+         logic::term( logic::op_not, atom ), ff } ));
+     
+   blfs. append( logic::belief( logic::bel_form, identifier( ) +
+                 gen. preddef. next( ), forall, { } ));
+
+
+   atom = logic::term( logic::op_apply, 
+                       logic::term( logic::op_unchecked, pred ),
+                       std::initializer_list< logic::term > ( ));
+
+   for( auto it = freevars. end( ); it != freevars. begin( ); )
+   {
+      -- it;
+      atom. view_apply( ). push_back( logic::term( logic::op_debruijn, it -> first ));
+   }
+ 
+   std::cout << blfs << "\n"; 
+   std::cout << "the atom is " << atom << "\n";
+   return ff;
+}
 
 
