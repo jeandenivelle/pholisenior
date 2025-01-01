@@ -104,25 +104,25 @@ namespace logic
          {
             auto q = t. view_quant( ); 
 
-            q. update_body( 
-                  topdown( repl, q. extr_body( ), vardepth + q. size( ), change ));
+            q. update_body( topdown( repl, q. extr_body( ), 
+                                     vardepth + q. size( ), change ));
          }
          return t; 
 
-#if 0
-      case sel_appl:
+      case op_apply:
          {
-            auto p = t. view_appl( );
+            auto ap = t. view_apply( );
 
-            p. update_func( 
-                       topdown_sar( changes, repl, p. extr_func( ), vardepth ));
- 
-            for( size_t i = 0; i != p. size( ); ++ i )
-               p. update_arg( i, 
-                       topdown_sar( changes, repl, p. extr_arg(i), vardepth ));
+            ap. update_func( topdown( repl, ap. extr_func( ), 
+                             vardepth, change ));
+
+            for( size_t i = 0; i != ap. size( ); ++ i )
+            {
+               ap. update_arg( i, topdown( repl, ap. extr_arg(i), 
+                               vardepth, change ));
+            }
          }
          return t;
-#endif
 
       case op_lambda:
          {

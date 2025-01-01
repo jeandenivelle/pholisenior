@@ -7,44 +7,40 @@ const char* reso::getcstring( polarity pol )
    {
    case pol_pos:       return "pos"; 
    case pol_neg:       return "neg";
-   case pol_prop:      return "prop";
-   case pol_negprop:   return "neg-prop";
    default:            return "???";
    }
 }
 
-reso::polarity reso::negate( reso::polarity pol )
+reso::polarity reso::operator - ( polarity pol )
 {
    switch( pol )
    {
    case pol_pos:       return pol_neg;
    case pol_neg:       return pol_pos;
-   case pol_prop:      return pol_negprop;
-   case pol_negprop:   return pol_prop;
    }
    std::cout << pol << "\n";
    throw std::logic_error( "cannot negate" ); 
 }
 
-logic::selector reso::demorgan( logic::selector sel, polarity pol )
+logic::selector reso::demorgan( polarity pol, logic::selector op )
 {
-   if( pol == pol_pos || pol == pol_prop )
+   if( pol == pol_pos )
    {
       // We still check:
 
-      switch( sel )
+      switch( op )
       {
       case logic::op_kleene_and:
       case logic::op_kleene_or:
       case logic::op_kleene_forall:
       case logic::op_kleene_exists:
-         return sel;
+         return op; 
       }
 
    }
    else
    {
-      switch( sel )
+      switch( op )
       {
       case logic::op_kleene_and:
          return logic::op_kleene_or;
@@ -60,7 +56,7 @@ logic::selector reso::demorgan( logic::selector sel, polarity pol )
       }
    }
 
-   std::cout << "demorgan " << sel << " / " << pol << "\n";
+   std::cout << "demorgan " << op << " / " << pol << "\n";
    throw std::runtime_error( "De Morgan: unhandled case" ); 
 }
 

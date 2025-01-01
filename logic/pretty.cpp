@@ -90,7 +90,7 @@ logic::pretty::getattractions( logic::selector sel )
 }
 
 
-bool
+void
 logic::pretty::parentheses::check( attractions attr,
                               std::pair< unsigned int, unsigned int > env )
 {
@@ -101,18 +101,15 @@ logic::pretty::parentheses::check( attractions attr,
       if( attr. left <= env. first )
       {
          ++ nr;
-         return true;
+         return;
       }
 
       if( attr. right <= env. second )
       {
          ++ nr;
-         return true;
+         return;
       }
-      return false;
    }
-   else
-      return false;     // Environment cannot attract anything.
 }
 
 void 

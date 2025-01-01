@@ -12,21 +12,18 @@
 namespace reso
 {
 
-   bool biggerthan( const logic::term& t, size_t max );
-      // Return true if term t is bigger than max.
-      // We stop checking when we reach max, so that this function works
-      // in constant time.
+   bool issimple( const logic::term& f );
+      // True if f is simple. Currently this means:
+      // Does not contain any binary operators.
 
-   logic::term 
-   nnf( logic::beliefstate& blfs, namegenerators& gen,
-        logic::context& ctxt, 
-        logic::term f, const polarity pol, const unsigned int eq );
+   logic::term
+   repl_equiv( logic::beliefstate& blfs, namegenerators& gen,
+               logic::context& ctxt, logic::term f, unsigned int equivs );
 
-      // Variable eq is the number of equivalences that we are in.
-      // If it becomes too high, we introduce a definition, because
-      // an equivalence generates a positive and a negative copy.
-      // Introduces Kleene operators at the same time,
-      // and add definitions. 
+      // Replace nested equivalences by definitions.
+
+   logic::term nnf( logic::term f, polarity pol );
+   logic::term nnf_prop( logic::term f, polarity pol );
 
    logic::term flatten( logic::term f );
       // The formula must be in NNF, which implies that it contains
@@ -39,8 +36,8 @@ namespace reso
    // Create a definition for the formula:
 
    logic::term
-   introduce_predicate( logic::beliefstate& blfs, namegenerators& gen,
-                        logic::context& ctxt, logic::term t );
+   repl_subform( logic::beliefstate& blfs, namegenerators& gen,
+                 logic::context& ctxt, logic::term t, bool equiv );
 
    logic::term
    clausify( logic::beliefstate& blfs, namegenerators& gen,

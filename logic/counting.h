@@ -113,6 +113,7 @@ namespace logic
       void print( std::ostream& out ) const;
    };
 
+
    inline debruijn_counter count_debruijn( const term& t )
    {
       debruijn_counter db;
@@ -120,8 +121,8 @@ namespace logic
       return db;
    }
 
-
    exact::unordered_map< size_t > count_beliefs( const term& t );
+
 
 }
 

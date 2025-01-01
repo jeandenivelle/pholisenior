@@ -21,42 +21,13 @@
 #include "reso/transformations.h"
 #include "reso/namegenerators.h"
 
+
 int main( int argc, char* argv[] )
 {
+
    logic::beliefstate blfs;
    reso::namegenerators gen;
    std::cout << gen << "\n";
-
-   logic::context ctxt;
-
-   ctxt. append( "aa", logic::type( logic::type_unchecked, 
-                                    identifier( ) + "three" ));
-   ctxt. append( "aa", logic::type( logic::type_truthval ));
-   ctxt. append( "aa", logic::type( logic::type_obj ));
-   ctxt. append( "aa", logic::type( logic::type_obj ));
-
-   auto fm = 2_db && 3_db;
-   std::cout << fm << "\n";
-
-   fm = introduce_predicate( blfs, gen, ctxt, std::move(fm));
-
-   {
-      auto O = logic::type( logic::type_obj );
-      auto T = logic::type( logic::type_truthval );
-      auto OOT2T = logic::type( logic::type_func, T, { O, O, T } );
-      auto hello = logic::type( logic::type_unchecked, 
-                                identifier( ) + "hello" + "world" );
-      auto three = logic::type( logic::type_struct, logic::exact(2) );
-
-      auto tp = logic::type( logic::type_func, three, { OOT2T, hello, OOT2T } );
-      logic::pretty::print( std::cout, blfs, tp, {0,0} );
-
-      std::cout << "\n";
-   }
-   return 0;
-
-   // tests::replacements( );
-   // return 0;
 
    // logic::beliefstate blfs; 
    tests::add_strict_prod( blfs ); 

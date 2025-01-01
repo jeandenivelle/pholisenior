@@ -35,7 +35,9 @@ namespace logic
    // A vector substitution assigns values to all
    // De Bruijn indices from #0 to #(s-1). 
    // Because of this, it can be represented by a 
-   // vector of values.
+   // vector of values. vector_subst supports 
+   // stack-like behaviour. This is needed for
+   // anti-prenexing.
 
    struct vector_subst 
    {
@@ -46,10 +48,11 @@ namespace logic
          // I don't know where they come form. 
          // I have no wish to make a polymorphic constructor. 
 
-      void push_back( const term& t ) { values. push_back(t); }
-      void push_back( term&& t ) { values. push_back( std::move(t)); }
+      void push( const term& t ) { values. push_back(t); }
+      void push( term&& t ) { values. push_back( std::move(t)); }
 
       size_t size( ) const { return values. size( ); }
+      void restore( size_t s );
 
       term operator( ) ( term t, size_t vardepth, bool& change ) const;
 
@@ -60,15 +63,16 @@ namespace logic
    // A sparse subst assigns values to some, but not
    // necessarily all, De Bruijn indices. 
 
-   struct sparse_subst
+   class sparse_subst
    {
       std::unordered_map< size_t, term > repl;
 
-      sparse_subst( ) = default;
+   public:
+      sparse_subst( ) noexcept = default;
 
-      void append( size_t var, const term& val )
+      void assign( size_t var, const term& val )
          { repl. insert( std::pair( var, val )); }
-      void append( size_t var, term&& val )
+      void assign( size_t var, term&& val )
          { repl. insert( std::pair( var, std::move( val ))); }
 
       term operator( ) ( term t, size_t vardepth, bool& change ) const;

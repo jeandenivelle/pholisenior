@@ -405,6 +405,29 @@ void tests::transformations( logic::beliefstate& blfs )
 
    using namespace logic;
 
+   {
+      auto X = logic::type( type_unchecked, identifier( ) + "X" );
+      auto Y = logic::type( type_unchecked, identifier( ) + "Y" );
+
+      auto p1 = apply( "p1"_unchecked, { 1_db, 0_db } );
+      auto p2 = apply( "p2"_unchecked, { 1_db, 0_db } );     
+      auto p3 = apply( "p3"_unchecked, { 1_db, 0_db } );
+      auto p4 = apply( "p4"_unchecked, { 1_db, 0_db } );
+
+      auto f1 = forall( {{ "y", Y }}, equiv( p1, p2 ));
+      auto f2 = forall( {{ "y", Y }}, equiv( p3, p4 ));
+
+      auto f = forall( {{ "x", X }}, equiv( f1, f2 ));
+      std::cout << f << "\n";
+       
+      reso::namegenerators gen;
+      context ctxt;
+
+      f = reso::repl_equiv( blfs, gen, ctxt, f, 1 );
+      std::cout << "nnf = " << f << "\n";
+      return;  
+   }
+
    const auto& f = blfs. getformulas( identifier( ) + "just" );
    if( f. size( ) != 1 )
       throw std::runtime_error( "cannot continue" );
@@ -415,8 +438,7 @@ void tests::transformations( logic::beliefstate& blfs )
    context ctxt;
    reso::namegenerators gen;
    std::cout << "\n\n";
-   auto cls = reso::nnf( blfs, gen, ctxt, ind. view_form( ). form( ), 
-                         reso::pol_neg, 0 );
+   auto cls = reso::nnf( ind. view_form( ). form( ), reso::pol_neg );
 
    std::cout << "clause is: " << cls << "\n";
  
@@ -595,7 +617,7 @@ void tests::replacements( )
    std::cout << simp << "\n";
 
    vector_subst subst;
-   subst. push_back( term( op_true ));
+   subst. push( term( op_true ));
    // subst. push( simp ); 
    std::cout << subst << "\n";
 

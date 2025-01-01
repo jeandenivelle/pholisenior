@@ -17,9 +17,9 @@ namespace reso
    inline 
    std::ostream& operator << ( std::ostream& out, const namegenerators& gen )
    {
-      out << "pred = " << gen. pred << "\n";
-      out << "predprop = " << gen. predisprop << "\n";
-      out << "preddef = " << gen. preddef << "\n";
+      out << "pred = " << gen. pred;
+      out << "predprop = " << gen. predisprop;
+      out << "preddef = " << gen. preddef;
       return out;
    }
 }

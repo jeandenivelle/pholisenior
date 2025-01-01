@@ -72,7 +72,7 @@ namespace pretty
 
       operator bool( ) const { return nr; }
 
-      bool check( attractions attr,
+      void check( attractions attr,
                   std::pair< unsigned, unsigned int > env );
 
       void open( std::ostream& out ) const;

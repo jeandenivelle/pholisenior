@@ -18,11 +18,11 @@ namespace reso
    public:
       namegenerator( const std::string& base, 
                      const std::string& index = "0000" )
-         : base( base ),
-           index( index )
+         : base( base ), index( index )
       { }
 
       std::string next( );
+         // Return a string, and increase the counter after that.
 
       void print( std::ostream& out ) const;
    };

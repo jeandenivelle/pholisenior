@@ -3,25 +3,114 @@
 #include "logic/counting.h"
 #include "logic/replacements.h"
 
-logic::term 
-reso::nnf( logic::beliefstate& blfs, namegenerators& gen,
-           logic::context& ctxt, logic::term f, const polarity pol, 
-           const unsigned int eq )
+
+bool reso::issimple( const logic::term& f )
 {
-   if( true )
+   return false;
+
+   switch( f. sel( ))
    {
-      std::cout << ctxt << "\n";
-      std::cout << pol << ":   " << f << "\n";
-      std::cout << "eq = " << eq << "\n";
+   case logic::op_exact:
+   case logic::op_debruijn:
+   case logic::op_unchecked:
+   case logic::op_false:
+   case logic::op_error:
+   case logic::op_true:
+      return true;
+
+   case logic::op_and:
+   case logic::op_or:
+   case logic::op_implies:
+   case logic::op_equiv:
+   case logic::op_lazy_and:
+   case logic::op_lazy_or:
+   case logic::op_lazy_implies:
+      return false;
+
+   case logic::op_forall:
+   case logic::op_exists:
+   case logic::op_kleene_forall:
+   case logic::op_kleene_exists:
+      return issimple( f. view_quant( ). body( ));  
+
+   case logic::op_equals:
+   case logic::op_apply:
+      return true;
    }
 
-   // We handle the prop-cases separately in the else: 
+   std::cout << "\n";
+   std::cout << f. sel( ) << "\n";
+   throw std::logic_error( "size_upto: selector not handled" ); 
+}
 
-   if( pol == pol_pos || pol == pol_neg )
+
+logic::term
+reso::repl_equiv( logic::beliefstate& blfs, namegenerators& gen,
+                  logic::context& ctxt, logic::term f, unsigned int maxequiv )
+{
+   std::cout << "replace_equiv: " << f << " / " << maxequiv << "\n";
+
+   switch( f. sel( ))
    {
-      switch( f. sel( ))
-      {
 
+   case logic::op_forall:
+   case logic::op_exists:
+   case logic::op_kleene_forall:
+   case logic::op_kleene_exists:
+      {
+         auto q = f. view_quant( );
+         size_t ss = ctxt. size( );
+
+         for( size_t i = 0; i != q. size( ); ++ i ) 
+            ctxt. append( q. var(i). pref, q. var(i). tp );
+
+         q. update_body( 
+               repl_equiv( blfs, gen, ctxt, q. extr_body( ), maxequiv ));
+
+          ctxt. restore( ss );
+      } 
+      return f;
+
+   case logic::op_equiv:
+      {
+         auto eqv = f. view_binary( );
+         if( maxequiv == 0 &&
+             ( !issimple( eqv. sub1( )) || !issimple( eqv. sub2( )) ))
+         {
+            std::cout << ctxt << "\n";
+
+            f = repl_subform( blfs, gen, ctxt, f, true );
+            return f;
+         }
+
+         if( maxequiv > 0 )
+            -- maxequiv;
+
+         eqv. update_sub1( 
+                 repl_equiv( blfs, gen, ctxt, eqv. extr_sub1( ), maxequiv ));
+         eqv. update_sub2( 
+                 repl_equiv( blfs, gen, ctxt, eqv. extr_sub2( ), maxequiv ));
+      }
+      return f;
+
+   case logic::op_apply:
+      return f;
+   } 
+
+   std::cout << "not defined " << f. sel( ) << "\n";
+   throw std::runtime_error( "replace equivs" );
+}
+
+
+logic::term reso::nnf( logic::term f, polarity pol )
+{
+   if( true )
+      std::cout << pol << ":   " << f << "\n";
+
+   switch( f. sel( ))
+   {
+   
+#if 0
       case logic::op_implies:
       case logic::op_lazy_implies:
          {
@@ -52,55 +141,75 @@ reso::nnf( logic::beliefstate& blfs, namegenerators& gen,
 
             return logic::term( demorgan( kleenop, pol ), { sub1, sub2 } );   
          } 
+#endif
+   case logic::op_forall:
+   case logic::op_kleene_forall:
+   case logic::op_exists:
+   case logic::op_kleene_exists:
+      {
+         auto q = f. view_quant( );
 
-      case logic::op_forall:
-      case logic::op_kleene_forall:
-      case logic::op_exists:
-      case logic::op_kleene_exists:
-         {
-            auto q = f. view_quant( );
+         auto res = nnf( q. body( ), pol );
 
-            size_t ss = ctxt. size( );
-            for( size_t i = 0; i != q. size( ); ++ i )
-               ctxt. append( q. var(i). pref, q. var(i). tp );
+         logic::selector kleenequant = f. sel( );
 
-            auto res = nnf( blfs, gen, ctxt, q. body( ), pol, eq );
+         if( kleenequant == logic::op_forall )
+            kleenequant = logic::op_kleene_forall;
 
-            logic::selector kleenequant = f. sel( );
+         if( kleenequant == logic::op_exists )
+            kleenequant = logic::op_kleene_exists;
 
-            if( kleenequant == logic::op_forall )
-               kleenequant = logic::op_kleene_forall;
+         // Now we are a real Kleene quantifier. 
 
-            if( kleenequant == logic::op_exists )
-               kleenequant = logic::op_kleene_exists;
+         res = logic::term( demorgan( pol, kleenequant ), res, 
+                            std::initializer_list< logic::vartype > ( ));
 
-            // Now we are a real Kleene quantifier. 
+         // Add the quantified variables/types from the original formula:
 
-            res = logic::term( demorgan( kleenequant, pol ), res, 
-                               std::initializer_list< logic::vartype > ( ));
+         for( size_t i = 0; i != q. size( ); ++ i )
+            res. view_quant( ). push_back( q. var(i));
 
-            // Add the quantified variables/types from the original formula:
+         return res; 
+      } 
 
-            for( size_t i = 0; i != q. size( ); ++ i )
-               res. view_quant( ). push_back( q. var(i));
+   case logic::op_equiv:
+      {
+         auto eq = f. view_binary( );
+         
+         auto A = nnf( eq. sub1( ), pol );
+         auto negA = nnf( eq. sub1( ), -pol );
 
-            ctxt. restore( ss ); 
-            return res; 
-         } 
+         auto B = nnf( eq. sub2( ), pol );
+         auto negB = nnf( eq. sub2( ), -pol );
+ 
+         using namespace logic;
 
-      case logic::op_equals:
-      case logic::op_apply:
-         if( pol == pol_pos )
-            return f;
-         if( pol == pol_neg )
-            return logic::term( logic::op_not, f ); 
-
-         throw std::logic_error( "should never been here" );
+         return term( demorgan( pol, op_kleene_and ),
+            { term( demorgan( pol, op_kleene_or ), { negA, B } ),
+              term( demorgan( pol, op_kleene_or ), { negB, A } ) } );
       }
-      std::cout << "reso::nnf " << f. sel( ) << "\n";
-      throw std::runtime_error( "unhandled selector" ); 
+
+   case logic::op_exact:
+   case logic::op_debruijn:
+   case logic::op_unchecked:
+   case logic::op_false:
+   case logic::op_error:
+   case logic::op_true:
+
+   case logic::op_equals:
+   case logic::op_apply:
+      if( pol == pol_pos )
+         return f;
+      if( pol == pol_neg )
+         return logic::term( logic::op_not, f ); 
    }
-   else
+
+   std::cout << "nnf " << pol << " : " << f. sel( ) << "\n";
+   throw std::runtime_error( "operator not implemented" );
+}
+
+
+#if 0
    {
       // Cases for # or !# : 
  
@@ -188,6 +297,8 @@ reso::nnf( logic::beliefstate& blfs, namegenerators& gen,
       throw std::runtime_error( "prop not handled" );
    }
 }
+
+#endif
 
 namespace
 {
@@ -329,9 +440,9 @@ reso::flatten( logic::term f )
 
 
 logic::term
-reso::introduce_predicate( logic::beliefstate& blfs, 
-                           namegenerators& gen,
-                           logic::context& ctxt, logic::term ff )
+reso::repl_subform( logic::beliefstate& blfs, 
+                    namegenerators& gen,
+                    logic::context& ctxt, logic::term ff, bool equiv )
 {
    auto freevars = count_debruijn( ff );
       // In increasing order. That means that the 
@@ -401,7 +512,7 @@ reso::introduce_predicate( logic::beliefstate& blfs,
       size_t var = 0;
       while( it != freevars. end( ))
       {
-         norm. append( it -> first, logic::term( logic::op_debruijn, var )); 
+         norm. assign( it -> first, logic::term( logic::op_debruijn, var )); 
          ++ it; ++ var;
       }
    }
@@ -417,7 +528,6 @@ reso::introduce_predicate( logic::beliefstate& blfs,
      
    blfs. append( logic::belief( logic::bel_form, identifier( ) +
                  gen. preddef. next( ), forall, { } ));
-
 
    atom = logic::term( logic::op_apply, 
                        logic::term( logic::op_unchecked, pred ),
