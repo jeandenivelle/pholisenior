@@ -33,12 +33,18 @@ namespace reso
       //        Merge nested | and & 
       //        Merge nested forall and exist.
  
-   // Create a definition for the formula:
+   identifier freshident( const logic::beliefstate& blfs, namegenerator& gen );
+
+   logic::term atom( identifier pred, const logic::type& predtype );
+   logic::term forall( const logic::type& predtype, logic::term form );
 
    logic::term
-   repl_subform( logic::beliefstate& blfs, namegenerators& gen,
-                 logic::context& ctxt, logic::term t, bool equiv );
-
+   define_subform( logic::beliefstate& blfs, namegenerators& gen,
+                   logic::context& ctxt, logic::term t, 
+                   logic::selector defop );
+      // defop is the operator that will be used in the definition.
+      // It can be op_equiv, op_implies, or op_kleene_or.
+ 
    logic::term
    clausify( logic::beliefstate& blfs, namegenerators& gen,
              logic::context& ctxt, logic::term& f, unsigned int alt );

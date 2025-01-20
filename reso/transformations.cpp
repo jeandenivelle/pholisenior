@@ -74,24 +74,29 @@ reso::repl_equiv( logic::beliefstate& blfs, namegenerators& gen,
    case logic::op_equiv:
       {
          auto eqv = f. view_binary( );
-         if( maxequiv == 0 &&
-             ( !issimple( eqv. sub1( )) || !issimple( eqv. sub2( )) ))
+ 
+         if( maxequiv == 0 )
          {
-            std::cout << ctxt << "\n";
+            // If both sides are simple, we return f unchanged.
 
-            f = repl_subform( blfs, gen, ctxt, f, true );
+            if( issimple( eqv. sub1( )) && issimple( eqv. sub2( )) )
+               return f;
+            else
+            { 
+               std::cout << ctxt << "\n";
+               f = define_subform( blfs, gen, ctxt, f, logic::op_equiv );
+               return f;
+            }
+         }
+         else
+         {
+            eqv. update_sub1( 
+                    repl_equiv( blfs, gen, ctxt, eqv. extr_sub1( ), maxequiv - 1 ));
+            eqv. update_sub2( 
+                    repl_equiv( blfs, gen, ctxt, eqv. extr_sub2( ), maxequiv - 1 ));
             return f;
          }
-
-         if( maxequiv > 0 )
-            -- maxequiv;
-
-         eqv. update_sub1( 
-                 repl_equiv( blfs, gen, ctxt, eqv. extr_sub1( ), maxequiv ));
-         eqv. update_sub2( 
-                 repl_equiv( blfs, gen, ctxt, eqv. extr_sub2( ), maxequiv ));
       }
-      return f;
 
    case logic::op_apply:
       return f;
@@ -439,11 +444,63 @@ reso::flatten( logic::term f )
 }
 
 
-logic::term
-reso::repl_subform( logic::beliefstate& blfs, 
-                    namegenerators& gen,
-                    logic::context& ctxt, logic::term ff, bool equiv )
+identifier
+reso::freshident( const logic::beliefstate& blfs, namegenerator& gen )
 {
+   identifier id = identifier( ) + gen. next( );
+
+   // If name occurs in blfs, we try another:
+
+   while( !blfs. getfunctions( id ). empty( ) ||
+          !blfs. getstructdefs( id ). empty( ))
+   {
+      id = identifier( ) + gen. next( );
+   }
+
+   return id;
+}
+
+
+logic::term reso::atom( identifier pred, const logic::type& preddtype )
+{
+   logic::term res = logic::term( logic::op_unchecked, pred );
+   res = logic::term( logic::op_apply, res, 
+                      std::initializer_list< logic::term > ( ));
+  
+   auto f = preddtype. view_func( );
+   auto ap = res. view_apply( );
+
+   for( size_t v = f. size( ); v -- ; )
+      ap. push_back( logic::term( logic::op_debruijn, v ));
+
+   return res;
+}
+
+logic::term reso::forall( const logic::type& preddtype, 
+                          logic::term form )
+{
+   form = logic::term( logic::op_kleene_forall, form,
+                      std::initializer_list< logic::vartype > ( ));
+ 
+   auto f = preddtype. view_func( );
+   auto q = form. view_quant( );
+
+   for( size_t i = 0; i != f. size( ); ++ i )
+      q. push_back( { "xx", f. arg(i) } );
+  
+   return form;
+}
+
+
+logic::term
+reso::define_subform( logic::beliefstate& blfs, 
+                      namegenerators& gen,
+                      logic::context& ctxt, logic::term ff,  
+                      logic::selector defop )
+{
+   std::cout << "replacing subofrm " << ff << "\n";
+   std::cout << "defop = " << defop << "\n";
+
    auto freevars = count_debruijn( ff );
       // In increasing order. That means that the 
       // nearest variable comes first.
@@ -452,59 +509,29 @@ reso::repl_subform( logic::beliefstate& blfs,
 
    // Create the new predicate:
 
-   identifier pred = identifier( ) + gen. pred. next( );
+   identifier pred = freshident( blfs, gen. pred );
+   std::cout << "predicate = " << pred << "\n";
 
-   while( blfs. getfunctions( pred ). size( ) ||
-          blfs. getstructdefs( pred ). size( ))
-   {
-      pred = identifier( ) + gen. predisprop. next( );
-   }
- 
    // Create the type of pred:
 
    auto T = logic::type( logic::type_truthval ); 
-   auto atype = logic::type( logic::type_func, T, {} );
+   
+   auto predtype = logic::type( logic::type_func, T, {} );
 
-   logic::sparse_subst subst; 
-  
    for( auto it = freevars. end( ); it != freevars. begin( ); )
    {
       -- it; 
-      atype. view_func( ). push_back( ctxt. gettype( it -> first ));
+      predtype. view_func( ). push_back( 
+                                  ctxt. gettype( it -> first ));
    }
 
-   std::cout << atype << "\n"; 
+   std::cout << predtype << "\n"; 
 
    // Add the declaration of pred:
 
-   blfs. append( logic::belief( logic::bel_decl, pred, atype ));
+   blfs. append( logic::belief( logic::bel_decl, pred, predtype ));
 
-   // Create forall( x1, ..., xn ) # pred( x1, ..., xn ) :
-
-   auto atom = logic::term( logic::op_unchecked, pred );
-   atom = logic::term( logic::op_apply, atom, 
-                       std::initializer_list< logic::term > ( ));
-
-   std::cout << "atom = " << atom << "\n";
-
-   for( size_t i = freevars. size( ); i; )
-   {
-      -- i;
-      atom. view_apply( ). push_back( logic::term( logic::op_debruijn, i ));
-   }
-
-   auto forall = logic::term( logic::op_kleene_forall, 
-                       logic::term( logic::op_prop, atom ),
-                       std::initializer_list< logic::vartype > ( ));
-
-   for( auto it = freevars. end( ); it != freevars. begin( ); )
-   {
-      -- it;
-      forall. view_quant( ). push_back( { "xx", ctxt. gettype( it -> first ) } );
-   }
-
-   blfs. append( logic::belief( logic::bel_form, identifier( ) + 
-                 gen. predisprop. next( ), forall, { } ));
+   // In ff, we need to normalize the variables to #s, ... ,#0 :
 
    logic::sparse_subst norm;
    {
@@ -522,26 +549,37 @@ reso::repl_subform( logic::beliefstate& blfs,
    bool change = false; 
    ff = topdown( norm, std::move( ff ), 0, change );
 
-   forall. view_quant( ). update_body( 
-      logic::term( logic::op_kleene_or, {
-         logic::term( logic::op_not, atom ), ff } ));
-     
-   blfs. append( logic::belief( logic::bel_form, identifier( ) +
-                 gen. preddef. next( ), forall, { } ));
+   std::cout << "normalized ff = " << ff << "\n";
 
-   atom = logic::term( logic::op_apply, 
-                       logic::term( logic::op_unchecked, pred ),
-                       std::initializer_list< logic::term > ( ));
+   auto predatom = atom( pred, predtype );
+   auto prop = forall( predtype, logic::term( logic::op_prop, predatom ));
 
-   for( auto it = freevars. end( ); it != freevars. begin( ); )
+   blfs. append( logic::belief( logic::bel_form, 
+                    freshident( blfs, gen. predisprop ), prop, { } ));
+
+   auto def = logic::term( logic::op_error );
+
+   switch( defop )
    {
-      -- it;
-      atom. view_apply( ). push_back( logic::term( logic::op_debruijn, it -> first ));
+   
+   case logic::op_equiv:
+      {
+         def = forall( predtype, 
+                  logic::term( logic::op_equiv, predatom, ff ));
+         break;
+      }
+
+   default:
+      std::cout << "defop = " << defop << "\n";
+      throw std::runtime_error( "define subform: cannot handle" );
    }
- 
-   std::cout << blfs << "\n"; 
-   std::cout << "the atom is " << atom << "\n";
-   return ff;
+
+   std::cout << "def = " << def << "\n";
+
+   blfs. append( logic::belief( logic::bel_form, 
+                                freshident( blfs, gen. preddef ), def, { } ));
+
+   return predatom;
 }
 
 

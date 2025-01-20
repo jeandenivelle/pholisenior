@@ -84,7 +84,7 @@ logic::term
 logic::sparse_subst::operator( ) ( term t, size_t vardepth, 
                                    bool& change ) const
 {
-   std::cout << "sparse-subst " << t << " [" << vardepth << "]\n";
+   // std::cout << "sparse-subst " << t << " [" << vardepth << "]\n";
 
    if( t. sel( ) == op_debruijn )
    {

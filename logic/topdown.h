@@ -27,8 +27,7 @@ namespace logic
    template< replacement R > 
    term topdown( const R& repl, term t, size_t vardepth, bool& change ) 
    {
-      std::cout << "\n";
-      std::cout << "entering topdown " << t << "\n";
+      // std::cout << "entering topdown " << t << "\n";
 
       {
          bool c = false;
