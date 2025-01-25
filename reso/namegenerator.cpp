@@ -6,8 +6,8 @@ namespace
 
    void increase( std::string& val )
    {
-      const char first = '0';
-      const char last = '9';
+      constexpr char first = '0';
+      constexpr char last = '9';
   
       size_t i = val. size( );
       while( i -- )

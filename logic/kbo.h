@@ -39,6 +39,10 @@ namespace logic
 
       void print( std::strong_ordering ord, std::ostream& out ); 
    }
+
+   inline bool equal( const logic::type& tp1, const logic::type& tp2 )
+      { return is_eq( logic::kbo::topleftright( tp1, tp2 )); }
+
 }
 
 #endif

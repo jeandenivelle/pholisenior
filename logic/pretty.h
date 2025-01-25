@@ -1,7 +1,6 @@
 
 // Everything related to pretty printing. 
-// Written by Akhmetzhan Kussainov 
-// and Hans de Nivelle.
+// Written by Alikhan Balpykov and Hans de Nivelle.
 // May 2023.
 
 #ifndef LOGIC_PRETTY_
@@ -14,9 +13,15 @@
 
 #include "uniquenamestack.h"
 
+#include <functional>
+
 namespace logic { 
 namespace pretty 
 {
+
+   static constexpr bool csyntax_types = true;
+      // If true, functional types are printed with 
+      // C-syntax, i.e. T(O). Otherwise O -> T. 
 
    struct attractions
    {
@@ -25,9 +30,7 @@ namespace pretty
          // Higher number means : more attraction. Zero means:
          // No. attraction. at. all. Not. even. the. slighest.
 
-      attractions( ) noexcept 
-         : left(0), right(0) 
-      { }
+      attractions( ) = delete;
 
       attractions( unsigned int left, unsigned int right )
          : left( left ), right( right )
@@ -50,17 +53,18 @@ namespace pretty
 
    std::pair< unsigned int, unsigned int > 
    inline 
-   between( std::pair< unsigned int, unsigned int > env , attractions attr )
+   between( std::pair< unsigned int, unsigned int > env, attractions attr )
       { return { env. first, attr. left }; }
       
    std::pair< unsigned int, unsigned int >
-   inline between( attractions attr1 , attractions attr2 )
+   inline between( attractions attr1, attractions attr2 )
       { return { attr1. right, attr2. left }; }
 
    std::pair< unsigned int, unsigned int >
    inline
-   between( attractions attr, std::pair< unsigned int , unsigned int > env )
+   between( attractions attr, std::pair< unsigned int, unsigned int > env )
       { return { attr. right, env. second }; }
+
 
    struct parentheses
    {
@@ -72,6 +76,9 @@ namespace pretty
 
       operator bool( ) const { return nr; }
 
+      // Checks if env pulls harder than attr, either to the left
+      // or to the right. If yes, we increase our nr.
+
       void check( attractions attr,
                   std::pair< unsigned, unsigned int > env );
 
@@ -79,6 +86,11 @@ namespace pretty
       void close( std::ostream& out ) const;
    };
 
+   void print( std::ostream& out, const beliefstate& blfs,
+               uniquenamestack& names, 
+               const std::function< vartype( size_t ) > & vt, size_t sz ); 
+      // Prints a sequence of vartypes nicely, combining
+      // types wherever possible.
 
    void print( std::ostream& out, const beliefstate& blfs, 
                const type& tp, std::pair< unsigned int, unsigned int > env );
@@ -89,16 +101,6 @@ namespace pretty
 
    void print( std::ostream& out, const beliefstate& blfs,
                context& ctxt, const term& t );
-
-#if 0
-   void print( std::ostream& out, const logic::term& tm,
-               logic::context& ctxt, logic::proofstate& state, 
-               uniquenamestack& names, attractions attr );
-
-   void print( std::ostream& out, const logic::term& tm,
-               logic::context& ctxt, logic::proofstate& state,
-               attractions attr = attractions( ));
-#endif
 
    uniquenamestack getnames( const logic::context& ctxt, size_t ss );
 
@@ -117,3 +119,4 @@ namespace pretty
 }}
 
 #endif
+

@@ -20,60 +20,50 @@ namespace pretty
 
       uniquename( ) = delete;
       uniquename( const std::string& base, size_t index )
-         : base( base ), index( index ) 
+         : base( base ), index( index )
       { }
 
       uniquename( std::string&& base, size_t index )
          : base( std::move( base )), index( index )
       { }
 
-      void print( std::ostream& out ) const 
+      void print( std::ostream& out ) const
       {
-         if( index ) 
+         if( index )
             out << base << index;
          else
-            out << base; 
+            out << base;
       }
    };
 
-
    class uniquenamestack
    {
-      std::vector< uniquename > vect; 
-      std::unordered_map< std::string, std::vector< size_t >> bases;
-         // Lists the occurrences of a name prefix (as indices of vect).
+      std::vector< uniquename > names; 
+      std::unordered_map< std::string, std::vector< size_t >> indices;
+         // indices[ base ] is a vector of indices that have been used
+         // for base.
        
    public:
       uniquenamestack( ) noexcept = default;
       uniquenamestack( uniquenamestack&& ) noexcept = default;
       uniquenamestack& operator = ( uniquenamestack&& ) noexcept = default; 
 
-      size_t size( ) const { return vect. size( ); } 
+      size_t size( ) const { return names. size( ); } 
 
       void restore( size_t s );
 
       // Correctly looks up a De Bruijn index:
 
       const uniquename& getname( size_t index ) const
-         { return vect[ vect. size( ) - index - 1 ]; }
+         { return names[ names. size( ) - index - 1 ]; }
 
       const uniquename& extend( std::string name );
-      
-      uniquename nextname( std::string name ) const;
-         // Get the uniquename that would be created if 
-         // extend( name ) would be called, without 
-         // actually extending. 
-
-      size_t find( const std::string& s ) const;
-         // Returns size( ) if we don't know about s. 
-         // Otherwise, a De Bruijn index, which can be used
-         // as argument to getname( ).  
 
       bool issafe( std::string s ) const;
-         // True if a name is safe, which means that it does
-         // not conflict with a name that we have.
-         // We need to pass by value because we remove the index.
-                   
+         // True if the base of s is not in the indices.
+         // This may sometimes return false for a name that
+         // is safe in principle, but better safe than sorry.
+
       void print( std::ostream& out ) const;
    };
 

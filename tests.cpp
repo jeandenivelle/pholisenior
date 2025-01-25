@@ -10,10 +10,7 @@
 #include "reso/transformations.h"
 
 #include "logic/replacements.h" 
-
-#if 0
-// #include "logic/normalization.h"
-#endif
+#include "logic/pretty.h"
 
 void tests::add_strict_prod( logic::beliefstate& bel )
 {
@@ -479,25 +476,36 @@ void tests::transformations( logic::beliefstate& blfs )
 
 }
 
-#if 0
 
-void tests::tableau( )
+void tests::pretty( const logic::beliefstate& blfs )
 {
-   logic::type S = logic::sel_set;
-   logic::type T = logic::sel_truthval;
+   using namespace logic;
 
-   logic::tableau tab;
+   auto O = type( type_obj );
+   auto T = type( type_truthval );
 
-   std::vector< logic::term > initial;
+   auto O2T = type( type_func, T, { O } );
+   auto OO2T = type( type_func, T, { O, O } );
+   auto OOO2T = type( type_func, T, { O, O, O } );
+ 
+   term tm = ( 0_db && 1_db ) || ( 0_db != 1_db );
+   tm = term( op_and, "xxxx"_unchecked, tm ) && term( op_exact, exact(23) );
+
+   tm = lambda( {{ "x1", T }, { "x2", T }, { "y1", O }, { "s", O }}, tm );
+   tm = apply( tm, { term( op_exact, exact(21)), term( op_false ) } );
+
+   tm = term( op_kleene_and, { tm, term( op_exact, exact(5)), 0_db } );
+   tm = term( op_kleene_and, { 0_db, tm } );
+
+   std::cout << "\n";
+   std::cout << "pretty: ";
+   std::cout << tm << "\n";
+   std::cout << "\n\n"; 
+
+   pretty::uniquenamestack un;
+   pretty::print( std::cout, blfs, un, tm, {0,0} );
 
 #if 0
-   initial. push_back( "a"_ident || "b"_ident ); 
-   initial. push_back( ! "a"_ident || "b"_ident ); 
-   initial. push_back( "a"_ident || ! "b"_ident  );
-   initial. push_back( ! "a"_ident || ! "b"_ident || "c"_ident ); 
-   initial. push_back( ! "c"_ident );
-#endif
-
    initial. push_back( exists( { "x", S },
                          logic::term( logic::sel_appl, "p"_ident, { 0_db } ) ||
                          logic::term( logic::sel_appl, "q"_ident, { 0_db } )));
@@ -518,9 +526,11 @@ void tests::tableau( )
 
    std::cout << tab << "\n";
    std::cout << tab. try_refute(0) << "\n";
+#endif
 
 }
 
+#if 0
 void tests::setsimplifications( )
 {
    std::cout << "testing set simplifications\n";

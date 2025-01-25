@@ -21,10 +21,11 @@ namespace tests
 
    void add_unique( logic::beliefstate& );
 
+
    void structural( logic::beliefstate& );
       // Tests for structural type checking.
  
-   void add_proof( logic::beliefstate& bel );
+   void add_proof( logic::beliefstate& blfs );
    
    void transformations( logic::beliefstate& blfs ); 
 
@@ -41,8 +42,10 @@ namespace tests
    void proofchecking( );
 
    void unification( );
+#endif
 
-   void tableau( );
+   void pretty( const logic::beliefstate& blfs );
+#if 0
 
    void tokenizer( );
 

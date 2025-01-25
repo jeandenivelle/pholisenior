@@ -47,7 +47,7 @@ bool operator < ( const identifier& id1, const identifier& id2 )
 
 std::ostream& operator << ( std::ostream& out, const identifier& id )
 {
-   if( id. empty( ))
+   if( id. isempty( ))
       out << "(EMPTY)";
    else
    { 

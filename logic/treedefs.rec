@@ -44,9 +44,10 @@
                 op_kleene_forall, op_kleene_exists } 
       => body : term, [ var : vartype ]
 
-%option delta { op_delta } => pref : std::string, val : term, body : term
-%option typeddelta{ op_typeddelta } 
-      => var : vartype, val : term, body : term
+%option delta { op_delta } => var : vartype, val : term, body : term
+   // There is no need for the untyped variant, because one can
+   // put a meaningless identifier as type, which type checking
+   // will correct.
 
 %option apply { op_apply } => func : term, [ arg : term ] 
 %option lambda { op_lambda } => body : term, [ var : vartype ]
@@ -87,16 +88,16 @@
 
 %cpp_back {
 
-	bool logic::operator == ( const vartype& vt1, const vartype& vt2 )
-	{
-		return vt1. pref == vt2. pref && vt1. tp. very_equal_to( vt2. tp ); 
-	}
+   bool logic::operator == ( const vartype& vt1, const vartype& vt2 )
+   {
+      return vt1. pref == vt2. pref && vt1. tp. very_equal_to( vt2. tp ); 
+   }
 
-	std::ostream& logic::operator << ( std::ostream& out, const vartype& vt )
-	{
-		out << vt. pref << " : " << vt. tp;
-		return out;
-	}
+   std::ostream& logic::operator << ( std::ostream& out, const vartype& vt )
+   {
+      out << vt. pref << " : " << vt. tp;
+      return out;
+   }
 } 
 
 

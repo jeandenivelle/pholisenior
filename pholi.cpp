@@ -46,7 +46,8 @@ int main( int argc, char* argv[] )
    std::cout << blfs << "\n";
    std::cout << "(after checking)\n";
 
-   tests::transformations( blfs );
+   // tests::transformations( blfs );
+   tests::pretty( blfs );
    return 0;
 
 #if 0

@@ -3,16 +3,6 @@
 #include "pretty.h"
 #include "kbo.h"
 
-namespace
-{
-   // We don't want to type this all the time:
-
-   bool equal( const logic::type& tp1, const logic::type& tp2 )
-   {
-      return is_eq( logic::kbo::topleftright( tp1, tp2 ));
-   }
-}
-
 
 void logic::checkandresolve( beliefstate& everything, errorstack& err )
 {

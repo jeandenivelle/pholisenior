@@ -26,7 +26,6 @@ public:
    identifier& operator = ( identifier&& ) noexcept = default;
    ~identifier( ) = default;
 
-
    using const_iterator = std::vector< std::string > :: const_iterator;
  
    const_iterator begin( ) const { return repr. begin( ); }
@@ -44,7 +43,10 @@ public:
       { repr. push_back( std::string(c) ); return *this; }
 
    size_t size( ) const { return repr. size( ); }
-   bool empty( ) const { return repr. empty( ); }
+   bool isempty( ) const { return repr. empty( ); }
+
+   const std::string& at( size_t i ) const 
+      { return repr. at(i); }
 
    struct equal_to
    {

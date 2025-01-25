@@ -97,6 +97,9 @@ namespace logic
 
       const std::pair< belief, dependencies > & at( exact id ) const
          { return vect. at( id. nr ); } 
+
+      bool contains( exact id ) const
+         { return id. nr < vect. size( ); } 
  
       void print( std::ostream& out ) const;
    };
