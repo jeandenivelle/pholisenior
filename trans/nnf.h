@@ -9,31 +9,21 @@
 #include "namegenerators.h"
 #include "polarity.h"
 
-namespace reso
+namespace trans
 {
 
-   bool issimple( const logic::term& f );
-      // True if f is simple. Currently this means:
-      // Does not contain any binary operators.
+   size_t size( const logic::term& f, size_t limit );
+      // Returns the size of f, but never more than limit.
+      // The point of this function is that we stop traversing
+      // when the limit is reached.
+
+   constexpr static size_t maxequiv = 4;
 
    logic::term
-   repl_equiv( logic::beliefstate& blfs, namegenerators& gen,
-               logic::context& ctxt, logic::term f, unsigned int equivs );
+   nnf( logic::beliefstate& blfs, namegenerator& gen,
+        logic::context& ctxt, logic::term f, polarity pol, unsigned int equivs );
 
-      // Replace nested equivalences by definitions.
-
-   logic::term nnf( logic::term f, polarity pol );
    logic::term nnf_prop( logic::term f, polarity pol );
-
-   logic::term flatten( logic::term f );
-      // The formula must be in NNF, which implies that it contains
-      // only Kleene operators.
-      // Factor forall x P(X) & Q(X) --> forall X P(X) & forall X Q(X)
-      //        exists x P(X) | Q(x) --> exists X P(X) | exists X Q(X).
-      //        Merge nested | and & 
-      //        Merge nested forall and exist.
- 
-   identifier freshident( const logic::beliefstate& blfs, namegenerator& gen );
 
    logic::term atom( identifier pred, const logic::type& predtype );
    logic::term forall( const logic::type& predtype, logic::term form );

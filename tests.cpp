@@ -7,7 +7,7 @@
 #include "logic/kbo.h"
 #include "logic/structural.h"
 
-#include "reso/transformations.h"
+// #include "reso/transformations.h"
 
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
@@ -399,7 +399,7 @@ void tests::add_proof( logic::beliefstate& blfs )
 void tests::transformations( logic::beliefstate& blfs )
 {
    std::cout << "testing clause transformations\n";
-
+#if 0
    using namespace logic;
 
    {
@@ -473,6 +473,7 @@ void tests::transformations( logic::beliefstate& blfs )
       f = !f;
    } 
 #endif
+#endif
 
 }
 
@@ -484,17 +485,19 @@ void tests::pretty( const logic::beliefstate& blfs )
    auto O = type( type_obj );
    auto T = type( type_truthval );
 
+   auto N2T = type( type_func, T, { } );
+
    auto O2T = type( type_func, T, { O } );
    auto OO2T = type( type_func, T, { O, O } );
-   auto OOO2T = type( type_func, T, { O, O, O } );
+   auto OOO2T = type( type_func, T, { O, type( type_struct, exact(44)), O } );
  
    term tm = ( 0_db && 1_db ) || ( 0_db != 1_db );
    tm = term( op_and, "xxxx"_unchecked, tm ) && term( op_exact, exact(23) );
 
-   tm = lambda( {{ "x1", T }, { "x2", T }, { "y1", O }, { "s", O }}, tm );
+   tm = lambda( {{ "x1", OOO2T }, { "x2", O2T }, { "y1", O }, { "s", O }}, tm );
    tm = apply( tm, { term( op_exact, exact(21)), term( op_false ) } );
 
-   tm = term( op_kleene_and, { tm, term( op_exact, exact(5)), 0_db } );
+   tm = term( op_kleene_and, { tm, term( op_exact, exact(25)), 0_db } );
    tm = term( op_kleene_and, { 0_db, tm } );
 
    std::cout << "\n";
@@ -625,11 +628,6 @@ void tests::replacements( )
    simp = term( op_lambda, simp, { { "v0", O }, { "v1", T } } );
 
    std::cout << simp << "\n";
-
-   vector_subst subst;
-   subst. push( term( op_true ));
-   // subst. push( simp ); 
-   std::cout << subst << "\n";
 
    lifter lift(3);
    std::cout << lift << "\n";

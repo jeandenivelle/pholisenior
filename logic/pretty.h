@@ -19,7 +19,7 @@ namespace logic {
 namespace pretty 
 {
 
-   static constexpr bool csyntax_types = true;
+   static constexpr bool csyntax_types = false;
       // If true, functional types are printed with 
       // C-syntax, i.e. T(O). Otherwise O -> T. 
 
@@ -90,7 +90,8 @@ namespace pretty
                uniquenamestack& names, 
                const std::function< vartype( size_t ) > & vt, size_t sz ); 
       // Prints a sequence of vartypes nicely, combining
-      // types wherever possible.
+      // types wherever possible. This is used when printing
+      // a quantifier, a lambda, a let, or a definition.
 
    void print( std::ostream& out, const beliefstate& blfs, 
                const type& tp, std::pair< unsigned int, unsigned int > env );
@@ -98,6 +99,12 @@ namespace pretty
    void print( std::ostream& out, const beliefstate& blfs,
                uniquenamestack& names,
                const term& t, std::pair< unsigned int, unsigned int > env );
+
+      // env specifies how hard our environment wants to rip us apart.
+      // If it is too much for us, we protect ourselves with parentheses.
+      // Unchecked names are printed with quotes.
+      // Exact names are prefixed with :: if they conflict with a local
+      // variable.
 
    void print( std::ostream& out, const beliefstate& blfs,
                context& ctxt, const term& t );

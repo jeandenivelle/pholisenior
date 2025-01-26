@@ -44,7 +44,7 @@
                 op_kleene_forall, op_kleene_exists } 
       => body : term, [ var : vartype ]
 
-%option delta { op_delta } => var : vartype, val : term, body : term
+%option let { op_let } => body : term, [ var : vartype, val : term ]
    // There is no need for the untyped variant, because one can
    // put a meaningless identifier as type, which type checking
    // will correct.

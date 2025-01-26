@@ -18,16 +18,12 @@
 #include "logic/replacements.h"
 #include "logic/counting.h"
 
-#include "reso/transformations.h"
-#include "reso/namegenerators.h"
+#include "trans/namegenerator.h"
 
 
 int main( int argc, char* argv[] )
 {
-
    logic::beliefstate blfs;
-   reso::namegenerators gen;
-   std::cout << gen << "\n";
 
    // logic::beliefstate blfs; 
    tests::add_strict_prod( blfs ); 

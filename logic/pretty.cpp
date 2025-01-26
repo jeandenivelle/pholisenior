@@ -86,61 +86,84 @@ logic::pretty::parentheses::close( std::ostream& out ) const
 void logic::pretty::print( std::ostream& out, const beliefstate& blfs,
                 const type& tp, std::pair< unsigned int, unsigned int > env ) 
 {
-   if constexpr( false )
-      out << tp; 
+  
+   // The following types are always printed the same:
 
-   else {
-      switch (tp.sel())
+   switch( tp. sel( ))
+   {
+   case type_obj:
+      out << "O";
+      return;
+   case type_truthval:
+      out << "T";
+      return;
+
+   case type_struct:
       {
-      case logic::type_obj:
-         out << "O";
-         return;
-      case logic::type_truthval:
-         out << "T";
-         return;
-      case logic::type_struct:
-         out << blfs. at( tp. view_struct( ). def( )). first. name( );
-         return;
-      case logic::type_unchecked:
-         out << tp. view_unchecked( ). id( );
-         return;
- 
-      case logic::type_func: 
-         {
-            const attractions arrow_attr = { 121, 120 };
-            const attractions prod_attr = { 500, 501 }; 
-
-            parentheses par;
-            par. check( arrow_attr, env ); 
-            if( par ) env = {0,0}; 
-
-            par. open( out );
-	         auto f = tp. view_func( );
-            
-            if( f. size( ) == 0 )
-               out << "( )";
-            if( f. size( ) == 1 )
-               print( out, blfs, f. arg(0), between( env, arrow_attr ));
-          
-            if( f. size( ) >= 2 ) 
-            {
-               print( out, blfs, f. arg(0), between( env, prod_attr ));
-               out << " * ";
-               for( size_t i = 1; i+1 < f. size( ); ++ i )
-               {
-                  print( out, blfs, f. arg(i), between( prod_attr, prod_attr ));
-                  out << " * ";
-               }
-               print( out, blfs, f. arg( f. size( ) - 1 ),  
-                      between( prod_attr, arrow_attr ));
-            }
-            out << " -> ";
-            print( out, blfs, f. result( ), between( arrow_attr, env ));
-            par. close( out );
+         exact ex = tp. view_struct( ). def( );
+         if( blfs. contains( ex ))
+         { 
+            const auto& id = blfs. at( ex ). first. name( );
+            out << id;
          }
+         else
+            out << ex;
       }
+      return;
+
+   case type_unchecked:
+      out << '\''<< tp. view_unchecked( ). id( ) << '\'';
+      return;
    }
 
+   if( tp. sel( ) != type_func )
+      throw std::runtime_error( "structural type must be functional" );
+
+   if constexpr( csyntax_types )
+   {
+      auto f = tp. view_func( );    
+      out << f. result( ) << '(';
+      for( size_t i = 0; i != f. size( ); ++ i )
+      {
+         if(i) out << ',';
+         out << f. arg(i);
+      }
+      out << ')';
+   }
+   else 
+   {
+      const attractions arrow_attr = { 121, 120 };
+      const attractions prod_attr = { 500, 501 }; 
+
+      parentheses par;
+      par. check( arrow_attr, env ); 
+      if( par ) env = {0,0}; 
+
+      par. open( out );
+      auto f = tp. view_func( );
+            
+      if( f. size( ) == 0 )
+         out << "1";
+
+      if( f. size( ) == 1 ) 
+         print( out, blfs, f. arg(0), between( env, arrow_attr ));
+
+      if( f. size( ) >= 2 )
+      { 
+         print( out, blfs, f. arg(0), between( env, prod_attr ));
+         out << " * ";
+         for( size_t i = 1; i+1 < f. size( ); ++ i )
+         {
+             print( out, blfs, f. arg(i), between( prod_attr, prod_attr ));
+             out << " * ";
+         }
+         print( out, blfs, f. arg( f. size( ) - 1 ),  
+                               between( prod_attr, arrow_attr ));
+      }
+      out << " -> ";
+      print( out, blfs, f. result( ), between( arrow_attr, env ));
+      par. close( out );
+   }
 }
 
 
@@ -216,7 +239,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
   
    case op_exact: 
       {
-         exact ex = t. view_exact( ).ex( );
+         exact ex = t. view_exact( ). ex( );
          if( blfs. contains( ex ))
          { 
             const auto& id = blfs. at( ex ).first. name( );
@@ -225,7 +248,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
             out << id;
          }
          else
-            out << '$' << ex;
+            out << ex;
       }
       return;
 
@@ -459,7 +482,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          return;
       }
        
-   case logic::op_delta:
+   case logic::op_let:
          {
 #if 0
             auto ax = t. view_axiom( ); 

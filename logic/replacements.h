@@ -32,34 +32,6 @@ namespace logic
    };
 
 
-   // A vector substitution assigns values to all
-   // De Bruijn indices from #0 to #(s-1). 
-   // Because of this, it can be represented by a 
-   // vector of values. vector_subst supports 
-   // stack-like behaviour. This is needed for
-   // anti-prenexing.
-
-   struct vector_subst 
-   {
-      std::vector< term > values; 
-
-      vector_subst( ) = default; 
-         // You may add the values by yourself.
-         // I don't know where they come form. 
-         // I have no wish to make a polymorphic constructor. 
-
-      void push( const term& t ) { values. push_back(t); }
-      void push( term&& t ) { values. push_back( std::move(t)); }
-
-      size_t size( ) const { return values. size( ); }
-      void restore( size_t s );
-
-      term operator( ) ( term t, size_t vardepth, bool& change ) const;
-
-      void print( std::ostream& out ) const;
-   };
-
-
    // A sparse subst assigns values to some, but not
    // necessarily all, De Bruijn indices. 
 
@@ -80,6 +52,17 @@ namespace logic
       void print( std::ostream& out ) const;      
    };
 
+
+   // A context subst looks in parallel with the context. 
+   // The numbers are not De Bruijn indices, but the number of
+   // introduction of variable.
+
+   class context_subst
+   {
+      std::vector< std::pair< size_t, term >> val;
+      size_t nrvars; 
+
+   };
 
    struct betareduction 
    {

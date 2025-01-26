@@ -1,7 +1,7 @@
 
 #include "polarity.h"
 
-const char* reso::getcstring( polarity pol )
+const char* trans::getcstring( polarity pol )
 {
    switch( pol )
    {
@@ -11,7 +11,7 @@ const char* reso::getcstring( polarity pol )
    }
 }
 
-reso::polarity reso::operator - ( polarity pol )
+trans::polarity trans::operator - ( polarity pol )
 {
    switch( pol )
    {
@@ -22,7 +22,8 @@ reso::polarity reso::operator - ( polarity pol )
    throw std::logic_error( "cannot negate" ); 
 }
 
-logic::selector reso::demorgan( polarity pol, logic::selector op )
+
+logic::selector trans::demorgan( polarity pol, logic::selector op )
 {
    if( pol == pol_pos )
    {
@@ -36,7 +37,6 @@ logic::selector reso::demorgan( polarity pol, logic::selector op )
       case logic::op_kleene_exists:
          return op; 
       }
-
    }
    else
    {

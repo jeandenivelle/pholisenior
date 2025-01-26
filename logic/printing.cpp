@@ -28,12 +28,12 @@ void logic::type::print( std::ostream& out ) const
 
    case type_func:
       {
-         auto a = view_func( );
-         out << a. result( ) << '(';
-         for( size_t i = 0; i != a. size( ); ++ i )
+         auto f = view_func( );
+         out << f. result( ) << '(';
+         for( size_t i = 0; i != f. size( ); ++ i )
          {
             if(i) out << ',';
-            out << a. arg(i);
+            out << f. arg(i);
          }
          out << ')';
       }

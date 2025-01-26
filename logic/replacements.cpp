@@ -27,58 +27,6 @@ logic::lifter::print( std::ostream& out ) const
    out << "lifter(" << dist << ")";
 }
 
-void logic::vector_subst::restore( size_t s )
-{
-   while( values. size( ) > s )
-      values. pop_back( );
-}
-
-logic::term
-logic::vector_subst::operator( ) ( term t, size_t vardepth, 
-                                   bool& change ) const
-{
-   if( t. sel( ) == op_debruijn )
-   {
-      auto p = t. view_debruijn( ); 
-      size_t ind = p. index( ); 
-      if( ind < vardepth )
-         return t;
-
-      change = true;
-         // It's certain now.
-
-      if( ind < values. size( ) + vardepth )
-      {
-         ind -= vardepth; 
-
-         // We don't lift over 0:
-
-         if( vardepth == 0 )
-            return values[ values. size( ) - ind - 1 ]; 
-         else
-         {
-            bool c = false;
-            return topdown( lifter( vardepth ), 
-                            values[ values. size( ) - ind - 1 ], 0, c );
-         }
-      }
-      else
-      {
-         ind -= values. size( ); 
-         return term( op_debruijn, ind );  
-      }
-   }
-   return t;
-}
-
-
-void logic::vector_subst::print( std::ostream& out ) const
-{
-   out << "Vector-subst:\n";
-   for( size_t i = 0; i != values. size( ); ++ i )
-      out << "   #" << i << " := " << values[ size( ) - i - 1 ] << "\n";
-}
-
 
 logic::term
 logic::sparse_subst::operator( ) ( term t, size_t vardepth, 
@@ -112,6 +60,7 @@ logic::sparse_subst::operator( ) ( term t, size_t vardepth,
 
    return t;
 }
+
 
 void logic::sparse_subst::print( std::ostream& out ) const
 {

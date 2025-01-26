@@ -35,11 +35,10 @@
    printing.cpp
    pretty.cpp
 
-%dir Source/reso
+%dir Source/trans
 %sources
-   polarity.cpp
-   transformations.cpp
    namegenerator.cpp
+   polarity.cpp
 
 %options 
    Wall
