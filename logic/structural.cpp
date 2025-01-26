@@ -322,7 +322,7 @@ logic::checkandresolve( const beliefstate& blfs,
                         errorstack& errors, context& ctxt, 
                         term& t ) 
 {
-   if constexpr( false )
+   if constexpr( true )
    {
       std::cout << "\n";
       std::cout << "checking term\n";
@@ -581,6 +581,29 @@ logic::checkandresolve( const beliefstate& blfs,
          return type_truthval; 
       }
 
+   case op_let:
+      {
+         auto let = t. view_let( ); 
+
+         size_t contextsize = ctxt. size( );
+
+         size_t errstart = errors. size( );
+            // If we produce errors, they start here.
+
+         bool correct = true;
+         for( size_t i = 0; i != let. size( ); ++ i )
+         {
+            auto vt = let. extr_var(i);
+
+            if( !checkandresolve( blfs, errors, vt. tp ))
+               correct = false;
+
+            let. update_var( i, vartype( vt. pref, vt. tp ));
+         }
+
+         std::cout << "correct = " << correct << "\n";
+      }
+      throw std::runtime_error( "not finished" );
    case op_apply:
       {
          auto ap = t. view_apply( );

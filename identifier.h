@@ -9,6 +9,7 @@
 
 #include <vector>
 #include <string> 
+#include <compare>
 #include <iostream>
 
 #include "identifier.h"
@@ -71,24 +72,14 @@ inline identifier operator + ( identifier id, std::string&& s )
 inline identifier operator + ( identifier id, const char* c ) 
    { id += c; return id; }
 
-bool operator == ( const identifier& id1, const identifier& id2 );
-bool operator < ( const identifier& id1, const identifier& id2 ); 
+std::strong_ordering
+operator <=> ( const identifier& id1, const identifier& id2 );
 
+inline bool operator == ( const identifier& id1, const identifier& id2 )
+   { return is_eq( id1 <=> id2 ); }
  
 std::ostream& operator << ( std::ostream& out, const identifier& id );
 util::hashbuilder& operator << ( util::hashbuilder&, const identifier& id );
-
-inline bool operator > ( const identifier& id1, const identifier& id2 )
-   { return id2 < id1; } 
-
-inline bool operator != ( const identifier& id1, const identifier& id2 )
-   { return !( id1 == id2 ); }
-
-inline bool operator <= ( const identifier& id1, const identifier& id2 )
-   { return !( id1 > id2 ); } 
-
-inline bool operator >= ( const identifier& id1, const identifier& id2 )
-   { return !( id1 < id2 ); }
 
 #endif
 

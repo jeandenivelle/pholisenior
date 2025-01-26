@@ -7,10 +7,12 @@
 #include "logic/kbo.h"
 #include "logic/structural.h"
 
-// #include "reso/transformations.h"
+#include "trans/nnf.h"
+#include "trans/removelets.h"
 
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
+
 
 void tests::add_strict_prod( logic::beliefstate& bel )
 {
@@ -399,8 +401,48 @@ void tests::add_proof( logic::beliefstate& blfs )
 void tests::transformations( logic::beliefstate& blfs )
 {
    std::cout << "testing clause transformations\n";
-#if 0
+
    using namespace logic;
+   type O = type( logic::type_obj );
+   type T = type( logic::type_truthval );
+   type O2T = type( type_func, T, { O } );
+   type O2O = type( type_func, O, { O } );
+
+   type Seq = type( type_unchecked, identifier( ) + "Seq" );
+
+   {
+      std::cout << "testing remove lets\n";
+
+      blfs. append( belief( bel_decl, identifier( ) + "rec", 
+               type( type_func, type( type_func, O, { O } ), { Seq, Seq } )));
+
+       blfs. append( belief( bel_decl, identifier( ) + "freegen",
+               type( type_func, T, { Seq } )));
+
+      std::cout << blfs << "\n";
+
+      auto f2 = apply( 1_db, { term( op_unchecked, identifier( ) + "0" ) } );
+      f2 = apply( 2_db, { f2 } );
+      f2 = ( f2 == apply( 1_db, { term( op_unchecked, identifier( ) + "0" ) } ) );
+
+      auto r = apply( "rec"_unchecked, { 1_db, 0_db } );
+
+      f2 = let( { { { "r", O2O }, r } }, f2 ); 
+      f2 = forall( { { "s2", Seq } }, f2 );
+
+      f2 = implies( apply( "freegen"_unchecked, { 0_db } ), f2 );
+      f2 = forall( { { "s1", Seq }}, f2 );
+      std::cout << f2 << "\n";
+
+      errorstack errors;
+      context ctxt;
+      auto tp = checkandresolve( blfs, errors, ctxt, f2 );
+      if( tp. has_value( ))
+         std::cout << "the type is " << tp. value( ) << "\n";
+
+   }
+
+#if 0
 
    {
       auto X = logic::type( type_unchecked, identifier( ) + "X" );
@@ -639,6 +681,27 @@ void tests::replacements( )
    std::cout << "simped = " << simped << "\n";
    simped. printstate( std::cout );
    std::cout << "change = " << change << "\n";
+
+   {
+      // contextsubst:
+#if 0
+      logic::contextsubst subst;
+      subst. extend(4);
+      subst. append( 4_db );
+      subst. append( 3_db );
+      subst. append( 2_db );
+      subst. extend(2);
+      std::cout << subst << "\n";
+   
+      bool change = false;
+      auto tm = 1_db && 2_db && 3_db && 4_db;
+      std::cout << tm << "\n";
+      tm. printstate( std::cout );
+      auto tm2 = topdown( subst, std::move(tm), 0, change );
+      std::cout << tm2 << "\n"; 
+      tm2. printstate( std::cout );
+#endif
+   }
 
 #if 0
    logic::equalitysystem eq( { { 0_db, 1_db } } ); 
@@ -1115,22 +1178,6 @@ void tests::proofchecking( )
       std::cout << "IMMEDIATE FAILED\n";
 
 #endif 
-   std::cout << "\n\n";
-   pos. restore(0);
-   logic::context ctxt;
-   logic::uniquenamestack names;
-   try
-   {
-      std::cout << "proof:      "; pretty::print( std::cout, names, edit. check. topterm ); std::cout << "\n";
-      logic::type prooftp = edit. check. typecheck( ctxt, pos, edit. check. topterm );
-      std::cout << "type : " << prooftp << "\n";
-      edit. check. checksequent( ctxt, pos, edit. check. topterm ); 
-   }
-   catch( const logic::failure& f )
-   {
-      ctxt. restore( 0 );
-      edit. check. print_errors( std::cout, ctxt );
-   }
 #endif
 #endif
 }

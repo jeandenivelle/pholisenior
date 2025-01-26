@@ -11,39 +11,28 @@ operator << ( util::hashbuilder& b, const identifier& id )
    return b;
 }
 
-bool operator == ( const identifier& id1, const identifier& id2 )
+std::strong_ordering 
+operator <=> ( const identifier& id1, const identifier& id2 )
 {
-   if( id1. size( ) != id2. size( ))
-      return false;
-
    auto p1 = id1. begin( );
    auto p2 = id2. begin( ); 
 
-   while( p1 != id1. end( ))
+   while( p1 != id1. end( ) && p2 != id2. end( ))
    {
-      if( *p1 != *p2 ) 
-         return false; 
-      ++ p1; ++ p2; 
-   }
-   
-   return true;
-}
-
-bool operator < ( const identifier& id1, const identifier& id2 ) 
-{
-   auto p1 = id1. begin( );
-   auto p2 = id2. begin( );
-
-   while( p1 != id1. end( ) && p2 != id2. end( )) 
-   {
-      if( *p1 != *p2 )
-         return *p1 < *p2;
+      auto cmp = ( *p1 <=> *p2 );
+      if( !is_eq( cmp )) 
+         return  cmp;
       ++ p1; ++ p2; 
    }
 
-   return p1 == id1. end( ) && p2 != id2. end( ); 
-}
+   if( p1 == id1. end( ) && p2 != id2. end( ))
+      return std::strong_ordering::less;
 
+   if( p1 != id1. end( ) && p2 == id2. end( ))
+      return std::strong_ordering::greater; 
+
+   return std::strong_ordering::equal;
+}
 
 std::ostream& operator << ( std::ostream& out, const identifier& id )
 {

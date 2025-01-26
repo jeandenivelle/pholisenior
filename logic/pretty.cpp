@@ -39,6 +39,7 @@ logic::pretty::getattractions( logic::selector sel )
    case op_kleene_forall:
    case op_kleene_exists:
    case op_lambda:
+   case op_let: 
       return { 0, 100 };
  
    case op_apply:
@@ -461,7 +462,6 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 
    case op_lambda:
       {
-         auto lamb = t. view_lambda( );
          const size_t ss = names. size( );
          auto ourattr = getattractions( t. sel( ));
          
@@ -471,10 +471,12 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 
          par.open( out );
 
-         out << "\\(";
+         out << "lambda "; 
+
+         auto lamb = t. view_lambda( );
          print( out, blfs, names,
                 [&lamb]( size_t i ) { return lamb. var(i); }, lamb. size( ));
-         out << " ) --> ";
+         out << " --> ";
 
          print(out, blfs, names, lamb.body(), between( ourattr, env ));
          par.close( out );
@@ -483,24 +485,38 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
       }
        
    case logic::op_let:
-         {
-#if 0
-            auto ax = t. view_axiom( ); 
-            out << "axiom(";
-            for( size_t i = 0; i != ax. size( ); ++i )
-            {
-               if(i) 
-                  out << ", ";
-               else
-                  out << " ";
+      {
+         const size_t ss = names. size( );
+         auto ourattr = getattractions( t. sel( ));
 
-               print( out, names, ax. proof(i), 0, 0 );
-            }
-            out << " )";
-            return; 
-#endif
-            throw std::runtime_error( "no delta" );
+         parentheses par;
+         par. check( ourattr, env );
+         if( par ) env = {0,0};
+
+         par. open( out );
+
+         out << "let";
+
+         auto let = t. view_let( ); 
+         for( size_t i = 0; i != let. size( ); ++i )
+         {
+            if(i) 
+               out << ", ";
+            else
+               out << " ";
+
+            out << names. extend( let. var(i). pref ); 
+            out << ": "; 
+            print( out, blfs, let. var(i). tp, {0,0} ); 
+            out << " := ";
+            print( out, blfs, names, let. val(i), {0,0} );
          }
+         out << " in ";
+         print( out, blfs, names, let. body( ), between( ourattr, env )); 
+         par. close( out );
+         names. restore( ss );
+         return;
+      }
 
    default:
       out << "UGLY( " << t << ")" << "Sel:" << t.sel();
@@ -591,7 +607,7 @@ logic::pretty::print( std::ostream& out,
       -- db;
 
       out << "   ";
-      // out << names. extend( ctxt. getname( db ));   // The name made unique.
+      out << names. extend( ctxt. getname( db ));   // The name made unique.
       out << " : ";
       print( out, blfs, ctxt. gettype( db ), {0,0} );
       out << '\n';
@@ -622,7 +638,7 @@ logic::pretty::getnames( const logic::context& ctxt, size_t ss )
    while( db ) 
    {
       -- db;
-      // names. extend( ctxt. getname( db )); 
+      names. extend( ctxt. getname( db )); 
    }
 
    return names;

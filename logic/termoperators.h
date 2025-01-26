@@ -59,6 +59,10 @@ namespace logic
    inline term lambda( std::initializer_list< vartype > vars, const term& t )
       { return term( op_lambda, t, vars ); }
 
+   inline term let( std::initializer_list< std::pair< vartype, term >> defs,
+                    const term& body )
+      { return term( op_let, body, defs. begin( ), defs. end( )); }
+
 }
 
 

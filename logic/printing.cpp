@@ -105,8 +105,8 @@ void logic::term::print( std::ostream& out ) const
    case op_kleene_and:
    case op_kleene_or:
       {
-         auto kl = view_kleene( );
          out << sel( ) << "( ";
+         auto kl = view_kleene( );
          for( size_t i = 0; i != kl. size( ); ++ i )
          {
             if( i != 0 )
@@ -135,37 +135,35 @@ void logic::term::print( std::ostream& out ) const
          out << " ) : " << p. body( );
       }
       return;
-#if 0
 
-   case op_kleene_and:
-   case op_kleene_or:
+   case op_let:
       {
-         auto p = view_kleeneprop( );
+         auto l = view_let( ); 
          out << sel( ) << "(";
-         for( size_t i = 0; i != p. size( ); ++ i )
-         {
-            if(i) 
-               out << ", ";
-            else
-               out << " ";
-            out << p. sub(i);
-         }
-         out << " )";
-      }
-      return;
-
-#endif
-   case op_apply:
-      {
-         auto p = view_apply( );
-         out << "{" << p. func( ) << "}(";
-         for( size_t i = 0; i != p. size( ); ++ i )
+         for( size_t i = 0; i != l. size( ); ++ i )
          {
             if(i)
                out << ", ";
             else
                out << " ";
-            out << p. arg(i);
+            out << l. var(i) << " := " << l. val(i); 
+         }
+         out << " in " << l. body( );
+         out << " )"; 
+      }
+      return;
+
+   case op_apply:
+      {
+         auto ap = view_apply( );
+         out << "{" << ap. func( ) << "}(";
+         for( size_t i = 0; i != ap. size( ); ++ i )
+         {
+            if(i)
+               out << ", ";
+            else
+               out << " ";
+            out << ap. arg(i);
          }
          out << " )";
       }
@@ -187,14 +185,14 @@ void logic::term::print( std::ostream& out ) const
          out << p. body( );
       }
       return;
-#if 0
+
    case op_named:
       {
          auto p = view_named( );
          out << "( " << p. lab( ) << " / " << p. sub( ) << " )";
       }
       return;
-#endif
+
    default:
       std::cout << sel( ) << "\n";
       throw std::logic_error( "term::print( ) : unknown selector" );

@@ -64,11 +64,79 @@ logic::sparse_subst::operator( ) ( term t, size_t vardepth,
 
 void logic::sparse_subst::print( std::ostream& out ) const
 {
-   out << "Sparse-subst:\n";
+   out << "Sparse subst:\n";
    for( const auto& r : repl )
       out << "   #" << r. first << " := " << r. second << "\n";
 }
 
+
+#if 0
+logic::term
+logic::contextsubst::operator( ) ( term t, size_t vardepth,
+                                   bool& change ) const
+{
+   std::cout << "contextsubst " << t << " [" << vardepth << "]\n";
+
+   if( t. sel( ) == op_debruijn ) 
+   {
+      size_t ind = t. view_debruijn( ). index( ); 
+      if( ind >= vardepth )
+      {
+         // id -= vardepth;  
+         if( ind >= nrvars ) throw std::logic_error( "contextsubst: wrong De Bruijn" ); 
+         ind = nrvars - ind - 1;
+         std::cout << "absolute = " << ind << "\n";
+
+         if( vect. size( ) && ind <= vect. back( ). first )
+         {
+            size_t i0 = 0;
+            size_t i1 = vect. size( );
+            while( i1 - i0 > 1 )
+            {
+               size_t mid = i0 + ( i1 - i0 ) / 2;
+               if( ind < vect[ mid ]. first )
+                  i1 = mid;
+               else
+                  i0 = mid; 
+            }
+
+            if( i0 >= vect. size( )) 
+               throw std::logic_error( "cannot happen I think" );
+                  // We checked before that the vector is not empty.
+
+            if( vect[i0]. first == ind )
+            {
+               change = true;
+               bool c = false;
+               return topdown( lifter( vardepth ), vect[i0]. second, 0, c );
+         }
+         }
+      }
+      else
+         std::cout << "dont even bother for " << ind << "\n";
+   }
+   return t;
+}
+#endif
+
+#if 0
+void logic::contextsubst::restore( size_t s )
+{
+   while( nrvars > s )
+   {
+      -- nrvars; 
+      if( vect. size( ) && vect. back( ). first == nrvars )
+         vect. pop_back( ); 
+   }
+}
+
+void logic::contextsubst::print( std::ostream& out ) const
+{
+   out << "Contextsubst( nrvars = " << nrvars << " ):\n";
+   for( const auto& v : vect )
+      out << "   " << v. first << " := " << v. second << "\n";
+}
+#endif
 
 #if 0
 

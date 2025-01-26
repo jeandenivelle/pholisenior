@@ -39,6 +39,7 @@
 %sources
    namegenerator.cpp
    polarity.cpp
+   removelets.cpp
 
 %options 
    Wall

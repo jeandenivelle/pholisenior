@@ -131,22 +131,12 @@ logic::kbo::topleftright( const type& tp1, const type& tp2 )
          return std::strong_ordering::equal;
       } 
   
-#if 0
-   case type_ident:
+   case type_unchecked:
       { 
-         normident n1 = tp1. view_ident( ). id( );
-         normident n2 = tp2. view_ident( ). id( ); 
-
-         if( n1 != n2 )
-         {
-            if( n1. value( ) < n2. value( ))
-               return std::strong_ordering::less;
-            else
-               return std::strong_ordering::greater; 
-         }
-         return std::strong_ordering::equal;
+         identifier id1 = tp1. view_unchecked( ). id( );
+         identifier id2 = tp2. view_unchecked( ). id( ); 
+         return id1 <=> id2;
       }
-#endif
 
    case logic::type_func:
       {

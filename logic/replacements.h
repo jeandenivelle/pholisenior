@@ -53,16 +53,39 @@ namespace logic
    };
 
 
-   // A context subst looks in parallel with the context. 
-   // The numbers are not De Bruijn indices, but the number of
-   // introduction of variable.
+   // A contextsubst stores definitions in combination with a 
+   // context. 
+   // The numbers inside are not De Bruijn indices, but the
+   // level of the variable. 
+   // In let x:T := true, y:O := whatever, the substitution will
+   // (0,true), (1,whatever). Lookup needs to know the current
+   // number of variables.
 
-   class context_subst
+   class contextsubst
    {
-      std::vector< std::pair< size_t, term >> val;
+      std::vector< std::pair< size_t, term >> vect;
       size_t nrvars; 
 
+   public:
+      contextsubst( ) noexcept 
+      { }
+
+      void extend( size_t nr ) 
+         { nrvars += nr; } 
+            // Add variables without defining them. 
+
+      void append( const term& val )
+         { vect. push_back( std::pair( nrvars, val )); ++ nrvars; }
+            // Add a variable with definition. If val contains
+            // De Bruijn indices, they look back from nrvars. 
+
+      void restore( size_t s );
+
+      term operator( ) ( term t, size_t vardepth, bool& change ) const;
+
+      void print( std::ostream& out ) const;
    };
+
 
    struct betareduction 
    {
@@ -73,6 +96,7 @@ namespace logic
       void print( std::ostream& out ) const; 
    };
 
+   
 
    struct equalitysystem
    {

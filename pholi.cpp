@@ -16,9 +16,6 @@
 #include "logic/structural.h"
 #include "logic/pretty.h"
 #include "logic/replacements.h"
-#include "logic/counting.h"
-
-#include "trans/namegenerator.h"
 
 
 int main( int argc, char* argv[] )
@@ -42,7 +39,9 @@ int main( int argc, char* argv[] )
    std::cout << blfs << "\n";
    std::cout << "(after checking)\n";
 
-   // tests::transformations( blfs );
+   tests::transformations( blfs );
+   return 0;
+
    tests::pretty( blfs );
    return 0;
 
