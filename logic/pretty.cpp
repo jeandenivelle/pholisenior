@@ -55,13 +55,13 @@ void
 logic::pretty::parentheses::check( attractions attr,
                               std::pair< unsigned int, unsigned int > env )
 {
-   if( env. first && env. first >= attr. left )
+   if( env. first && attr. left && env. first >= attr. left )
    {
       ++ nr;
       return;
    }
 
-   if( env. second && env. second >= attr. right )
+   if( env. second && attr. right && env. second >= attr. right )
    {
       ++ nr;
       return;
@@ -262,13 +262,13 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          parentheses par;
          par. check( ourattr, env );
          if( par ) env = {0,0};
+         par.open( out ); 
 
          if( t. sel( ) == op_not )
             out << "! ";
          if( t. sel( ) == op_prop )
-            out << '#';
+            out << "# ";
 
-         par.open( out ); 
          print( out, blfs, names, un. sub( ), between( ourattr, env ));
          par.close( out );
       }
@@ -471,12 +471,12 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 
          par.open( out );
 
-         out << "lambda "; 
+         out << "lambda"; 
 
          auto lamb = t. view_lambda( );
          print( out, blfs, names,
                 [&lamb]( size_t i ) { return lamb. var(i); }, lamb. size( ));
-         out << " --> ";
+         out << " in ";
 
          print(out, blfs, names, lamb.body(), between( ourattr, env ));
          par.close( out );
@@ -506,9 +506,11 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
                out << " ";
 
             out << names. extend( let. var(i). pref ); 
+            names. restore( names. size( ) - 1 );
             out << ": "; 
             print( out, blfs, let. var(i). tp, {0,0} ); 
             out << " := ";
+            names. extend( let. var(i). pref );
             print( out, blfs, names, let. val(i), {0,0} );
          }
          out << " in ";

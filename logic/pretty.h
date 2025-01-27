@@ -19,7 +19,7 @@ namespace logic {
 namespace pretty 
 {
 
-   static constexpr bool csyntax_types = false;
+   static constexpr bool csyntax_types = true;
       // If true, functional types are printed with 
       // C-syntax, i.e. T(O). Otherwise O -> T. 
 

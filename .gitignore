@@ -9,4 +9,5 @@ logic/term.h
 logic/term.cpp
 logic/belief.h
 logic/belief.cpp
+Makefile
 

@@ -244,7 +244,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
          {
             errorstack::builder bld;
 
-            bld << "identifier used as type has no struct-def: ";
+            bld << "identifier without struct-def used as type: ";
             bld << id. id( ); 
             errors. push( std::move( bld ));
 
@@ -306,7 +306,10 @@ namespace logic
       {
          errorstack::builder res;
          res << "\n";
-         res << "----------------------------------------------------\n";
+         for( unsigned int i = 0; i != 70; ++ i )
+            res. put( '-' );
+         res. put( '\n' );
+ 
          auto un = pretty::print( res, blfs, ctxt );
          res << "Term:\n   ";
          pretty::print( res, blfs, un, t, {0,0} );
@@ -322,7 +325,7 @@ logic::checkandresolve( const beliefstate& blfs,
                         errorstack& errors, context& ctxt, 
                         term& t ) 
 {
-   if constexpr( true )
+   if constexpr( false )
    {
       std::cout << "\n";
       std::cout << "checking term\n";
@@ -368,7 +371,12 @@ logic::checkandresolve( const beliefstate& blfs,
          }
 
          const std::vector< type > empty;
-         return try_apply( blfs, overcands[0], empty, 0 );
+         auto tp = try_apply( blfs, overcands[0], empty, 0 );
+         if( !tp. has_value( ))
+            throw std::runtime_error( "I believe that this cannot happen" );
+
+         t = term( op_exact, overcands[0] );
+         return tp;
       }
 
    case op_debruijn:
@@ -542,7 +550,7 @@ logic::checkandresolve( const beliefstate& blfs,
             if( !checkandresolve( blfs, errors, vt. tp ))
                correct = false;
 
-            quant. update_var( i, vartype( vt. pref, vt. tp ));
+            quant. update_var( i, vt );
          }
 
          if( !correct )
@@ -587,23 +595,75 @@ logic::checkandresolve( const beliefstate& blfs,
 
          size_t contextsize = ctxt. size( );
 
-         size_t errstart = errors. size( );
-            // If we produce errors, they start here.
-
-         bool correct = true;
          for( size_t i = 0; i != let. size( ); ++ i )
          {
+            // We extract the declared type and put it back:
+
             auto vt = let. extr_var(i);
+            bool decltype_ok = checkandresolve( blfs, errors, vt.tp );
+            let. update_var( i, vt );
 
-            if( !checkandresolve( blfs, errors, vt. tp ))
-               correct = false;
+            // We extract the defined value, and put it back:
 
-            let. update_var( i, vartype( vt. pref, vt. tp ));
+            auto val = let. extr_val(i);
+            auto valtype = checkandresolve( blfs, errors, ctxt, val );
+            let. update_val( i, val );
+
+            // If we have a declared type, the value has a type,
+            // and these types differ, we create an error message,
+            // and replace the declared type. 
+
+            if( decltype_ok && valtype. has_value( ) &&
+                !equal( let. var(i). tp, valtype. value( )) )
+            {
+               auto err = errorheader( blfs, ctxt, t );
+               err << "let: declared type ";
+               pretty::print( err, blfs, let. var(i). tp, {0,0} ); 
+               err << " differs from true type ";
+               pretty::print( err, blfs, valtype. value( ), {0,0} );
+               errors. push( std::move( err ));
+
+               vt = let. extr_var(i);
+               vt. tp = valtype. value( );
+               let. update_var( i, vt );
+            }
+
+            // If the value has a type, while the declared type was rejected,
+            // we replace the declared type.
+
+            if( !decltype_ok && valtype. has_value( ))
+            {
+               // We replace:
+
+               vt = let. extr_var(i);
+               vt. tp = valtype. value( );
+               let. update_var( i, vt ); 
+
+               decltype_ok = true;
+            }
+            
+            if( !decltype_ok )
+            {
+               ctxt. restore( contextsize );
+               return { };
+            }
+ 
+            ctxt. append( let. var(i). pref, let. var(i). tp );   
          }
 
-         std::cout << "correct = " << correct << "\n";
+         std::optional< type > bodytype;
+
+         {
+            auto bod = let. extr_body( );
+            bodytype = checkandresolve( blfs, errors, ctxt, bod );
+            let. update_body( bod );
+         }
+         
+         ctxt. restore( contextsize ); 
+         
+         return bodytype; 
       }
-      throw std::runtime_error( "not finished" );
+
    case op_apply:
       {
          auto ap = t. view_apply( );
@@ -727,8 +787,6 @@ logic::checkandresolve( const beliefstate& blfs,
 
             return { };
          }
-
-         throw std::runtime_error( "not implemented" );
       }
 
    case op_lambda:
@@ -747,7 +805,7 @@ logic::checkandresolve( const beliefstate& blfs,
              if( !checkandresolve( blfs, errors, vt. tp ))
                correct = false;
 
-            lamb. update_var( i, vartype( vt. pref, vt. tp ));
+            lamb. update_var( i, vt );
          }
 
          if( !correct )
@@ -796,10 +854,13 @@ logic::try_apply( type ftype,
    if( pos > argtypes. size( ))
       throw std::logic_error( "pos > size( )" );
 
-   std::cout << "trying to apply " << ftype << " on\n";
-   for( size_t i = pos; i != argtypes. size( ); ++ i ) 
-      std::cout << "   " << i << " : " << argtypes[i] << "\n";
-   std::cout << "\n";
+   if constexpr( false )
+   {
+      std::cout << "trying to apply " << ftype << " on\n";
+      for( size_t i = pos; i != argtypes. size( ); ++ i ) 
+         std::cout << "   " << i << " : " << argtypes[i] << "\n";
+      std::cout << "\n";
+   }
 
    while( pos != argtypes. size( ))
    {
@@ -837,7 +898,7 @@ logic::try_apply( const beliefstate& blfs, exact name,
 #if 0
    std::cout << "trying to apply belief " << name << " on\n";
    for( size_t i = pos; i != argtypes. size( ); ++ i )
-      std::cout << "   " << i << " : " << argtypes[i];
+      std::cout << "   arg[" << i << "] : " << argtypes[i];
    std::cout << "\n";
 #endif
 
@@ -859,23 +920,29 @@ logic::try_apply( const beliefstate& blfs, exact name,
       case bel_fld:
          {
             auto fld = bel. view_field( ); 
-            auto structtype = fld. sdef( );
+            exact structtype = fld. sdef( );
 
+            const belief& parentblf = blfs. at( structtype ). first;
+               // The belief in the parent.
+            if( parentblf. sel( ) != bel_struct )
+               throw std::runtime_error( "parent type not a structdef" );
+            
+            const structdef& parentdef = parentblf. view_struct( ). def( ); 
+
+            auto ftype = parentdef. at( fld. offset( )). tp;
+              // Type with which the field was declared.
+
+            if( pos == argtypes. size( ))
+            {
+               return type( type_func, ftype, 
+                                       { type( type_struct, structtype ) } );
+            }
+           
             if( pos + 1 <= argtypes. size( ) && 
                 argtypes[ pos ]. sel( ) == type_struct &&
                 argtypes[ pos ]. view_struct( ). def( ) == structtype )
             {
-               const belief& parentblf = blfs. at( structtype ). first;
-                  // The belief in the parent.
-
-               if( parentblf. sel( ) != bel_struct )
-                  throw std::runtime_error( "parent type not a structdef" );
-        
-               const structdef& parentdef = 
-                  parentblf. view_struct( ). def( ); 
-
-               return try_apply( parentdef. at( fld. offset( )). tp,
-                                 argtypes, pos + 1 );
+               return try_apply( ftype, argtypes, pos + 1 );
             }
             return { };
          }  
