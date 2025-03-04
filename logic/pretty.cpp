@@ -497,24 +497,34 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 
          out << "let";
 
-         auto let = t. view_let( ); 
-         for( size_t i = 0; i != let. size( ); ++i )
+         size_t nr = 0;
+
+         // Could this use of pointers be eliminated?
+
+         const auto* p = &t; 
+         while( p -> sel( ) == op_let )
          {
-            if(i) 
+            auto let = p -> view_let( );  
+
+            if( nr ) 
                out << ", ";
             else
                out << " ";
 
-            out << names. extend( let. var(i). pref ); 
+            out << names. extend( let. var(). pref ); 
             names. restore( names. size( ) - 1 );
             out << ": "; 
-            print( out, blfs, let. var(i). tp, {0,0} ); 
+            print( out, blfs, let. var(). tp, {0,0} ); 
             out << " := ";
-            names. extend( let. var(i). pref );
-            print( out, blfs, names, let. val(i), {0,0} );
+            names. extend( let. var(). pref );
+            print( out, blfs, names, let. val( ), {0,0} );
+  
+            p = &let. body( );
+            ++ nr;
          }
+
          out << " in ";
-         print( out, blfs, names, let. body( ), between( ourattr, env )); 
+         print( out, blfs, names, *p, between( ourattr, env )); 
          par. close( out );
          names. restore( ss );
          return;

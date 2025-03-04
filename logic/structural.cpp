@@ -325,7 +325,7 @@ logic::checkandresolve( const beliefstate& blfs,
                         errorstack& errors, context& ctxt, 
                         term& t ) 
 {
-   if constexpr( false )
+   if constexpr( true )
    {
       std::cout << "\n";
       std::cout << "checking term\n";
@@ -592,75 +592,74 @@ logic::checkandresolve( const beliefstate& blfs,
    case op_let:
       {
          auto let = t. view_let( ); 
-
          size_t contextsize = ctxt. size( );
 
-         for( size_t i = 0; i != let. size( ); ++ i )
+         // Check the type (possibly resolving ambiguities): 
+
+         auto vt = let. extr_var( );
+         bool decltype_ok = checkandresolve( blfs, errors, vt.tp );
+         let. update_var( vt );
+
+         // Check the value (possibly resolving ambiguities):
+
+         auto val = let. extr_val( );
+         auto valtype = checkandresolve( blfs, errors, ctxt, val );
+         let. update_val( val );
+     
+         // If we have a declared type, the value has a type,
+         // and these types differ, we create an error message,
+         // and replace the declared type by the type of the value. 
+
+         if( decltype_ok && valtype. has_value( ) &&
+             !equal( let. var( ). tp, valtype. value( )) )
          {
-            // We extract the declared type and put it back:
+            auto err = errorheader( blfs, ctxt, t );
+            err << "let: declared type ";
+            pretty::print( err, blfs, let. var( ). tp, {0,0} ); 
+            err << " differs from true type ";
+            pretty::print( err, blfs, valtype. value( ), {0,0} );
+            errors. push( std::move( err ));
 
-            auto vt = let. extr_var(i);
-            bool decltype_ok = checkandresolve( blfs, errors, vt.tp );
-            let. update_var( i, vt );
-
-            // We extract the defined value, and put it back:
-
-            auto val = let. extr_val(i);
-            auto valtype = checkandresolve( blfs, errors, ctxt, val );
-            let. update_val( i, val );
-
-            // If we have a declared type, the value has a type,
-            // and these types differ, we create an error message,
-            // and replace the declared type. 
-
-            if( decltype_ok && valtype. has_value( ) &&
-                !equal( let. var(i). tp, valtype. value( )) )
-            {
-               auto err = errorheader( blfs, ctxt, t );
-               err << "let: declared type ";
-               pretty::print( err, blfs, let. var(i). tp, {0,0} ); 
-               err << " differs from true type ";
-               pretty::print( err, blfs, valtype. value( ), {0,0} );
-               errors. push( std::move( err ));
-
-               vt = let. extr_var(i);
-               vt. tp = valtype. value( );
-               let. update_var( i, vt );
-            }
-
-            // If the value has a type, while the declared type was rejected,
-            // we replace the declared type.
-
-            if( !decltype_ok && valtype. has_value( ))
-            {
-               // We replace:
-
-               vt = let. extr_var(i);
-               vt. tp = valtype. value( );
-               let. update_var( i, vt ); 
-
-               decltype_ok = true;
-            }
-            
-            if( !decltype_ok )
-            {
-               ctxt. restore( contextsize );
-               return { };
-            }
- 
-            ctxt. append( let. var(i). pref, let. var(i). tp );   
+            vt = let. extr_var( );
+            vt. tp = valtype. value( );
+            let. update_var( vt );
          }
 
-         std::optional< type > bodytype;
+         // If the value has a type, while the declared type was rejected,
+         // we replace the declared type.
 
+         if( !decltype_ok && valtype. has_value( ))
+         {
+            auto err = errorheader( blfs, ctxt, t );
+            err << "let: replaced ill-formed type by ";
+            pretty::print( err, blfs, valtype. value( ), {0,0} );
+            errors. push( std::move( err ));
+
+            vt = let. extr_var( );
+            vt. tp = valtype. value( );
+            let. update_var( vt ); 
+
+            decltype_ok = true; 
+         }
+
+         if( !decltype_ok )
+         {
+            ctxt. restore( contextsize );
+                // The context was not yet extended, but why not restore?
+
+            return { };
+         }
+
+         ctxt. append( let. var( ). pref, let. var( ). tp );  
+
+         std::optional< type > bodytype;
          {
             auto bod = let. extr_body( );
             bodytype = checkandresolve( blfs, errors, ctxt, bod );
             let. update_body( bod );
          }
-         
+
          ctxt. restore( contextsize ); 
-         
          return bodytype; 
       }
 
@@ -736,7 +735,7 @@ logic::checkandresolve( const beliefstate& blfs,
                errors. push( std::move( err )); 
                return { };
             }
-           
+ 
             if( results. size( ) > 1 )
             {
                auto err = errorheader( blfs, ctxt, t );

@@ -44,10 +44,10 @@
                 op_kleene_forall, op_kleene_exists } 
       => body : term, [ var : vartype ]
 
-%option let { op_let } => body : term, [ var : vartype, val : term ]
+%option let { op_let } => var : vartype, val : term, body : term
    // There is no need for the untyped variant, because one can
-   // put a meaningless identifier as type, which type checking
-   // will correct.
+   // put a meaningless identifier as type, which will be corrected
+   // during type checking. 
 
 %option apply { op_apply } => func : term, [ arg : term ] 
 %option lambda { op_lambda } => body : term, [ var : vartype ]

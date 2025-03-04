@@ -409,6 +409,8 @@ void tests::transformations( logic::beliefstate& blfs )
    type O2O = type( type_func, O, { O } );
 
    type Seq = type( type_unchecked, identifier( ) + "Seq" );
+   type X = type( type_unchecked, identifier( ) + "X" );
+
    type Seqex = type( type_struct, exact(8));
 
    {
@@ -428,7 +430,8 @@ void tests::transformations( logic::beliefstate& blfs )
 
       auto r = apply( "rec"_unchecked, { 1_db, 0_db } );
 
-      f2 = let( { { { "r", Seq }, r } }, f2 ); 
+      f2 = let( { "r", X }, r, f2 ); 
+
       f2 = forall( { { "s2", Seq } }, f2 );
 
       f2 = implies( apply( "freegen"_unchecked, { 0_db } ), f2 );

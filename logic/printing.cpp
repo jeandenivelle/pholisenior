@@ -138,17 +138,9 @@ void logic::term::print( std::ostream& out ) const
 
    case op_let:
       {
-         auto l = view_let( ); 
-         out << sel( ) << "(";
-         for( size_t i = 0; i != l. size( ); ++ i )
-         {
-            if(i)
-               out << ", ";
-            else
-               out << " ";
-            out << l. var(i) << " := " << l. val(i); 
-         }
-         out << " in " << l. body( );
+         auto let = view_let( ); 
+         out << "let( " << let. var( ) << " := " << let. val( ); 
+         out << " in " << let. body( );
          out << " )"; 
       }
       return;
