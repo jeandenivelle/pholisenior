@@ -8,6 +8,8 @@
 #include "logic/structural.h"
 
 #include "calc/transformer.h"
+#include "calc/kleening.h"
+#include "calc/alternating.h"
 
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
@@ -416,44 +418,25 @@ void tests::transformations( logic::beliefstate& blfs )
    type Seqex = type( type_struct, exact(8));
 
    {
-      std::cout << "testing remove lets\n";
+      std::cout << "testing KNF\n";
+      auto f = equiv( "abc"_unchecked || "xyz"_unchecked,
+                        "hans"_unchecked );
+      f = exists( {{ "a", O }, { "b", O }}, f );
+ 
+      f = prop(f);
+      std::cout << f << "\n";
 
-      blfs. append( belief( bel_decl, identifier( ) + "rec", 
-               type( type_func, type( type_func, O, { O } ), { Seqex, Seqex } )));
+      f = calc::knf( f, calc::pol_pos );
+      std::cout << "\n" << f << "\n";
 
-      blfs. append( belief( bel_decl, identifier( ) + "freegen",
-              type( type_func, T, { Seqex } )));
+      std::cout << "KNF:  " << f << "\n";
+      // f = calc::alt_disj(f); 
+      // std::cout << "ANF_disj:  " << f << "\n";
 
-      std::cout << blfs << "\n";
-
-      auto f2 = apply( term( op_unchecked, identifier( ) + "0" ), { 2_db } );
-      f2 = apply( 0_db, { f2 } );
-      f2 = ( f2 == apply( term( op_unchecked, identifier( ) + "0" ), { 1_db } ) );
-
-      auto r = apply( "rec"_unchecked, { 1_db, 0_db } );
-
-      f2 = let( { "r", X }, r, f2 ); 
-
-      f2 = forall( { { "s2", Seq } }, f2 );
-
-      f2 = implies( apply( "freegen"_unchecked, { 0_db } ), f2 );
-      f2 = forall( { { "s1", Seq }}, f2 );
-      std::cout << f2 << "\n";
-      f2 = f2 && f2;
-
-      errorstack errors;
-      context ctxt;
-      auto tp = checkandresolve( blfs, errors, ctxt, f2 );
-      if( tp. has_value( ))
-         std::cout << "the type is " << tp. value( ) << "\n";
-
-      std::cout << "after type checking " << f2 << "\n";
-
-      pretty::uniquenamestack names;
-      print( std::cout, blfs, names, f2, {0,0} ); 
+      return; 
    }
 
-#if 0
+#if 1
    {
       auto X = logic::type( type_unchecked, identifier( ) + "X" );
       auto Y = logic::type( type_unchecked, identifier( ) + "Y" );
@@ -467,14 +450,7 @@ void tests::transformations( logic::beliefstate& blfs )
       auto f2 = forall( {{ "y", Y }}, equiv( p3, p4 ));
 
       auto f = forall( {{ "x", X }}, equiv( f1, f2 ));
-      std::cout << f << "\n";
-#if 0
-      reso::namegenerators gen;
-      context ctxt;
-
-      f = reso::repl_equiv( blfs, gen, ctxt, f, 1 );
-      std::cout << "nnf = " << f << "\n";
-#endif
+      std::cout << f << "\n\n\n\n";
       return;  
    }
 

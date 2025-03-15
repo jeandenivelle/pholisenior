@@ -33,6 +33,9 @@ namespace logic
    inline term lazy_implies( const term& t1, const term& t2 )
       { return term( op_lazy_implies, t1, t2 ); }
 
+   inline term lazy_or( const term& t1, const term& t2 )
+      { return term( op_lazy_or, t1, t2 ); }
+
    inline term equiv( const term& t1, const term& t2 )
       { return term( op_equiv, t1, t2 ); }
 
