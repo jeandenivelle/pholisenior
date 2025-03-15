@@ -102,17 +102,17 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             break; 
          } 
 
-      case bel_form:
+      case bel_thm:
          {
-            auto f = blf. view_form( );
-            auto form = f. extr_form( );
+            auto thm = blf. view_thm( );
+            auto form = thm. extr_form( );
             context ctxt;
             auto tp = checkandresolve( everything, err, ctxt, form );
-            f. update_form( form );
+            thm. update_form( form );
 
             if( tp. has_value( ) && tp. value( ). sel( ) != type_truthval )
             {
-                  throw std::runtime_error( "theorem not well-typed" );
+               throw std::runtime_error( "theorem not well-typed" );
             }
 
             if( err. size( ) > errstart )
@@ -325,7 +325,7 @@ logic::checkandresolve( const beliefstate& blfs,
                         errorstack& errors, context& ctxt, 
                         term& t ) 
 {
-   if constexpr( true )
+   if constexpr( false )
    {
       std::cout << "\n";
       std::cout << "checking term\n";

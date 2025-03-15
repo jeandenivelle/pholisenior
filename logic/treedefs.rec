@@ -46,7 +46,7 @@
 
 %option let { op_let } => var : vartype, val : term, body : term
    // There is no need for the untyped variant, because one can
-   // put a meaningless identifier as type, which will be corrected
+   // always use a meaningless identifier as type, which will be corrected
    // during type checking. 
 
 %option apply { op_apply } => func : term, [ arg : term ] 
@@ -108,13 +108,17 @@
 %option struct { bel_struct } => def : structdef 
 %option decl { bel_decl } => tp : type 
 %option def { bel_def } => val : term, tp : type
-%option form { bel_form } => form : term, [ prf : proof ] 
-    // 0,1,2 proofs. The first proves #form, the second proves form itself.
+
+%option thm { bel_thm } => form : term, prop : proof, truth : proof
+%option asm { bel_asm } => form : term, prop : proof
+%option form { bel_form } => form : term
+   // form is used only in refutation proofs.
 
 %option field { bel_fld } => sdef : exact, offset : size_t 
    // The meanings are:
    //    structtype is the exact structural type that we belong to,
    //    and offset is our index in this struct.
+
 %option constr { bel_constr } => # tp : exact
    // Constructor, e.g. Seq(O,O(O)). 
    // tp is the type that we are the constructor of. 

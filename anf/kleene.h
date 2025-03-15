@@ -1,6 +1,6 @@
 
-#ifndef RESO_TRANSFORMATIONS_
-#define RESO_TRANSFORMATIONS_
+#ifndef ANF_KLEENE_
+#define ANF_KLEENE_
 
 #include "logic/term.h"
 #include "logic/beliefstate.h"
@@ -10,7 +10,7 @@
 #include "namegenerator.h"
 #include "polarity.h"
 
-namespace trans
+namespace anf
 {
 
    size_t size( const logic::term& f, size_t limit );

@@ -49,23 +49,15 @@ namespace logic
       case op_true:  
          return t; 
 
-#if 0
-      case sel_not:
-      case sel_union:
-      case sel_pow:
-      case sel_unique:
-      case prf_and1:
-      case prf_and2:
-      case prf_taut:
-      case prf_ext1:
-      case prf_ext2: 
+      case op_not:
+      case op_prop:
          {
             auto p = t. view_unary( );
-            p. update_sub(  
-                      topdown_sar( changes, repl, p. extr_sub( ), vardepth ));
+            p. update_sub( 
+                    topdown( repl, p. extr_sub( ), vardepth, change ));
          }
          return t;
-#endif
+
       case op_and:
       case op_or:
       case op_implies:

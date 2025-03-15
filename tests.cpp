@@ -7,8 +7,7 @@
 #include "logic/kbo.h"
 #include "logic/structural.h"
 
-#include "trans/nnf.h"
-#include "trans/removelets.h"
+#include "calc/transformer.h"
 
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
@@ -390,7 +389,10 @@ void tests::add_proof( logic::beliefstate& blfs )
 
    cls = term( op_kleene_exists, cls, {{ "x", O }, { "y", O }} );
 
-   blfs. append( belief( bel_form, identifier( ) + "initial", cls, { proof( ) } ));
+   std::cout << cls << "\n";
+   throw std::runtime_error( "quitting" );
+
+   blfs. append( belief( bel_asm, identifier( ) + "initial", cls, { proof( ) } ));
 #if 0
    cls = term( op_kleene_or, { } );
    cl_view = cls. view_kleeneprop( );
@@ -452,7 +454,6 @@ void tests::transformations( logic::beliefstate& blfs )
    }
 
 #if 0
-
    {
       auto X = logic::type( type_unchecked, identifier( ) + "X" );
       auto Y = logic::type( type_unchecked, identifier( ) + "Y" );
@@ -467,32 +468,36 @@ void tests::transformations( logic::beliefstate& blfs )
 
       auto f = forall( {{ "x", X }}, equiv( f1, f2 ));
       std::cout << f << "\n";
-       
+#if 0
       reso::namegenerators gen;
       context ctxt;
 
       f = reso::repl_equiv( blfs, gen, ctxt, f, 1 );
       std::cout << "nnf = " << f << "\n";
+#endif
       return;  
    }
 
+#endif
    const auto& f = blfs. getformulas( identifier( ) + "just" );
    if( f. size( ) != 1 )
       throw std::runtime_error( "cannot continue" );
 
    auto ind = blfs. at( f[0] ). first;
-   std::cout << "trying to make clause from " << ind << "\n";
 
-   context ctxt;
-   reso::namegenerators gen;
-   std::cout << "\n\n";
-   auto cls = reso::nnf( ind. view_form( ). form( ), reso::pol_neg );
+   logic::context ctxt;
 
-   std::cout << "clause is: " << cls << "\n";
+   calc::transformer trans; 
+   trans. add_initial( blfs, ! ind. view_thm( ). form( ));
+   trans. add_initial( blfs, 
+      !forall( { { "a", O }, { "b", T }, { "c", O2T }, { "d", O2O }},
+                equiv( 0_db, equiv( ! 1_db, equiv( 2_db, 3_db ))) ));
+
+   std::cout << trans << "\n";
+   trans. flush( blfs );
+   // std::cout << blfs << "\n";
+   // std::cout << trans << "\n";
  
-   cls = reso::flatten( cls );
-   std::cout << "flattened: " << cls << "\n";
-
 #if 0
    logic::simplifications::logical log;
    std::cout << log << "\n";
@@ -523,7 +528,6 @@ void tests::transformations( logic::beliefstate& blfs )
 
       f = !f;
    } 
-#endif
 #endif
 
 }
@@ -798,8 +802,8 @@ void tests::add_seq( logic::beliefstate& blfs )
       form1 = lazy_implies( form1, implies( form2, implies( form3, form4 )));
       form1 = forall( {{ "s", Seq }, { "Q", O2T }}, form1 );
       
-      blfs. append( belief( bel_form, identifier( ) + "induction", form1, 
-                            { proof( ), proof( ) } ) ); 
+      blfs. append( belief( bel_thm, identifier( ) + "induction", form1, 
+                            proof( ), proof( )) ); 
    }
 
    // We define a homomorphic relation:
@@ -898,8 +902,8 @@ void tests::add_seq( logic::beliefstate& blfs )
       impl = forall( {{ "x1", O }, { "x2", O }}, impl );
       impl = forall( {{ "s1", Seq }, { "s2", Seq }}, impl );
 
-      blfs. append( belief( bel_form, identifier( ) + "just", impl,
-                            { proof( ), proof( ) } ) ); 
+      blfs. append( belief( bel_thm, identifier( ) + "just", impl,
+                            proof( ), proof( )) ); 
 
    }
 }

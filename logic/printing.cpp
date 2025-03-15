@@ -216,6 +216,14 @@ void logic::belief::print( std::ostream& out ) const
       }
       return;
 
+   case bel_thm:
+      out << "theorem " << name( ) << " : " << view_thm( ). form( );
+      return;
+
+   case bel_asm:
+      out << "assumption " << name( ) << " : " << view_asm( ). form( );
+      return;
+
    case bel_form:
       out << "form " << name( ) << " : " << view_form( ). form( );
       return;

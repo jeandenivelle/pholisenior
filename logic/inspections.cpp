@@ -1,7 +1,8 @@
 
-#include "counting.h"
+#include "inspections.h"
 
-void logic::debruijn_counter::operator( ) ( const term& t, size_t vardepth )
+void 
+logic::debruijn_counter::operator( ) ( const term& t, size_t vardepth )
 {
    // std::cout << "de Bruijn " << t << " / " << vardepth << "\n";
 

@@ -1,11 +1,11 @@
 
-#ifndef TRANS_POLARITY_
-#define TRANS_POLARITY_
+#ifndef CALC_POLARITY_
+#define CALC_POLARITY_
 
 #include <iostream>
 #include "logic/term.h"
 
-namespace trans
+namespace calc
 {
    enum polarity { pol_pos, pol_neg };
 
@@ -17,8 +17,8 @@ namespace trans
    polarity operator - ( polarity );  
 
    logic::selector demorgan( polarity pol, logic::selector sel );
-      // Apply the De Morgan rule on a Kleene operator.
-      // It doesn't work on other operators.
+      // Apply the De Morgan rule on a Kleene oprator.
+      // It doesn't work for other operators.
 }
 
 #endif

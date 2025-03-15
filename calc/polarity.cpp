@@ -1,17 +1,17 @@
 
 #include "polarity.h"
 
-const char* trans::getcstring( polarity pol )
+const char* calc::getcstring( polarity pol )
 {
    switch( pol )
    {
-   case pol_pos:       return "pos"; 
-   case pol_neg:       return "neg";
+   case pol_pos:       return "positive"; 
+   case pol_neg:       return "negative";
    default:            return "???";
    }
 }
 
-trans::polarity trans::operator - ( polarity pol )
+calc::polarity calc::operator - ( polarity pol )
 {
    switch( pol )
    {
@@ -23,7 +23,8 @@ trans::polarity trans::operator - ( polarity pol )
 }
 
 
-logic::selector trans::demorgan( polarity pol, logic::selector op )
+logic::selector 
+calc::demorgan( polarity pol, logic::selector op )
 {
    if( pol == pol_pos )
    {

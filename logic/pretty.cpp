@@ -545,6 +545,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
    print( out, blfs, names, t, {0,0} );
 }
 
+
 #if 0
 
 void pretty::print( std::ostream& out,

@@ -26,20 +26,25 @@ namespace
    }
 }
 
-
 std::string 
-reso::namegenerator::next( )
+calc::namegenerator::create( std::string base )
 {
-   auto res = base + index;
-   increase( index );
-   return res; 
+   auto p = names. find( base );
+   if( p == names. end( ))
+   {
+      p = names. insert( 
+             std::pair< std::string, std::string > ( base, "0001" )). first;
+   }
+   base += ( p -> second );
+   increase( p -> second );
+   return base;
 }
 
-
-void reso::namegenerator::print( std::ostream& out ) const
+void calc::namegenerator::print( std::ostream& out ) const
 {
    out << "Namegenerator:\n";
-   out << "   " << base << " : " << index << "\n";
+   for( const auto& n : names )
+      out << "   " << n. first << " : " << n. second << "\n";
 }
 
 

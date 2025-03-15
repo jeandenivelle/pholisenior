@@ -1,4 +1,6 @@
 
+#include "calc/proofstate.h"
+
 #include "errorstack.h"
 
 #include "identifier.h"
@@ -17,9 +19,12 @@
 #include "logic/pretty.h"
 #include "logic/replacements.h"
 
+#include "calc/namegenerator.h"
 
 int main( int argc, char* argv[] )
 {
+   std::unordered_map< identifier, identifier::hash, identifier::equal_to, int > test;
+
    logic::beliefstate blfs;
 
    // logic::beliefstate blfs; 
@@ -34,7 +39,7 @@ int main( int argc, char* argv[] )
    tests::add_settheory( blfs );
    std::cout << blfs << "\n";
    tests::structural( blfs );
-   tests::add_proof( blfs );
+   // tests::add_proof( blfs );
 
    std::cout << blfs << "\n";
    std::cout << "(after checking)\n";
@@ -46,15 +51,6 @@ int main( int argc, char* argv[] )
    return 0;
 
 #if 0
-   auto tm = 44_db && "aaa"_inexact;
-   tm = apply( "field"_inexact, { tm } );
-
-   std::cout << implies( tm, tm ) << "\n";
-  
-   auto lab = logic::term( logic::op_named, tm, identifier( ) + "thm1" );
-
-   std::cout << lab << "\n";
-   return 0;
    
    // tests::context( ); 
    // tests::setsimplifications( );

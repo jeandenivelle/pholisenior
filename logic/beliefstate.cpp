@@ -62,6 +62,8 @@ logic::exact logic::beliefstate::append( belief&& bl )
          return ex;
       }
 
+   case bel_thm:
+   case bel_asm:
    case bel_form:
       {
          exact ex = exact( vect. size( )); 

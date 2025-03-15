@@ -1,12 +1,11 @@
 
 // Written by Hans de Nivelle, Dec. 2024.
 
-#ifndef LOGIC_COUNTING_
-#define LOGIC_COUNTING_
+#ifndef LOGIC_INSPECTIONS_
+#define LOGIC_INSPECTIONS_
 
 #include "term.h"
 #include <map>
-
 
 namespace logic
 {
@@ -96,7 +95,7 @@ namespace logic
          // It must be an ordered map. We use the debruijn counter 
          // to introduce a new predicate for a subformula, and we want 
          // the variables to be ordered in this predicate in the same 
-         // order as they are quantified in the surrounding scope. 
+         // order as they were quantified in the surrounding scope. 
 
       void operator( ) ( const term& t, size_t vardepth );
 
@@ -106,7 +105,9 @@ namespace logic
          // Blocking coincidental copying.
 
       size_t size( ) const { return occ. size( ); }
-      using const_iterator = std::map< size_t, size_t > :: const_iterator;
+      using const_iterator = 
+            std::map< size_t, size_t > :: const_iterator;
+
       const_iterator begin( ) const { return occ. begin( ); }
       const_iterator end( ) const { return occ. end( ); }
 
@@ -122,7 +123,6 @@ namespace logic
    }
 
    exact::unordered_map< size_t > count_beliefs( const term& t );
-
 
 }
 

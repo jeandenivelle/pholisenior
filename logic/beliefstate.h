@@ -20,6 +20,7 @@ namespace logic
 {
 
    // Maybe I will not use this, and stick with the original ranking function:
+   // This probably should be moved out of this class.
 
    struct dependencies
    {
@@ -78,7 +79,8 @@ namespace logic
 #endif
 
       exact append( belief&& bel );
-         // If one adds a name with a pattern that overlaps with an existing
+         // If one adds a name with a pattern that overlaps with an 
+         // existing
          // pattern, it will be added without complaints. It will only 
          // be detected during type checking, when the overlapping 
          // pattern is used, and causes an ambiguous overload.
