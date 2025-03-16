@@ -419,8 +419,8 @@ void tests::transformations( logic::beliefstate& blfs )
 
    {
       std::cout << "testing KNF\n";
-      auto f = equiv( "abc"_unchecked || "xyz"_unchecked,
-                        "hans"_unchecked );
+      auto f = lazy_and( "A"_unchecked, "B"_unchecked );
+
       f = exists( {{ "a", O }, { "b", O }}, f );
  
       f = prop(f);
