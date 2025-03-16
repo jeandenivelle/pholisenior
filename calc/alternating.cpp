@@ -149,4 +149,54 @@ calc::flatten_conj( logic::context& ctxt, const logic::term& f,
    throw std::runtime_error( "alt_conj: formula not in KNF" );
 }
 
+logic::term
+calc::splitalt( transformer& trans, logic::beliefstate& blfs,
+                logic::context& ctxt, logic::term f,
+                logic::selector op, unsigned int maxlevel )
+{
+   if( isliteral(f))
+      return f;
+
+   // We decide if there is a level increase:
+
+   auto s = f. sel( ); 
+
+   if( ( op == logic::op_kleene_or && 
+          ( s == logic::op_kleene_and || s == logic::op_kleene_forall )) ||
+       ( op == logic::op_kleene_and &&
+          ( s == logic::op_kleene_or || s == logic::op_kleene_exists )))
+   {
+      if( maxlevel <= 1 )
+      {
+         throw std::runtime_error( "subformula replacement" );      
+
+      } 
+ 
+      -- maxlevel;  // Lost one level. 
+   }
+   
+   if( f. sel( ) == logic::op_kleene_or || f. sel( ) == logic::op_kleene_and )
+   {
+      auto prop = f. view_kleene( );
+      for( size_t i = 0; i != prop. size( ); ++ i )
+      {
+         prop. update_sub( i,  
+               splitalt( trans, blfs, ctxt, prop. extr_sub(i), op, maxlevel )); 
+      }
+      return f;
+   }
+
+   if( f. sel( ) == logic::op_kleene_forall || f. sel( ) == logic::op_kleene_exists )
+   {
+      auto q = f. view_quant( ); 
+      size_t ss = ctxt. size( );
+      for( size_t i = 0; i != q. size( ); ++ i )
+         ctxt. append( q. var(i). pref, q. var(i). tp );
+      q. update_body( splitalt( trans, blfs, ctxt, q. extr_body( ), op, maxlevel ));
+      ctxt. restore(ss);
+      return f;
+   }
+
+   throw std::runtime_error( "splitalt: should be not reachable" );
+}
 

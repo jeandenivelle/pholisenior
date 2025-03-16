@@ -431,7 +431,6 @@ void tests::transformations( logic::beliefstate& blfs )
       std::cout << "\n" << f << "\n";
 
       std::cout << "ANF:  " << f << "\n";
-      // f = calc::alt_disj(f); 
       // std::cout << "ANF_disj:  " << f << "\n";
 
       return; 
@@ -456,38 +455,6 @@ void tests::transformations( logic::beliefstate& blfs )
    // std::cout << blfs << "\n";
    // std::cout << trans << "\n";
  
-#if 0
-   logic::simplifications::logical log;
-   std::cout << log << "\n";
-   std::cout << "\n";
-
-   auto S = logic::type( logic::sel_set );
-   auto T = logic::type( logic::sel_truthval );
-   auto B = logic::type( logic::sel_belief );
-
-   auto a = "A"_ident;
-   auto b = "B"_ident;
-   auto c = "C"_ident;
-   auto P = "P"_ident;
-   auto Q = "Q"_ident;
-
-   logic::term f = exists( { "x", S }, logic::term( logic::sel_appl, P, { 0_db } ));
-
-   for( unsigned int i = 0; i < 4; ++ i )
-   {
-      auto f1 = log( f, 0 );
-        
-      std::cout << f << " ==> " << f1;
-
-      if( f. very_equal_to( f1 ))
-         std::cout << "      (result is very equal)\n";
-      else
-         std::cout << "\n";
-
-      f = !f;
-   } 
-#endif
-
 }
 
 

@@ -35,6 +35,12 @@ namespace calc
    void 
    flatten_conj( logic::context& ctxt, const logic::term& f,
                  std::vector< logic::term > & into );
+
+   logic::term
+   splitalt( transformer& trans, logic::beliefstate& blfs,
+             logic::context& ctxt, logic::term f,
+             logic::selector op, unsigned int maxlevel );
+      // op must be either kleene_or or kleene_and. 
 }
 
 #endif
