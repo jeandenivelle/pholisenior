@@ -417,44 +417,26 @@ void tests::transformations( logic::beliefstate& blfs )
 
    type Seqex = type( type_struct, exact(8));
 
+   if( false ) 
    {
-      std::cout << "testing KNF\n";
-      auto f = lazy_and( "A"_unchecked, "B"_unchecked );
+      std::cout << "testing ANF\n";
+      auto f = logic::term( logic::op_kleene_or, {  0_db == 2_db, 1_db == 3_db } );
 
-      f = exists( {{ "a", O }, { "b", O }}, f );
+      f = logic::term( logic::op_kleene_exists, f, {{ "a", O }, { "b", T }} );
+      f = logic::term( logic::op_kleene_forall, f, {{ "x", T }, { "y", O2O }} ); 
  
-      f = prop(f);
       std::cout << f << "\n";
 
-      f = calc::knf( f, calc::pol_pos );
+      f = calc::alt_conj(f);
       std::cout << "\n" << f << "\n";
 
-      std::cout << "KNF:  " << f << "\n";
+      std::cout << "ANF:  " << f << "\n";
       // f = calc::alt_disj(f); 
       // std::cout << "ANF_disj:  " << f << "\n";
 
       return; 
    }
 
-#if 1
-   {
-      auto X = logic::type( type_unchecked, identifier( ) + "X" );
-      auto Y = logic::type( type_unchecked, identifier( ) + "Y" );
-
-      auto p1 = apply( "p1"_unchecked, { 1_db, 0_db } );
-      auto p2 = apply( "p2"_unchecked, { 1_db, 0_db } );     
-      auto p3 = apply( "p3"_unchecked, { 1_db, 0_db } );
-      auto p4 = apply( "p4"_unchecked, { 1_db, 0_db } );
-
-      auto f1 = forall( {{ "y", Y }}, equiv( p1, p2 ));
-      auto f2 = forall( {{ "y", Y }}, equiv( p3, p4 ));
-
-      auto f = forall( {{ "x", X }}, equiv( f1, f2 ));
-      std::cout << f << "\n\n\n\n";
-      return;  
-   }
-
-#endif
    const auto& f = blfs. getformulas( identifier( ) + "just" );
    if( f. size( ) != 1 )
       throw std::runtime_error( "cannot continue" );

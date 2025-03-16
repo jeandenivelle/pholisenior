@@ -134,7 +134,7 @@ void calc::transformer::flush( logic::beliefstate& blfs )
          print( std::cout );
          std::cout << f << "\n";
          std::cout << "dont know what comes after: " << f. last << "\n";
-         throw std::logic_error( "unfinished" );
+         return;
       }
  
       forms. push_back( std::move(f));

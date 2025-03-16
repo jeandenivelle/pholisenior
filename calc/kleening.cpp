@@ -142,7 +142,6 @@ logic::term calc::knf( const logic::term& f, polarity pol )
    case op_debruijn:
    case op_unchecked:
    case op_equals:
-   case op_lambda:
    case op_apply:
       if( pol == pol_pos )
          return f;
@@ -176,6 +175,7 @@ calc::knf_prop( const logic::term& f, polarity pol )
       return knf_prop( f. view_unary( ). sub( ), pol );
 
    case op_prop:
+   case op_equals:
       return term( demorgan( pol, op_kleene_and ),
                    std::initializer_list< term > ( ));
 
@@ -220,7 +220,7 @@ calc::knf_prop( const logic::term& f, polarity pol )
          res = term( demorgan( pol, op_kleene_forall ), 
                      res, std::initializer_list< vartype > ( ));
 
-            // Add the quantified variables/types from the original formula:
+         // Add the quantified variables/types from the original formula:
 
          for( size_t i = 0; i != q. size( ); ++ i )
             res. view_quant( ). push_back( q. var(i));
@@ -241,4 +241,5 @@ calc::knf_prop( const logic::term& f, polarity pol )
    std::cout << pol << " : " << f. sel( ) << "\n";
    throw std::runtime_error( "not handled in knf-prop" );
 }
+
 
