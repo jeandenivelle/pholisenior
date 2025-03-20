@@ -1,5 +1,4 @@
 
-#include "calc/proofstate.h"
 
 #include "errorstack.h"
 

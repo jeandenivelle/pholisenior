@@ -10,6 +10,7 @@
 #include "calc/transformer.h"
 #include "calc/kleening.h"
 #include "calc/alternating.h"
+#include "calc/sequent.h"
 
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
