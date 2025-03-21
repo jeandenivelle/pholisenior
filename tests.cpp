@@ -424,22 +424,27 @@ void tests::transformations( logic::beliefstate& blfs )
 
       auto all1 =
          forall( { { "y", O }}, 
-            apply( "p1"_unchecked, { 1_db, 0_db } ) ||
-            apply( "q1"_unchecked, { 1_db, 0_db } ));
+            apply( "p1"_unchecked, { 0_db, 1_db } ) ||
+            apply( "q1"_unchecked, { 0_db, 1_db } ));
 
       auto all2 =
          forall( { { "z", O2O }},
             apply( "p2"_unchecked, { 1_db, 0_db } ) ||
-            apply( "q2"_unchecked, { 1_db, 0_db } ));
+            exists( {{ "t", T }}, 
+               apply( "q2"_unchecked, { 2_db, 1_db, 0_db } )));
 
       auto form = forall( { { "x", T }}, 
-            apply( "a"_unchecked, { 0_db } ) ||
+            apply( "a"_unchecked, { 0_db } ) &&
+            exists( {{ "u", T }}, apply( "b"_unchecked, { 0_db, 1_db } )) ||
             ( all1 && all2 ));
 
       form = calc::knf( form, calc::pol_pos ); 
       std::cout << "testing distr\n";
+      {
+         logic::context ctxt; 
+         pretty::print( std::cout, blfs, ctxt, form );
+      }
 
-      std::cout << form << "\n";
       calc::disj_stack disj;
       disj. append( form, 0 );
       std::vector< logic::term > conj;
@@ -447,8 +452,12 @@ void tests::transformations( logic::beliefstate& blfs )
       logic::context ctxt;
       calc::distr( ctxt, disj, conj );
       std::cout << "result is \n";
-      
-      
+      for( const auto& c : conj )
+      {
+         pretty::print( std::cout, blfs, ctxt, c ); 
+         std::cout << "\n";
+      }
+
       return; 
    }
 

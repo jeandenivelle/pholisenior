@@ -28,11 +28,11 @@ logic::pretty::getattractions( logic::selector sel )
       return { 160, 160 }; 
 
    case op_lazy_and:
-      return { 140, 141 };
+      return { 140, 1 };
    case op_lazy_or:
-      return { 130, 131 };
+      return { 130, 1 };
    case op_lazy_implies:
-      return { 121, 120 };
+      return { 121, 1 };
 
    case op_forall:
    case op_exists:
@@ -40,7 +40,7 @@ logic::pretty::getattractions( logic::selector sel )
    case op_kleene_exists:
    case op_lambda:
    case op_let: 
-      return { 0, 100 };
+      return { 0, 1 };
  
    case op_apply:
       return { 190, 191 };
@@ -57,28 +57,28 @@ logic::pretty::parentheses::check( attractions attr,
 {
    if( env. first && attr. left && env. first >= attr. left )
    {
-      ++ nr;
+      needed = true;
       return;
    }
 
    if( env. second && attr. right && env. second >= attr. right )
    {
-      ++ nr;
+      needed = true;
       return;
    }
 }
 
 void 
-logic::pretty::parentheses::open( std::ostream& out ) const
+logic::pretty::parentheses::opening( std::ostream& out ) const
 {
-   for( unsigned int i = 0; i != nr; ++ i )
+   if( needed )
       out << "( ";
 }
 
 void 
-logic::pretty::parentheses::close( std::ostream& out ) const
+logic::pretty::parentheses::closing( std::ostream& out ) const
 {
-   for( unsigned int i = 0; i != nr; ++ i )
+   if( needed ) 
       out << " )";
 }
 
@@ -140,7 +140,7 @@ void logic::pretty::print( std::ostream& out, const beliefstate& blfs,
       par. check( arrow_attr, env ); 
       if( par ) env = {0,0}; 
 
-      par. open( out );
+      par. opening( out );
       auto f = tp. view_func( );
             
       if( f. size( ) == 0 )
@@ -163,7 +163,7 @@ void logic::pretty::print( std::ostream& out, const beliefstate& blfs,
       }
       out << " -> ";
       print( out, blfs, f. result( ), between( arrow_attr, env ));
-      par. close( out );
+      par. closing( out );
    }
 }
 
@@ -205,10 +205,6 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
    }
 }
 
-
-// The attractions in env come from different operators.
-// env. first is the left attraction of the operator to the right of us.
-// env. second is sthe right attraction of the operator to the left of us.
 
 void 
 logic::pretty::print( std::ostream& out, const beliefstate& blfs,
@@ -262,7 +258,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          parentheses par;
          par. check( ourattr, env );
          if( par ) env = {0,0};
-         par.open( out ); 
+         par.opening( out ); 
 
          if( t. sel( ) == op_not )
             out << "! ";
@@ -270,7 +266,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
             out << "# ";
 
          print( out, blfs, names, un. sub( ), between( ourattr, env ));
-         par.close( out );
+         par.closing( out );
       }
       return;
    
@@ -294,7 +290,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
       par. check( ourattr, env ); 
       if( par ) env = {0,0}; 
 
-      par.open( out );
+      par.opening( out );
       print( out, blfs, names, bin. sub1( ), between( env, ourattr ));
 
       switch( t. sel( ))
@@ -310,7 +306,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          
       print( out, blfs, names, bin. sub2( ), between( ourattr, env ));
 
-      par.close( out );
+      par.closing( out );
       return;
    }
 
@@ -326,7 +322,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
       par.check( ourattr, env ); 
       if( par ) env = {0,0}; 
 
-      par.open( out );
+      par.opening( out );
       out << "{ ";
       print( out, blfs, names, bin. sub1( ), {0,0} );
       out << " }";
@@ -341,7 +337,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
       }
       
       print( out, blfs, names, bin. sub2( ), between( ourattr, env ));
-      par.close( out );
+      par.closing( out );
 
       return;
    }
@@ -375,13 +371,13 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          parentheses par;
          par. check( ourattr, env );
          if( par ) env = {0,0};
-         par. open( out );
+         par. opening( out );
 
          print( out, blfs, names, kl. sub(0), between( env, ourattr ));
      
          for( size_t i = 1; i != kl. size( ); ++ i )
          {
-            if( t. sel( ) == op_and )
+            if( t. sel( ) == op_kleene_and )
                out << " && ";
             else
                out << " || ";
@@ -392,7 +388,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
                       between( ourattr, env ));
          }
 
-         par. close( out );
+         par. closing( out );
          return; 
       }
 
@@ -410,7 +406,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          par. check( ourattr, env );
          if( par ) env = {0,0};
          
-         par. open( out );
+         par. opening( out );
 
          if( t. sel( ) == op_forall || t. sel( ) == op_kleene_forall )
             out << "[";
@@ -421,13 +417,13 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
                 [&q]( size_t i ) { return q. var(i); }, q. size( ));
 
          if( t. sel( ) == op_forall || t. sel( ) == op_kleene_forall )
-            out << " ] ";
+            out << " ] : ";
          if( t. sel( ) == op_exists || t. sel( ) == op_kleene_exists )
-            out << " > ";
+            out << " > : ";
 
          print( out, blfs, names, q. body( ), between( ourattr, env ));
 
-         par. close( out );
+         par. closing( out );
          names. restore( ss );
          return;
       }
@@ -442,7 +438,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          if( par ) 
             env = {0,0};
 
-         par. open( out );
+         par. opening( out );
          print( out, blfs, names, appl. func( ), between( env, ourattr ));
 
          out << '(';
@@ -456,7 +452,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          }
          out << " )";
   
-         par. close( out );
+         par. closing( out );
          return;
       }
 
@@ -469,7 +465,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          par. check( ourattr, env ); 
          if( par ) env = {0,0};    
 
-         par.open( out );
+         par.opening( out );
 
          out << "lambda"; 
 
@@ -479,7 +475,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          out << " in ";
 
          print(out, blfs, names, lamb.body(), between( ourattr, env ));
-         par.close( out );
+         par.closing( out );
          names. restore( ss );
          return;
       }
@@ -493,7 +489,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          par. check( ourattr, env );
          if( par ) env = {0,0};
 
-         par. open( out );
+         par. opening( out );
 
          out << "let";
 
@@ -525,7 +521,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 
          out << " in ";
          print( out, blfs, names, *p, between( ourattr, env )); 
-         par. close( out );
+         par. closing( out );
          names. restore( ss );
          return;
       }
@@ -539,12 +535,67 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 
 void
 logic::pretty::print( std::ostream& out, const beliefstate& blfs,
-            context& ctxt, const term& t )
+                      context& ctxt, const term& t )
 {
    uniquenamestack names = getnames( ctxt, ctxt. size( ));
    print( out, blfs, names, t, {0,0} );
 }
 
+
+
+
+logic::pretty::uniquenamestack
+logic::pretty::print( std::ostream& out, 
+                      const beliefstate& blfs, const logic::context& ctxt )
+{
+   out << "Context:\n"
+;
+   size_t db = ctxt. size( );
+      // De Bruijn index.
+ 
+   uniquenamestack names; 
+
+   while( db )
+   {
+      -- db;
+
+      out << "   ";
+      out << names. extend( ctxt. getname( db ));   // The name made unique.
+      out << " : ";
+      print( out, blfs, ctxt. gettype( db ), {0,0} );
+      out << '\n';
+   }
+   if constexpr( false ) 
+   {
+      out << "this is the ugly version of this context:\n";
+      out << ctxt << "\n";
+   }
+
+   return names; 
+}
+
+logic::pretty::uniquenamestack
+logic::pretty::getnames( const logic::context& ctxt, size_t ss )
+{
+   uniquenamestack names;
+
+   if( ss > ctxt. size( ))
+   {
+      std::cout << "cutoff size " << ss << "/" << ctxt. size( ) << " too big\n";
+      throw std::runtime_error( "too big" );
+   }
+
+   // db = 'De Bruijn':
+
+   size_t db = ss;
+   while( db ) 
+   {
+      -- db;
+      names. extend( ctxt. getname( db )); 
+   }
+
+   return names;
+}
 
 #if 0
 
@@ -604,69 +655,15 @@ void pretty::print( std::ostream& out,
 }
 #endif
 
-logic::pretty::uniquenamestack
-logic::pretty::print( std::ostream& out, 
-                      const beliefstate& blfs, const logic::context& ctxt )
-{
-   out << "Context:\n"
-;
-   size_t db = ctxt. size( );
-      // De Bruijn index.
- 
-   uniquenamestack names; 
-
-   while( db )
-   {
-      -- db;
-
-      out << "   ";
-      out << names. extend( ctxt. getname( db ));   // The name made unique.
-      out << " : ";
-      print( out, blfs, ctxt. gettype( db ), {0,0} );
-      out << '\n';
-   }
-   if constexpr( false ) 
-   {
-      out << "this is the ugly version of this context:\n";
-      out << ctxt << "\n";
-   }
-
-   return names; 
-}
-
-logic::pretty::uniquenamestack
-logic::pretty::getnames( const logic::context& ctxt, size_t ss )
-{
-   uniquenamestack names;
-
-   if( ss > ctxt. size( ))
-   {
-      std::cout << "cutoff size " << ss << "/" << ctxt. size( ) << " too big\n";
-      throw std::runtime_error( "too big" );
-   }
-
-   // db = 'De Bruijn':
-
-   size_t db = ss;
-   while( db ) 
-   {
-      -- db;
-      names. extend( ctxt. getname( db )); 
-   }
-
-   return names;
-}
-
-#if 0
-void output::print( std::ostream& out, const logic::beliefstate& bel )
+void 
+logic::pretty::print( std::ostream& out, const logic::beliefstate& blfs )
 {
    out << "Belief State:\n";
-#if 0
-   uniquenamestack names;
 
-   for( size_t i = 0; i != bel. size( ); ++ i )
+#if 0
+   for( size_t i = 0; i != blfs. size( ); ++ i )
    {
-      out << "   " << i << "   " << bel. at(i). first << "  : ";
+      out << "   " << i << "   " << blfs. at(i). first << "  : ";
       print( out, names, bel. at(i). second );
    }
 
@@ -678,64 +675,4 @@ void output::print( std::ostream& out, const logic::beliefstate& bel )
 #endif
    out << "\n";
 }
-#endif
-
-#if 0
-void pretty::print( std::ostream& out, uniquenamestack& names, 
-                    const logic::error& err )
-{
-   switch( err. sel( ))
-   {
-   case logic::err_index:
-      {
-         auto ind = err. view_index( );
-         out << ind. message( ) << "   #" << ind. index( ) << "\n";
-         return;
-      }
-
-   case logic::err_typediff:
-      {
-         auto diff = err. view_typediff( );
-         out << diff. message( ) << "   ";
-         out << "got "; print( out, diff. received( ));
-         out << " instead of "; print( out, diff. expected( ));
-         out << "\n";
-         return;
-      }
-
-   case logic::err_wrongtype:
-      {
-         auto wrong = err. view_wrongtype( );
-         out << wrong. message( ) << "   ";
-         print( out, wrong. tp( ));
-         out << "\n";
-         return;
-      }
-
-   case logic::err_ident:
-      {
-         auto id = err. view_ident( );
-         out << id. message( ) << "   " << id. ident( ) << "\n";
-         return;
-      }
-
-   case logic::err_cannotapply:
-      {
-         auto cant = err. view_cannotapply( );
-         out << cant. message( ) << "   ";
-         for( size_t i = 0; i != cant. size( ); ++ i )
-         {
-            if(i) out << ", "; 
-            print( std::cout, names, cant. form(i)); 
-         }
-         out << "\n";
-         return; 
-      }  
-   }
-
-   std::cerr << "error " << err. sel( ) << "\n";
-   throw std::runtime_error( "dont know how to pretty-print" ); 
-}
-
-#endif
 

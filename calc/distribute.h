@@ -60,7 +60,7 @@ namespace calc
      
    void distr( logic::context& ctxt, disj_stack& disj, 
                std::vector< logic::term > & conj );
-     
+
 }
 
 #endif 

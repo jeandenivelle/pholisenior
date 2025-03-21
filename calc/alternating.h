@@ -9,12 +9,6 @@ namespace calc
    bool isatom( const logic::term& f );
    bool isliteral( const logic::term& f );
 
-   logic::term 
-   quantify( logic::selector op, const logic::context& ctxt, 
-             const logic::term& body );
-      // We won't add the quantifier if ctxt is empty.
-
-        
    // Formula f must be in KNF:
 
    // Result will be a disjunction of exists of alt_foralls( ).

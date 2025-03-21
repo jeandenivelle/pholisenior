@@ -68,22 +68,25 @@ namespace pretty
 
    struct parentheses
    {
-      unsigned int nr;
+      bool needed = false;
     
-      parentheses( ) noexcept 
-         : nr(0)
-      { }
+      parentheses( ) noexcept { }
 
-      operator bool( ) const { return nr; }
+      operator bool( ) const { return needed; }
 
       // Checks if env pulls harder than attr, either to the left
-      // or to the right. If yes, we increase our nr.
+      // or to the right. If yes, we make needed = true.
 
+      // env. first is surrounding attraction from the left.
+      // env. second is surrounding attraction from the right.
+      //  
       void check( attractions attr,
                   std::pair< unsigned, unsigned int > env );
 
-      void open( std::ostream& out ) const;
-      void close( std::ostream& out ) const;
+      void opening( std::ostream& out ) const;
+      void closing( std::ostream& out ) const;
+         // print opening/closing parentheses. 
+         // Don't change our state. 
    };
 
    void print( std::ostream& out, const beliefstate& blfs,
@@ -91,7 +94,10 @@ namespace pretty
                const std::function< vartype( size_t ) > & vt, size_t sz ); 
       // Prints a sequence of vartypes nicely, combining
       // types wherever possible. This is used when printing
-      // a quantifier, a lambda, a let, or a definition.
+      // a quantifier, a lambda, or a definition.
+
+   // env. first is the left attraction of the operator to the right of us.
+   // env. second is the right attraction of the operator to the left of us.
 
    void print( std::ostream& out, const beliefstate& blfs, 
                const type& tp, std::pair< unsigned int, unsigned int > env );
@@ -101,10 +107,12 @@ namespace pretty
                const term& t, std::pair< unsigned int, unsigned int > env );
 
       // env specifies how hard our environment wants to rip us apart.
-      // If it is too much for us, we protect ourselves with parentheses.
+      // If it is too much for us, we shield ourselves with parentheses.
       // Unchecked names are printed with quotes.
-      // Exact names are prefixed with :: if they conflict with a local
+      // Exact names will be prefixed with :: if they conflict with a local
       // variable.
+
+   // The main one:
 
    void print( std::ostream& out, const beliefstate& blfs,
                context& ctxt, const term& t );
@@ -118,10 +126,11 @@ namespace pretty
    print( std::ostream& out, const beliefstate& blfs,
           const context& cxt ); 
       // Print a context. Since a term is often printed
-      // with its term, we remember the uniquenamestack,
+      // with its context, we remember the uniquenamestack,
       // so that it can be used for printing the term. 
 
-   void print( std::ostream& out, const logic::beliefstate& );
+   void print( std::ostream& out, const belief& bel, const beliefstate& blfs ); 
+   void print( std::ostream& out, const beliefstate& blfs );
 
 }}
 

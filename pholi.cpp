@@ -36,12 +36,14 @@ int main( int argc, char* argv[] )
    tests::add_unique( blfs );
 #endif
    tests::add_settheory( blfs );
-   std::cout << blfs << "\n";
+   logic::pretty::print( std::cout, blfs ); 
+   std::cout << "(before type checking)\n";
+
    tests::structural( blfs );
    // tests::add_proof( blfs );
 
-   std::cout << blfs << "\n";
-   std::cout << "(after checking)\n";
+   logic::pretty::print( std::cout, blfs ); 
+   std::cout << "(after type checking)\n";
 
    tests::transformations( blfs );
    return 0;

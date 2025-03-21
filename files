@@ -39,6 +39,7 @@
 %sources
    polarity.cpp
    namegenerator.cpp
+   util.cpp
    transformer.cpp
    removelet.cpp
    splitequiv.cpp

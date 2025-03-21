@@ -41,6 +41,8 @@ namespace logic
 
    public:
       sparse_subst( ) noexcept = default;
+      sparse_subst( sparse_subst&& ) noexcept = default;
+      sparse_subst& operator = ( sparse_subst&& ) = default;
 
       void assign( size_t var, const term& val )
          { repl. insert( std::pair( var, val )); }
@@ -59,7 +61,7 @@ namespace logic
    // level of the variable. 
    // In let x:T := true, y:O := whatever, the substitution will
    // (0,true), (1,whatever). Lookup needs to know the current
-   // number of variables.
+   // number of variables. CURRENTLY NOT USED.
 
    class contextsubst
    {

@@ -2,22 +2,28 @@
 #include "distribute.h"
 #include "logic/replacements.h"
 #include "logic/topdown.h"
+#include "util.h"
 
 namespace
 {
+   // or > forall > and > (everything else):
+
    bool isbetter( const logic::term& good, const logic::term& bad )
    {
       switch( good. sel( ))
       {
       case logic::op_kleene_or:
          return bad. sel( ) != logic::op_kleene_or;  
+
       case logic::op_kleene_forall:
          return bad. sel( ) != logic::op_kleene_or &&
                 bad. sel( ) != logic::op_kleene_forall;
+
       case logic::op_kleene_and:
          return bad. sel( ) != logic::op_kleene_or &&
                 bad. sel( ) != logic::op_kleene_forall &&
                 bad. sel( ) != logic::op_kleene_and; 
+
       default:
          return false; 
       }
@@ -72,16 +78,24 @@ void
 calc::distr( logic::context& ctxt, disj_stack& disj,
              std::vector< logic::term > & conj )
 {
-   std::cout << "\n";
-   std::cout << "Distr:\n";
-   std::cout << ctxt << "\n";
-   std::cout << disj << "\n";
+   if constexpr ( false )
+   {
+      std::cout << "------------------------------\n";
+      std::cout << "distr:\n";
+      std::cout << ctxt << "\n";
+      std::cout << disj << "\n";
+   }
 
    auto best = disj. findbest( isbetter );
    if( best == disj. end( ))
-      throw std::logic_error( "no clue what to do" );
+   {
+      conj. push_back( logic::term( logic::op_kleene_or,
+                                    std::initializer_list< logic::term > ( )));
 
-   std::cout << "best = " << ( best -> form ) << "\n";
+   }
+
+   if constexpr ( false )
+      std::cout << "best = " << ( best -> form ) << "\n";
    
    if( best -> form. sel( ) == logic::op_kleene_forall )
    {
@@ -125,8 +139,8 @@ calc::distr( logic::context& ctxt, disj_stack& disj,
          disj. append( kl. sub(i), ctxt. size( ));
          distr( ctxt, disj, conj );
          disj. restore( dd );
-         ( best -> active ) = true;  
       }
+      ( best -> active ) = true;  
       return; 
    }
 
@@ -139,29 +153,16 @@ calc::distr( logic::context& ctxt, disj_stack& disj,
       {
          if( ctxt. size( ) == d. level )
          {
-            std::cout << "not lifted: " << d << "\n";
             cl. push_back( d. form ); 
          }
          else
          {
             logic::lifter lft( ctxt. size( ) - d. level );
-            std::cout << lft << "\n"; 
-            std::cout << d << "\n";
             bool c = false;
             cl. push_back( topdown( lft, d. form, 0, c ));
          }
       }
    }
-
-   std::cout << clause << "\n"; 
-#if 0
-   if( sel -> sel( ))
-   {
-
-
-   }
-#endif
-   throw std::runtime_error( "nothing was picked" );
-
+   conj. push_back( quantify( logic::op_kleene_forall, ctxt, clause ));
 }
 
