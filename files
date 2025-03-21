@@ -44,6 +44,7 @@
    splitequiv.cpp
    kleening.cpp
    alternating.cpp
+   distribute.cpp
 
 %options 
    Wall

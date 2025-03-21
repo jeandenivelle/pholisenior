@@ -51,11 +51,6 @@ namespace logic
    inline term exists( std::initializer_list< vartype > vars, const term& t )
       { return term( op_exists, t, vars ); }
 
-#if 0
-   term operator + ( const term& t, size_t depth );
-      // This is the lifting operator.
-#endif
-
    inline term apply( const term& f, std::initializer_list< term > args )
       { return term( op_apply, f, args ); }
 
