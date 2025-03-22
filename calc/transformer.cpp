@@ -4,15 +4,12 @@
 #include "splitequiv.h"
 #include "alternating.h"
 
-#include "logic/inspections.h"
-#include "logic/replacements.h"
-
 const char* calc::getcstring( transstep step )
 {
    switch( step ) 
    {
-   case step_cls:
-      return "cls";
+   case step_lev:
+      return "lev";
    case step_anf:
       return "anf"; 
    case step_kleening:
@@ -31,8 +28,8 @@ const char* calc::getcstring( transstep step )
 void calc::subformula::print( std::ostream& out ) const
 {
    out << pred << "/" << pol << "      = " << form << "   ";
-   out << "[" << last << "]"; 
-
+   out << "[" << last << "]\n"; 
+   out << ctxt << "\n";
 }
 
 bool calc::operator < ( const subformula& sub1, const subformula& sub2 )
@@ -46,11 +43,13 @@ bool calc::operator < ( const subformula& sub1, const subformula& sub2 )
 }
 
 void 
-calc::transformer::push( logic::exact pred,
+calc::transformer::push( logic::context ctxt, logic::exact pred,
                          logic::term form, polarity pol, transstep last )
 {
-   forms. push_back( subformula( pred, std::move( form ), 
-                                 pol, last, nr ++ ));
+   forms. push_back( 
+      subformula( std::move( ctxt ), pred, std::move( form ), 
+                  pol, last, nr ++ ));
+
    push_heap( forms. begin( ), forms. end( ));
 }  
 
@@ -91,7 +90,7 @@ calc::transformer::add_initial( logic::beliefstate& blfs, logic::term conj )
 
    auto pred = blfs. append( std::move( decl ));
  
-   push( pred, conj, pol_neg, step_none );
+   push( logic::context( ), pred, conj, pol_neg, step_none );
 }
 
 
@@ -113,8 +112,13 @@ void calc::transformer::flush( logic::beliefstate& blfs )
          break;  
       case step_rmlet:
          {
-            logic::context ctxt = get_context( f. pred, blfs );
-            f. form = splitequiv( *this, blfs, ctxt, std::move( f. form ), 0 );
+            size_t cc = f. ctxt. size( ); 
+            f. form = splitequiv( *this, blfs, f. ctxt, 
+                                  std::move( f. form ), 0 );
+
+            if( f. ctxt. size( ) != cc )
+               throw std::logic_error( "size of context changed" );
+
             f. last = step_splitequiv;
             break; 
          }
@@ -143,23 +147,32 @@ void calc::transformer::flush( logic::beliefstate& blfs )
  
 }
 
-std::pair< logic::term, logic::term > 
-calc::transformer::extractsubform( logic::beliefstate& blfs,
-                                   const char* namebase,
-                                   const logic::context& ctxt,
-                                   logic::term ff )
+logic::exact
+calc::transformer::newpredsym( logic::beliefstate& blfs,
+                               const char* namebase,
+                               const logic::context& ctxt )
 {
-   auto pred = fresh_ident( blfs, namebase );
-   std::cout << "predicate name will be " << pred << "\n";
-
-   std::cout << "extracting " << ff << "\n";
-   
-   auto freevars = count_debruijn( ff );
-      // In increasing order. That means that the
-      // nearest De Bruijn variable comes first.
 
    auto tp = logic::type( logic::type_func, 
                 logic::type( logic::type_truthval ), { } );
+
+   size_t db = ctxt. size( );
+   while( db )
+   {
+      -- db;
+      tp. view_func( ). push_back( ctxt. gettype( db ));
+   }
+
+   auto pred = fresh_ident( blfs, namebase );
+  
+   auto pred_exact = 
+      blfs. append( logic::belief( logic::bel_decl, pred, tp ));
+   return pred_exact;
+
+#if 0 
+   auto freevars = count_debruijn( ff );
+      // In increasing order. That means that the
+      // nearest De Bruijn variable comes first.
 
    // We need to walk in reverse order, because we want the
    // type of the furthest De Bruijn variable first:
@@ -170,9 +183,6 @@ calc::transformer::extractsubform( logic::beliefstate& blfs,
       size_t vv = it -> first;
       tp. view_func( ). push_back( ctxt. gettype( vv ));
    }
-
-   auto predex = 
-      blfs. append( logic::belief( logic::bel_decl, pred, tp ));
 
    // Now that we have the exact name, we can create the atom: 
 
@@ -211,6 +221,7 @@ calc::transformer::extractsubform( logic::beliefstate& blfs,
    ff = topdown( norm, std::move(ff), 0, change );
 
    return std::pair( std::move( atom ), std::move( ff ));
+#endif
 }
 
 
@@ -222,29 +233,4 @@ void calc::transformer::print( std::ostream& out ) const
       out << "   " << f << "\n"; 
 }
 
-logic::context
-calc::get_context( logic::exact pred, const logic::beliefstate& blfs )
-{
-   const auto& bel = blfs. at( pred ). first; 
-   if( bel. sel( ) != logic::bel_decl )
-      throw std::logic_error( "predicate not declaration" );
-
-   const auto& tp = bel. view_decl( ). tp( ); 
-
-   if( tp. sel( ) == logic::type_truthval )
-      return logic::context( );
-
-   if( tp. sel( ) == logic::type_func )
-   {
-      auto f = tp. view_func( );
-
-      logic::context res;
-      for( size_t i = 0; i != f. size( ); ++ i ) 
-         res. append( "V", f.arg(i));
-   
-      return res;
-   }
-
-   throw std::logic_error( "get_context: type is wrong" );
-}
 

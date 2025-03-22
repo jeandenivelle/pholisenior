@@ -102,7 +102,7 @@ namespace logic
       debruijn_counter( ) = default;
       debruijn_counter( debruijn_counter&& ) = default;
       debruijn_counter& operator = ( debruijn_counter&& ) = default;
-         // Blocking coincidental copying.
+         // Blocking accidental copying.
 
       size_t size( ) const { return occ. size( ); }
       using const_iterator = 

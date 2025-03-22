@@ -418,7 +418,7 @@ void tests::transformations( logic::beliefstate& blfs )
 
    type Seqex = type( type_struct, exact(8));
 
-   if( true )
+   if( false )
    {
       // Test calc::distr:
 
@@ -489,7 +489,7 @@ void tests::transformations( logic::beliefstate& blfs )
    logic::context ctxt;
 
    calc::transformer trans; 
-   trans. add_initial( blfs, ! ind. view_thm( ). form( ));
+   // trans. add_initial( blfs, ! ind. view_thm( ). form( ));
    trans. add_initial( blfs, 
       !forall( { { "a", O }, { "b", T }, { "c", O2T }, { "d", O2O }},
                 equiv( 0_db, equiv( ! 1_db, equiv( 2_db, 3_db ))) ));

@@ -4,6 +4,7 @@
 
 #include "logic/context.h"
 #include "logic/term.h"
+#include "logic/inspections.h"
 
 namespace calc
 {
@@ -16,7 +17,19 @@ namespace calc
    logic::term
    quantify( logic::selector op, const logic::context& ctxt,
              const logic::term& body );
-  
+
+   std::pair< logic::debruijn_counter, logic::term >
+   norm_debruijns( logic::term ff );
+
+   logic::context 
+   restrict( const logic::context& ctxt, 
+             const logic::debruijn_counter& used ); 
+      // Restrict ctxt to the used variables. 
+
+   logic::term
+   application( const logic::term& f, 
+                const logic::debruijn_counter& vars );
+      // Apply f on the domain of vars, from far to near. 
 }
 
 #endif
