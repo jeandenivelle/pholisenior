@@ -30,11 +30,16 @@ namespace calc
    flatten_conj( logic::context& ctxt, const logic::term& f,
                  std::vector< logic::term > & into );
 
+   size_t alternation_rank( const logic::term& f, logic::selector op );
+      // The alternation rank of f. 
+      // If f is a literal, then the rank is zero.
+      // op must be a Kleene operator.
+
    logic::term
-   splitalt( transformer& trans, logic::beliefstate& blfs,
+   restrict_alternation( transformer& trans, logic::beliefstate& blfs,
              logic::context& ctxt, logic::term f,
-             logic::selector op, unsigned int maxlevel );
-      // op must be either kleene_or or kleene_and. 
+             logic::selector op, unsigned int maxrank );
+      // op must be a Kleene operator. 
 }
 
 #endif

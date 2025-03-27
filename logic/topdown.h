@@ -75,19 +75,18 @@ namespace logic
          }
          return t;
 
-#if 0
-      case prf_disj:
+      case op_kleene_and:
+      case op_kleene_or:
          {
-            auto p = t. view_ternary( );
-            p. update_sub1(
-                      topdown_sar( changes, repl, p. extr_sub1( ), vardepth ));
-            p. update_sub2(
-                      topdown_sar( changes, repl, p. extr_sub2( ), vardepth )); 
-            p. update_sub3( 
-                      topdown_sar( changes, repl, p. extr_sub3( ), vardepth ));
+            auto kl = t. view_kleene( );
+            for( size_t i = 0; i != kl. size( ); ++ i )
+            {
+               kl. update_sub( i,
+                      topdown( repl, kl. extr_sub(i), vardepth, change ));
+            }
          }
          return t;
-#endif
+
       case op_forall:
       case op_exists:
       case op_kleene_forall:

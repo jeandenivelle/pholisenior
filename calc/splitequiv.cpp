@@ -84,7 +84,7 @@ calc::splitequiv( transformer& trans, logic::beliefstate& blfs,
             std::cout << "normalized subform: " << pr. second << "\n"; 
 
             std::cout << "original context " << ctxt << "\n";
-            auto restr = restrict( ctxt, pr. first ); 
+            auto restr = restriction( ctxt, pr. first ); 
                // ctxt, restricted to the variables that occur
                // in pr. second.
 
@@ -95,8 +95,9 @@ calc::splitequiv( transformer& trans, logic::beliefstate& blfs,
             trans. push( std::move( restr ), pred, pr. second,
                          pol_neg, step_splitequiv );
 
-            restr = restrict( ctxt, pr. first );
-               // We need to recreate it, because it was moved!
+            restr = restriction( ctxt, pr. first );
+               // We need to recreate restr, because the original
+               // restr was moved into trans. 
  
             trans. push( std::move( restr ), pred, 
                          logic::term( logic::op_not, pr. second ),
@@ -104,6 +105,8 @@ calc::splitequiv( transformer& trans, logic::beliefstate& blfs,
 
             auto appl = application( 
                logic::term( logic::op_exact, pred ), pr. first );
+            std::cout << "should we return?\n";
+            throw std::logic_error( "what" );
          }
       }
    case logic::op_apply:

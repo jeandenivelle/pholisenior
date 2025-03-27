@@ -22,9 +22,9 @@ namespace calc
    norm_debruijns( logic::term ff );
 
    logic::context 
-   restrict( const logic::context& ctxt, 
+   restriction( const logic::context& ctxt, 
              const logic::debruijn_counter& used ); 
-      // Restrict ctxt to the used variables. 
+      // Restrict of ctxt to the used variables. 
 
    logic::term
    application( const logic::term& f, 

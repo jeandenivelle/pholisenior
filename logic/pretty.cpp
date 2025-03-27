@@ -113,7 +113,7 @@ void logic::pretty::print( std::ostream& out, const beliefstate& blfs,
       return;
 
    case type_unchecked:
-      out << '\''<< tp. view_unchecked( ). id( ) << '\'';
+      out << tp. view_unchecked( ). id( ) << '?';
       return;
    }
 

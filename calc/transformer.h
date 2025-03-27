@@ -21,7 +21,7 @@ namespace calc
 
    enum transstep 
    {
-      step_lev = 1,
+      step_rank = 1,
       step_anf = 2,
       step_kleening = 3,
       step_splitequiv = 4,

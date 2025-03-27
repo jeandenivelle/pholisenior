@@ -8,8 +8,8 @@ const char* calc::getcstring( transstep step )
 {
    switch( step ) 
    {
-   case step_lev:
-      return "lev";
+   case step_rank:
+      return "rank";
    case step_anf:
       return "anf"; 
    case step_kleening:
@@ -117,7 +117,9 @@ void calc::transformer::flush( logic::beliefstate& blfs )
                                   std::move( f. form ), 0 );
 
             if( f. ctxt. size( ) != cc )
+            {
                throw std::logic_error( "size of context changed" );
+            }
 
             f. last = step_splitequiv;
             break; 
@@ -165,8 +167,7 @@ calc::transformer::newpredsym( logic::beliefstate& blfs,
 
    auto pred = fresh_ident( blfs, namebase );
   
-   auto pred_exact = 
-      blfs. append( logic::belief( logic::bel_decl, pred, tp ));
+   auto pred_exact = blfs. append( logic::belief( logic::bel_decl, pred, tp ));
    return pred_exact;
 
 #if 0 

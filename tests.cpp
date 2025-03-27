@@ -461,22 +461,29 @@ void tests::transformations( logic::beliefstate& blfs )
       return; 
    }
 
-   if( false ) 
+   if( true ) 
    {
       std::cout << "testing ANF\n";
       auto f = logic::term( logic::op_kleene_or, {  0_db == 2_db, 1_db == 3_db } );
 
       f = logic::term( logic::op_kleene_exists, f, {{ "a", O }, { "b", T }} );
       f = logic::term( logic::op_kleene_forall, f, {{ "x", T }, { "y", O2O }} ); 
- 
       std::cout << f << "\n";
 
       f = calc::alt_conj(f);
       std::cout << "\n" << f << "\n";
 
       std::cout << "ANF:  " << f << "\n";
-      // std::cout << "ANF_disj:  " << f << "\n";
+      calc::transformer trans;
+      logic::context ctxt;
+      std::cout << calc::alternation_rank( f, logic::op_kleene_and ) << "\n";
 
+      f = calc::restrict_alternation( trans, blfs, ctxt, f, 
+                                      logic::op_kleene_and, 1 );
+
+      std::cout << "result = " << f << "\n";
+
+      std::cout << trans << "\n"; 
       return; 
    }
 

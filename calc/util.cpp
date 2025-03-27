@@ -50,8 +50,11 @@ calc::quantify( logic::selector op, const logic::context& ctxt,
 std::pair< logic::debruijn_counter, logic::term > 
 calc::norm_debruijns( logic::term ff )
 {
-   std::cout << "normalizing:\n\n";
-   std::cout << "   " << ff << "\n";
+   if constexpr( false )
+   {
+      std::cout << "normalizing:\n\n";
+      std::cout << "   " << ff << "\n";
+   }
 
    auto freevars = count_debruijn( ff );
       // In increasing order. That means that the
@@ -77,8 +80,8 @@ calc::norm_debruijns( logic::term ff )
 }
 
 logic::context
-calc::restrict( const logic::context& ctxt, 
-                const logic::debruijn_counter& used )
+calc::restriction( const logic::context& ctxt, 
+                   const logic::debruijn_counter& used )
 {
    // context look back from the end. Because of that, the
    // highest De Bruijn variable comes first in the context.
