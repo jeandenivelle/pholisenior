@@ -1,4 +1,5 @@
 
+#include "semantics/truthval.h"
 
 #include "errorstack.h"
 
@@ -22,6 +23,9 @@
 
 int main( int argc, char* argv[] )
 {
+   std::cout << semantics::ff << "\n";
+   return 0;
+
    std::unordered_map< identifier, identifier::hash, identifier::equal_to, int > test;
 
    logic::beliefstate blfs;
