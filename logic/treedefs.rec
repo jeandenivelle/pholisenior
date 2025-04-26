@@ -29,7 +29,6 @@
    void print( std::ostream& out ) const;
 }  
 
-
 %define term ( op_error ) 
 %option exact { op_exact } => # ex : exact
 %option debruijn { op_debruijn } => # index : size_t  
@@ -70,10 +69,7 @@
 
    };
 
-   bool operator == ( const vartype& , const vartype& );
-
-   bool 
-   very_equal( const std::vector< proof > & , const std::vector< proof > & );
+   bool very_equal( const vartype& , const vartype& );
 } 
 
 
@@ -84,11 +80,14 @@
 
 %h_after {
    std::ostream& operator << ( std::ostream& , const vartype& );
+
+   bool 
+   very_equal( const std::vector< proof > & , const std::vector< proof > & );
 } 
 
 %cpp_back {
 
-   bool logic::operator == ( const vartype& vt1, const vartype& vt2 )
+   bool logic::very_equal( const vartype& vt1, const vartype& vt2 )
    {
       return vt1. pref == vt2. pref && vt1. tp. very_equal_to( vt2. tp ); 
    }
@@ -109,8 +108,11 @@
 %option decl { bel_decl } => tp : type 
 %option def { bel_def } => val : term, tp : type
 
-%option thm { bel_thm } => form : term, prop : proof, truth : proof
-%option asm { bel_asm } => form : term, prop : proof
+%option thm { bel_thm } => form : term, prf : proof
+%option asm { bel_asm } => form : term, prf : proof
+   // Assumption has proof of #F. Theorem has proof of
+   // #F * F.
+
 %option form { bel_form } => form : term
    // form is used only in refutation proofs.
 

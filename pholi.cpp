@@ -1,5 +1,5 @@
 
-#include "semantics/truthval.h"
+#include "semantics/interpretation.h"
 
 #include "errorstack.h"
 
@@ -19,14 +19,14 @@
 #include "logic/pretty.h"
 #include "logic/replacements.h"
 
-#include "calc/namegenerator.h"
+#include "parsing/tokenizer.h"
 
 int main( int argc, char* argv[] )
 {
-   std::cout << semantics::ff << "\n";
-   return 0;
+   tests::parser( );
 
-   std::unordered_map< identifier, identifier::hash, identifier::equal_to, int > test;
+   // tests::truthtables( );
+   return 0;
 
    logic::beliefstate blfs;
 
@@ -49,7 +49,7 @@ int main( int argc, char* argv[] )
    logic::pretty::print( std::cout, blfs ); 
    std::cout << "(after type checking)\n";
 
-   tests::transformations( blfs );
+   tests::proofchecking( blfs );
    return 0;
 
    tests::pretty( blfs );
@@ -62,7 +62,6 @@ int main( int argc, char* argv[] )
    // tests::kbo( );
    // tests::tokenizer( );
    // tests::betareduction( ); 
-   // tests::naturaldeduction( ); 
    // tests::proofpluscom( );
    // tests::replacements( );
 

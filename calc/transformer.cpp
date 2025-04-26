@@ -169,60 +169,6 @@ calc::transformer::newpredsym( logic::beliefstate& blfs,
   
    auto pred_exact = blfs. append( logic::belief( logic::bel_decl, pred, tp ));
    return pred_exact;
-
-#if 0 
-   auto freevars = count_debruijn( ff );
-      // In increasing order. That means that the
-      // nearest De Bruijn variable comes first.
-
-   // We need to walk in reverse order, because we want the
-   // type of the furthest De Bruijn variable first:
-
-   for( auto it = freevars. end( ); it != freevars. begin( ); )
-   {
-      -- it;
-      size_t vv = it -> first;
-      tp. view_func( ). push_back( ctxt. gettype( vv ));
-   }
-
-   // Now that we have the exact name, we can create the atom: 
-
-   auto atom = logic::term( logic::op_exact, predex );
-   atom = logic::term( logic::op_apply, atom, 
-                       std::initializer_list< logic::term > ( ));
-
-   auto atom_view = atom. view_apply( );
-
-   // We need to go in reverse order, because we want the
-   // type of the furthest De Bruijn variable first:
-
-   for( auto it = freevars. end( ); it != freevars. begin( ); )
-   {
-      -- it; 
-      size_t vv = it -> first; 
-      atom_view. push_back( logic::term( logic::op_debruijn, vv ));
-   }
-
-   std::cout << "replacing subformula by " << atom << "\n";
-
-   // The normalizing substitution substitutes the variables
-   // in f into #0,#1,#2, ...
-
-   logic::sparse_subst norm;
-   size_t var = 0;
-   for( const auto& f : freevars )
-   {
-      norm. assign( f. first, logic::term( logic::op_debruijn, var ));
-      ++ var;
-   }
-
-   std::cout << "normalizer = " << norm << "\n";
-
-   bool change = false;
-   ff = topdown( norm, std::move(ff), 0, change );
-
-   return std::pair( std::move( atom ), std::move( ff ));
-#endif
 }
 
 

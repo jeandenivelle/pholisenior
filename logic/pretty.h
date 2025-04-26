@@ -79,7 +79,7 @@ namespace pretty
 
       // env. first is surrounding attraction from the left.
       // env. second is surrounding attraction from the right.
-      //  
+
       void check( attractions attr,
                   std::pair< unsigned, unsigned int > env );
 
@@ -112,7 +112,7 @@ namespace pretty
       // Exact names will be prefixed with :: if they conflict with a local
       // variable.
 
-   // The main one:
+   // This the main one that you should call: 
 
    void print( std::ostream& out, const beliefstate& blfs,
                context& ctxt, const term& t );
@@ -129,7 +129,7 @@ namespace pretty
       // with its context, we remember the uniquenamestack,
       // so that it can be used for printing the term. 
 
-   void print( std::ostream& out, const belief& bel, const beliefstate& blfs ); 
+   void print( std::ostream& out, const beliefstate& blfs, const belief& bel ); 
    void print( std::ostream& out, const beliefstate& blfs );
 
 }}

@@ -3,29 +3,6 @@
 #include "logic/inspections.h"
 #include "logic/replacements.h"
 
-bool calc::isatom( const logic::term& f )
-{
-   switch( f. sel( ))
-   {
-   case logic::op_exact:
-   case logic::op_debruijn:
-   case logic::op_unchecked:
-   case logic::op_equals:
-   case logic::op_apply:
-      return true;
-   default:
-      return false;
-   }
-}
-
-bool calc::isliteral( const logic::term& f )
-{
-   if( f. sel( ) == logic::op_not || f. sel( ) == logic::op_prop )
-      return isliteral( f. view_unary( ). sub( ));
-   else
-      return isatom(f);
-}
-
 
 logic::term
 calc::quantify( logic::selector op, const logic::context& ctxt,

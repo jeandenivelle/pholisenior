@@ -11,10 +11,14 @@
 #include "calc/kleening.h"
 #include "calc/alternating.h"
 #include "calc/distribute.h"
+#include "calc/sequent.h"
 
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
 
+#include "semantics/interpretation.h"
+
+#include "parsing/parser.h"
 
 void tests::add_strict_prod( logic::beliefstate& bel )
 {
@@ -476,7 +480,7 @@ void tests::transformations( logic::beliefstate& blfs )
       std::cout << "ANF:  " << f << "\n";
       calc::transformer trans;
       logic::context ctxt;
-      std::cout << calc::alternation_rank( f, logic::op_kleene_and ) << "\n";
+      std::cout << calc::alternation_rank(f) << "\n";
 
       f = calc::restrict_alternation( trans, blfs, ctxt, f, 
                                       logic::op_kleene_and, 1 );
@@ -779,7 +783,7 @@ void tests::add_seq( logic::beliefstate& blfs )
       form1 = forall( {{ "s", Seq }, { "Q", O2T }}, form1 );
       
       blfs. append( belief( bel_thm, identifier( ) + "induction", form1, 
-                            proof( ), proof( )) ); 
+                            proof( )) ); 
    }
 
    // We define a homomorphic relation:
@@ -879,7 +883,7 @@ void tests::add_seq( logic::beliefstate& blfs )
       impl = forall( {{ "s1", Seq }, { "s2", Seq }}, impl );
 
       blfs. append( belief( bel_thm, identifier( ) + "just", impl,
-                            proof( ), proof( )) ); 
+                            proof( )) ); 
 
    }
 }
@@ -988,17 +992,21 @@ void tests::add_simple( logic::beliefstate& bs )
 
 #endif
 
-#if 0
-void tests::tokenizer( ) {
-   size_t count = 0;
-   parser::tokenizer t;
-   parser::symbol s ( parser::symboltype::sym_EOF, std::nullopt );
-   while( ( s = t. read() ). type != parser::symboltype::sym_EOF && count < 1000 ) {
-      std::cout << s << std::endl;
-      ++count;
-   }
+void tests::parser( ) {
+   lexing::filereader inp( &std::cin, "std::cin" );
+
+   parsing::tokenizer tok( std::move( inp ));
+   logic::beliefstate blfs; 
+   parsing::parser prs( tok, blfs );  
+
+   prs. debug = 0;
+   prs. checkattrtypes = 0;
+
+   auto res = prs. parse( parsing::sym_File );
+
 }
 
+#if 0
 
 void tests::betareduction( ) 
 {
@@ -1049,9 +1057,23 @@ void tests::betareduction( )
    std::cout << normalize_sar( beta, appl ) << "\n";
 }
 
+#endif
 
-void tests::proofchecking( )
+void tests::proofchecking( logic::beliefstate& blfs )
 {
+   auto id = identifier( ) + "just";
+
+   const auto& f = blfs. getformulas( identifier( ) + "just" );
+   if( f. size( ) != 1 )
+      throw std::runtime_error( "cannot continue" );
+
+   auto ind = blfs. at( f[0] ). first;
+
+   auto seq = calc::sequent( blfs, f. front( ));
+   seq. apply_initial( "initial" );
+
+   std::cout << seq << "\n";
+
 #if 0
    logic::beliefstate bel;
    add_kuratowski( bel );
@@ -1171,6 +1193,7 @@ void tests::proofchecking( )
 #endif
 }
 
+#if 0
 
 void tests::unification( )
 {
@@ -1769,6 +1792,37 @@ void tests::prove_von_neumann( )
    // Current Focus
 }
 
+#endif
+
+void tests::truthtables( )
+{
+   using namespace logic;
+
+   auto O = type( type_obj );
+   auto T = type( type_truthval );
+
+   auto O2T = type( type_func, T, { O } );
+   auto O2O = type( type_func, O, { O } );
+
+   auto OO2T = type( type_func, T, { O, O } );
+   auto OOO2T = type( type_func, T, { O, O, O } );
+   auto tp = type( type_func, T, {O} );
+   term from = exists( {{ "x", logic::type_obj }}, apply( "P"_unchecked, { 0_db } ) && apply( "Q"_unchecked, { 0_db } ));
+   auto b = term( op_kleene_and, { apply( "P"_unchecked, { 0_db } ), apply( "Q"_unchecked, { 0_db } ) } );
+   term into = term( op_kleene_exists, b, { { "x", logic::type_obj }} );
+
+   logic::context ctxt;
+   logic::beliefstate blfs;
+
+   // std::cout << from << "\n";
+   pretty::print( std::cout, blfs, ctxt, from );
+   // std::cout << into << "\n";
+   pretty::print( std::cout, blfs, ctxt, into );
+   std::cout << "\n\n";
+   semantics::check_preceq( { { identifier( ) + "P", O2T }, { identifier( ) + "Q", O2T }}, from, into );
+}
+
+#if 0
 #if 0
 
 void tests::parser( ) {

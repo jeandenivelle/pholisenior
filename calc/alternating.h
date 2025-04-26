@@ -30,10 +30,11 @@ namespace calc
    flatten_conj( logic::context& ctxt, const logic::term& f,
                  std::vector< logic::term > & into );
 
-   size_t alternation_rank( const logic::term& f, logic::selector op );
-      // The alternation rank of f. 
-      // If f is a literal, then the rank is zero.
-      // op must be a Kleene operator.
+   bool isinanf( const logic::term& f );
+
+   size_t alternation_rank( const logic::term& f );
+      // The alternation rank of f. We merrily crash
+      // if f is not in ANF.
 
    logic::term
    restrict_alternation( transformer& trans, logic::beliefstate& blfs,

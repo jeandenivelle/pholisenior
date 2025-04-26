@@ -74,9 +74,9 @@ namespace calc
       namegenerator gen;
 
       std::vector< subformula > forms;   
-         // std::priority gives to many problems.
+         // std::priority_queue creates too many problems.
          // 1. It cannot be printed.
-         // 2. There is no operation that moves out (and pop) the top.
+         // 2. There is no operation that moves out (and pops) the top.
          //    I now use std::push_heap( ) and std::pop_heap( ).
 
       size_t nr = 0;
@@ -94,7 +94,6 @@ namespace calc
          // std::vector, and push/pop_heap instead.
 
 public:
- 
       void add_initial( logic::beliefstate& blfs, logic::term init );
          // If you want to negate conj, you have to do it by 
          // yourself. 
@@ -114,7 +113,6 @@ public:
 private: 
       identifier fresh_ident( const logic::beliefstate& blfs,
                               const char* namebase );
-
    };
 
 }

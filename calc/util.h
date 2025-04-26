@@ -8,10 +8,6 @@
 
 namespace calc
 {
-  
-   bool isatom( const logic::term& f );
-   bool isliteral( const logic::term& f );
-
    // We won't create a quantifier if ctxt is empty:
 
    logic::term

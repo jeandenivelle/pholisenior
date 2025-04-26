@@ -9,5 +9,11 @@ logic/term.h
 logic/term.cpp
 logic/belief.h
 logic/belief.cpp
+
+parsing/symbol.h
+parsing/symbol.cpp
+parsing/parser.h
+parsing/parser.cpp
+
 Makefile
 

@@ -467,15 +467,15 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 
          par.opening( out );
 
-         out << "lambda"; 
+         out << "LAMBDA"; 
 
          auto lamb = t. view_lambda( );
          print( out, blfs, names,
                 [&lamb]( size_t i ) { return lamb. var(i); }, lamb. size( ));
-         out << " in ";
+         out << " IN ";
 
          print(out, blfs, names, lamb.body(), between( ourattr, env ));
-         par.closing( out );
+         par. closing( out );
          names. restore( ss );
          return;
       }
@@ -491,7 +491,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 
          par. opening( out );
 
-         out << "let";
+         out << "LET";
 
          size_t nr = 0;
 
@@ -519,7 +519,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
             ++ nr;
          }
 
-         out << " in ";
+         out << " IN ";
          print( out, blfs, names, *p, between( ourattr, env )); 
          par. closing( out );
          names. restore( ss );
@@ -597,14 +597,15 @@ logic::pretty::getnames( const logic::context& ctxt, size_t ss )
    return names;
 }
 
-#if 0
 
-void pretty::print( std::ostream& out,
-                    uniquenamestack& names,
-                    const logic::belief& bel )
+void 
+logic::pretty::print( std::ostream& out,
+                      const beliefstate& blfs,  
+                      const logic::belief& bel )
 {
    switch( bel. sel( ) )
    {
+#if 0
    case logic::bel_decl:
       {
          auto decl = bel. view_decl( );
@@ -630,22 +631,26 @@ void pretty::print( std::ostream& out,
          out << "\n";
          return;
       }
+#endif
 
    case logic::bel_thm:
       {
+         out << "theorem   " << bel. name( ) << " : ";
          auto thm = bel. view_thm( );
-         pretty::print( out, names, thm. form( ) );
-         out << ",   proof = ";
-         pretty::print( out, names, thm. proof( ) );
+         context ctxt;
+         pretty::print( out, blfs, ctxt, thm. form( ) );
+         // pretty::print( out, names, thm. proof( ) );
          out << "\n";
          return; 
       }
 
-   case logic::bel_thm_file:
+   case logic::bel_form:
       {
-         auto thm = bel. view_thm_file( );
-         pretty::print( out, names, thm. form( ) );
-         out << "   (proof is in " << thm. prooffile( ) << ")\n";
+         out << "formula   " << bel. name( ) << " : "; 
+         auto fm = bel. view_form( );
+         context ctxt;
+         pretty::print( out, blfs, ctxt, fm. form( ) );
+         out << "\n";
          return; 
       }
 
@@ -653,7 +658,7 @@ void pretty::print( std::ostream& out,
    out << "print belief: " << bel. sel( ) << "\n";
    throw std::runtime_error( "unknown selector" );
 }
-#endif
+
 
 void 
 logic::pretty::print( std::ostream& out, const logic::beliefstate& blfs )

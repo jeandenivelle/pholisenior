@@ -37,15 +37,34 @@
 
 %dir Source/calc
 %sources
-   polarity.cpp
-   namegenerator.cpp
-   util.cpp
+   sequent.cpp
+   extension.cpp
+   selector.cpp
    transformer.cpp
-   removelet.cpp
    splitequiv.cpp
    kleening.cpp
    alternating.cpp
-   distribute.cpp
+   util.cpp
+   polarity.cpp
+   namegenerator.cpp
+ 
+%dir Source/semantics
+%sources
+   value.cpp
+   function.cpp
+   interpretation.cpp
+
+%dir Source/parsing
+%sources
+   tokenizer.cpp
+   symbol.cpp
+   parser.cpp
+
+%dir Lexing/lexing2023
+%sources
+   stateset.cpp
+   partition.cpp
+   filereader.cpp
 
 %options 
    Wall
@@ -75,8 +94,18 @@
    belief.h
    belief.cpp
 
-%preproc $(Maph)/maphoon $(Source)/parser/grammar.m $(Source)/parser $(Maph) 
-%dir Source/parser
+%preproc $(Treegen)/treegen calc/calculus.rec
+%dir Source/calc
+%in
+   calculus.rec
+%out 
+   selector.h
+   selector.cpp
+   extension.h
+   extension.cpp
+
+%preproc $(Maph)/maphoon $(Source)/parsing/grammar.m $(Source)/parsing $(Maph) 
+%dir Source/parsing
 %in
    grammar.m
 %out

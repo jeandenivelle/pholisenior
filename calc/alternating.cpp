@@ -2,6 +2,37 @@
 #include "alternating.h"
 #include "util.h"
 
+
+bool calc::isatom( const logic::term& f )
+{
+   switch( f. sel( ))
+   {
+   case logic::op_not:
+   case logic::op_prop:
+   case logic::op_kleene_forall:
+   case logic::op_kleene_exists:
+   case logic::op_kleene_and:
+   case logic::op_kleene_or:
+      return false;
+   default:
+      return true;
+   }
+}
+
+
+bool calc::isliteral( const logic::term& f )
+{
+   const auto* p = &f;
+   if( p -> sel( ) == logic::op_not )
+      p = & ( p -> view_unary( ). sub( ));
+
+   if( p -> sel( ) == logic::op_prop )
+      p = & ( p -> view_unary( ). sub( ));
+
+   return isatom( *p );
+}
+
+
 logic::term calc::alt_disj( logic::term f )
 {
    std::cout << "alt disj: " << f << "\n";
@@ -126,10 +157,69 @@ namespace
    }
 }
 
+bool calc::isinanf( const logic::term& f )
+{
+   if( f. sel( ) == logic::op_kleene_and )
+   {
+      throw std::logic_error( "not implemented" );
+   }
+
+   if( f. sel( ) == logic::op_kleene_or )
+   {
+      auto kl = f. view_kleene( );
+      for( size_t i = 0; i != kl. size( ); ++ i )
+      {
+         const auto* p = &kl. sub(i);
+
+         // If it is a Kleene exists, we replace p by the body: 
+
+         if( p -> sel( ) == logic::op_kleene_exists )
+            p = &( p -> view_quant( ). body( ));
+       
+         if( p -> sel( ) == logic::op_kleene_and )
+         {
+            if( !isinanf( *p ))
+               return false;
+         }
+         else
+         {
+            if( !isliteral( *p ))
+               return false;
+         }
+      }
+      return true;
+   }
+   return false;
+}
 
 size_t
-calc::alternation_rank( const logic::term& f, logic::selector op )
+calc::alternation_rank( const logic::term& f )
 {
+   size_t rank = 0;
+
+   if( f. sel( ) == logic::op_kleene_or )
+   {
+      auto kl = f. view_kleene( );
+      for( size_t i = 0; i != kl. size( ); ++ i )
+      {
+         const auto* p = &kl. sub(i);
+
+         // If it is a Kleene exists, we replace p by the body:
+
+         if( p -> sel( ) == logic::op_kleene_exists )
+            p = &( p -> view_quant( ). body( ));
+
+         if( p -> sel( ) == logic::op_kleene_and )
+         {
+            size_t rk = alternation_rank( *p );
+            if( rk > rank )
+               rank = rk; 
+         }
+      }
+      return rank + 1;
+   }
+
+#if 0
    if( isliteral(f))
       return 0;
 
@@ -168,7 +258,8 @@ calc::alternation_rank( const logic::term& f, logic::selector op )
       throw std::logic_error( "alternation rank : should be unreachable" );
 
    }
- 
+#endif
+   throw std::logic_error( "rank: not in ANF" );
 }
 
 
