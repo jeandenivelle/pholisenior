@@ -11,15 +11,13 @@
 %symbol{ logic::term } EquivTermWith EquivTermWithout
 
 %symbol{ logic::term } GreedyPrefTerm
-   // Greedy Prefix Term that grabs everything to the right.
+   // Greedy Prefix Term that grabs everything to its right.
 
 %symbol{ std::vector< logic::term > } ArgSeq
 
 %symbol{ logic::belief } struct_specifier
-%symbol{std::stack<std::vector<std::pair<std::vector<std::string>, logic::type>>>} args_seq 
 %symbol{ logic::type } StructType func 
 %symbol{ std::vector< logic::type > } StructTypeSeq
-%symbol{} iff_expr implication_expr not_expr quantifier_expr lazy_implication lazy_or lazy_and
 
 %symbol{std::vector<std::pair<std::vector<std::string>, logic::type>>} idents_type_list 
 %symbol{ std::string } VARIABLE
@@ -29,7 +27,10 @@
 %symbol{ std::vector< logic::vartype > } VarTypeSeq VarsOneType 
    // VarsOneType has form v1, ..., vn : T 
 
-%symbol{} STRUCT DEF FRM
+%symbol{ logic::fielddecl } FieldDecl 
+%symbol{ logic::structdef } FieldDeclSeq 
+
+%symbol{} STRUCT END DEF FRM
 
 %symbol{ } EOF FILEBAD WHITESPACE COMMENT 
 %symbol{ } LPAR RPAR LBRACE RBRACE LBRACKET RBRACKET LEXISTS REXISTS
@@ -41,10 +42,6 @@
 %symbol{ } LET LAMBDA IN 
 %symbol{ std::string } SCANERROR
 
-%symbol{ } apply_expr member_apply_expr
-
-%symbol{} iff_expr_q implication_expr_q not_expr_q
-
 %symbolcode_h { #include "location.h" }
 %symbolcode_h { #include <vector> }
 %symbolcode_h { #include <string> }
@@ -52,7 +49,6 @@
 %symbolcode_h { #include "logic/type.h" }
 %symbolcode_h { #include "./logic/selector.h" }
 %symbolcode_h { #include "./identifier.h" }
-%symbolcode_h { #include <typeinfo> }
 %symbolcode_h { #include "./logic/belief.h"}
 %symbolcode_h { #include "./logic/beliefstate.h"}
 
@@ -75,19 +71,33 @@
 
 
 File => 
-    | File Term : tm SEMICOLON {
-         std::cout << "the term = " << tm << "\n";
-      }
-         | File _recover_ SEMICOLON
-         ;
+    | STRUCT Identifier : id ASSIGN FieldDeclSeq : def END SEMICOLON
+       { std::cout << "the struct = " << def << "\n"; } 
+
+    | File Term : tm SEMICOLON 
+       { std::cout << "the term = " << tm << "\n"; }
+    | File _recover_ SEMICOLON
+    ;
+
+// ----------------------- structs ---------------------------------
+
+FieldDeclSeq => 
+   { return logic::structdef( ); }
+|
+   FieldDeclSeq : seq FieldDecl : decl
+   { seq. append( std::move( decl )); return seq; }
+;
+
+FieldDecl => Identifier: id COLON StructType : tp SEMICOLON
+{
+   return logic::fielddecl( std::move( id ), std::move( tp ));
+}
+;
+
+// ----------------------------- terms ---------------------------
 
 Term => EquivTermWith : tm { return tm; }
 ;
-
-// idents_type_list => VarTypeSeq : ict { return {ict}; }
-// 		   | VarTypeSeq : ict COMMA idents_type_list:v 
-// 				      { v.push_back(ict); return v; }
-// 			      ;
 
 VarSeq => VARIABLE : v 
 { 
@@ -149,21 +159,6 @@ Identifier => IdentifierStart : id VARIABLE : v { return id + v; }
            | Identifier : id SEP VARIABLE : v  { return id + v; } 
            ;
 
-
-// -----------------------structs---------------------------------
-
-struct_specifier => STRUCT VARIABLE:s ASSIGN idents_type_list:v  
-{
-	std::cout << "STRUCT!\n";
-
-    logic::structdef strctseq;
-    for (auto it = v.end(); it-- != v.begin(); ) {
-    	for (auto jt = it -> first.end(); jt-- != it -> first.begin(); ) {
-        	strctseq.append(identifier() + (*jt), it -> second);
-       	}
-    } 
-    return logic::belief(logic::bel_struct, identifier() + s, strctseq);
-}; 
 
 //-----------------------defs---------------------------------
 

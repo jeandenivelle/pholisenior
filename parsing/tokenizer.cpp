@@ -48,6 +48,7 @@ parsing::tokenizer::buildclassifier()
    // Keywords:
 
    cls.insert( word( "struct" ), symbolval::sym_STRUCT);
+   cls.insert( word( "end" ), symbolval::sym_END );
    cls.insert( word( "def" ), symbolval::sym_DEF);
    cls.insert( word( "frm" ), symbolval::sym_FRM);
 

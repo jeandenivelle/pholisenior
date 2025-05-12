@@ -12,16 +12,16 @@
 
 namespace logic
 {
-   struct fielddef
+   struct fielddecl
    {
       identifier name;
       type tp;
 
-      fielddef( const identifier& name, const type& tp )
+      fielddecl( const identifier& name, const type& tp )
          : name( name ), tp( tp )
       { }
 
-      fielddef( identifier&& name, type&& tp )
+      fielddecl( identifier&& name, type&& tp )
          : name( std::move( name )), tp( std::move( tp ))
       { }
 
@@ -37,21 +37,21 @@ namespace logic
 
    struct structdef
    {
-      std::vector< fielddef > repr;
+      std::vector< fielddecl > repr;
 
       structdef( ) noexcept = default;
 
-      size_t append( const identifier& name, const type& tp )
+      size_t append( const fielddecl& fld )
       { 
          size_t offset = repr. size( );
-         repr. push_back( fielddef( name, tp )); 
+         repr. push_back( fld ); 
          return offset;
       }
 
-      size_t append( identifier&& name, type&& tp )
+      size_t append( fielddecl&& fld )
       {
          size_t offset = repr. size( );
-         repr. push_back( fielddef( std::move( name ), std::move( tp ))); 
+         repr. push_back( std::move( fld )); 
          return offset;
       }
 
@@ -61,17 +61,17 @@ namespace logic
       bool very_equal_to( const structdef& def ) const
          { return repr. data( ) == def. repr. data( ); } 
 
-      using const_iterator = std::vector< fielddef > :: const_iterator;
+      using const_iterator = std::vector< fielddecl > :: const_iterator;
       const_iterator begin( ) const { return repr. begin( ); }
       const_iterator end( ) const { return repr. end( ); }
 
-      using iterator = std::vector< fielddef > :: iterator;
+      using iterator = std::vector< fielddecl > :: iterator;
       iterator begin( ) { return repr. begin( ); }
       iterator end( ) { return repr. end( ); }
       
       size_t size( ) const { return repr. size( ); }
-      const fielddef& at( size_t offset ) const { return repr. at( offset ); }
-      fielddef& at( size_t offset ) { return repr. at( offset ); }
+      const fielddecl& at( size_t offset ) const { return repr. at( offset ); }
+      fielddecl& at( size_t offset ) { return repr. at( offset ); }
 
       void print( std::ostream& out ) const;
    };

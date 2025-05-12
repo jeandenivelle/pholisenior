@@ -249,8 +249,10 @@ void tests::add_settheory( logic::beliefstate& blfs )
    type O2T = type( type_func, T, { O } );
 
    logic::structdef setdef;
-   setdef. append( identifier( ) + "setlike", type( type_func, T, { O2T } ));
-   setdef. append( identifier( ) + "mat", type( type_func, O, { O2T } ));
+   setdef. append( fielddecl( identifier( ) + "setlike", 
+                              type( type_func, T, { O2T } )));
+   setdef. append( fielddecl( identifier( ) + "mat", 
+                              type( type_func, O, { O2T } )));
 
    blfs. append( belief( bel_struct, identifier( ) + "Settheory", setdef ));
 
@@ -724,8 +726,8 @@ void tests::add_seq( logic::beliefstate& blfs )
    type Seq = type( type_unchecked, identifier( ) + "Seq" );
 
    logic::structdef structseq;
-   structseq. append( identifier( ) + "0", O );
-   structseq. append( identifier( ) + "succ", O2O );
+   structseq. append( logic::fielddecl( identifier( ) + "0", O ));
+   structseq. append( logic::fielddecl( identifier( ) + "succ", O2O ));
 
    blfs. append( belief( bel_struct, identifier( ) + "Seq", structseq ));
 
