@@ -19,29 +19,9 @@
 namespace logic 
 {
 
-   // Maybe I will not use this, and stick with the original ranking function:
-   // This probably should be moved out of this class.
-
-   struct dependencies
-   {
-      size_t rank;
-      exact::unordered_set successors;
-         // Direct successors (which must have higher rank).
-         // I am not sure what should be stored here. It seems more
-         // natural to store predecessors, but it makes the ranking 
-         // algorithm less efficient. Maybe one needs two indices. 
-
-      dependencies( ) 
-         : rank(0)
-      { }
-
-      void print( std::ostream& out ) const;
-   };
-  
- 
    class beliefstate
    {
-      std::vector< std::pair< belief, dependencies >> vect; 
+      std::vector< belief > vect; 
 
       using identifier2exact = 
          std::unordered_map< identifier, std::vector< exact >, 
@@ -73,11 +53,6 @@ namespace logic
 
       size_t size( ) const { return vect. size(); }
 
-#if 0
-      void add( normident id, const belief& bel )
-         { add( id, belief( bel )); }
-#endif
-
       exact append( belief&& bel );
          // If one adds a name with a pattern that overlaps with an 
          // existing
@@ -94,10 +69,10 @@ namespace logic
       const std::vector< exact > & 
       getformulas( const identifier& id ) const;
 
-      std::pair< belief, dependencies > & at( exact id )
+      belief& at( exact id )
          { return vect. at( id. nr ); }
 
-      const std::pair< belief, dependencies > & at( exact id ) const
+      const belief& at( exact id ) const
          { return vect. at( id. nr ); } 
 
       bool contains( exact id ) const

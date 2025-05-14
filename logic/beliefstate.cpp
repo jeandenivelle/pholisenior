@@ -15,22 +15,24 @@ logic::exact logic::beliefstate::append( belief&& bl )
          structdefs[ bl. name( ) ]. push_back( exstruct );
 
          // We temporarily insert an empty belief, because we still need
-         // access to bl. If we put in the vector already now, it moves 
+         // access to bl later when we add the field functions and
+         // the constructor. If we insert bl now, it moves 
          // with every insertion, which is annoying.
-
-         vect. emplace_back( belief( bel_empty, identifier( ) ), 
-                             dependencies( ));
+         // We still have to insert something because we need
+         // the exactname. 
+ 
+         vect. push_back( belief( bel_empty, identifier( ) ));
 
          auto exconstr = exact( vect. size( ));
          functions[ bl. name( ) ]. push_back( exconstr );
 
-         vect. emplace_back( belief( logic::bel_constr, bl. name( ), exstruct ), 
-                             dependencies( ));
+         vect. push_back( belief( logic::bel_constr, bl. name( ), exstruct )); 
 
-         // We also need to create the field functions:
+         // We create the field functions:
 
          const structdef& sdef = bl. view_struct( ). def( ); 
-            // sdef is not in vect. That would be dangerous.
+            // sdef is not in vect. That would be dangerous,
+            // because we adding the fields as functions to vect.
 
          for( size_t offset = 0; offset != sdef. size( ); ++ offset )
          {
@@ -39,40 +41,26 @@ logic::exact logic::beliefstate::append( belief&& bl )
                                      exstruct, offset );
             auto exfld = exact( vect. size( ));
             functions[ sdef. at( offset ). name ]. push_back( exfld ); 
-            vect. emplace_back( std::move( fieldfunc ), dependencies( ));
+            vect. push_back( std::move( fieldfunc ));
          }
 
-         at( exstruct ). first = std::move( bl );
+         at( exstruct ) = std::move( bl );
+            // We replace the temporary belief by bl. 
+
          return exstruct;
       }      
 
    case bel_decl:
-      {
-         exact ex = exact( vect. size( ));
-         functions[ bl. name( ) ]. push_back( ex );
-         vect. emplace_back( std::move( bl ), dependencies( ));
-         return ex; 
-      }
-
-   case bel_def:
-      {
-         exact ex = exact( vect. size( ));
-         functions[ bl. name( ) ]. push_back( ex );
-         vect. emplace_back( std::move( bl ), dependencies( ));
-         return ex;
-      }
-
+   case bel_def: 
    case bel_thm:
    case bel_asm:
    case bel_form:
       {
-         exact ex = exact( vect. size( )); 
-         formulas[ bl. name( ) ]. push_back( ex );
-         vect. emplace_back( std::move( bl ), dependencies( ));
-         return ex;
+         exact ex = exact( vect. size( ));
+         functions[ bl. name( ) ]. push_back( ex );
+         vect. push_back( std::move( bl ));
+         return ex; 
       }
-      break;
-
    }
 
    std::cout << "dont know how to append : " << bl << "\n";
@@ -132,7 +120,7 @@ void logic::beliefstate::print( std::ostream& out ) const
 {
    out << "Beliefstate:\n"; 
    for( size_t i = 0; i != vect. size( ); ++ i )
-      out << "   " << exact(i) << " : " << vect[i]. first << "\n";
+      out << "   " << exact(i) << " : " << vect[i] << "\n";
    out << "\n";
 
    out << "Functions:\n";

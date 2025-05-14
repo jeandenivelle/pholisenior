@@ -22,16 +22,16 @@ namespace logic
       // The beliefstate is not const, because we resolve overloads.
 
    void uncheck( type& tp );
+      // Make type tp unchecked.
    void uncheck( term& t );
-      // Make a term t unchecked.
+      // Make term t unchecked.
 
    exact::unordered_set allexact( const term& t );
       // Get the exact names in t.
 
-
-   // Technically seen, we should return std::optional< T > ,
+   // Technically seen, we should return std::optional<T> ,
    // where T is some unit type. 
-   // This is because a structural type by itself can have only one type.
+   // This is because a structural type by itself can have only one kind.
    // This is a bit overdone, so we just use bool.
 
    bool

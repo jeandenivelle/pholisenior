@@ -497,7 +497,7 @@ void tests::transformations( logic::beliefstate& blfs )
    if( f. size( ) != 1 )
       throw std::runtime_error( "cannot continue" );
 
-   auto ind = blfs. at( f[0] ). first;
+   auto ind = blfs. at( f[0] );
 
    logic::context ctxt;
 
@@ -895,7 +895,7 @@ void tests::structural( logic::beliefstate& blfs )
 {
    using namespace logic;
    
-   auto prod = blfs. at( exact(0)). first;
+   auto prod = blfs. at( exact(0));
    // std::cout << prod << "\n";
 
    errorstack err; 
@@ -994,11 +994,10 @@ void tests::add_simple( logic::beliefstate& bs )
 
 #endif
 
-void tests::parser( ) {
+void tests::parser( logic::beliefstate& blfs ) {
    lexing::filereader inp( &std::cin, "std::cin" );
 
    parsing::tokenizer tok( std::move( inp ));
-   logic::beliefstate blfs; 
    parsing::parser prs( tok, blfs );  
 
    prs. debug = 0;
@@ -1069,7 +1068,7 @@ void tests::proofchecking( logic::beliefstate& blfs )
    if( f. size( ) != 1 )
       throw std::runtime_error( "cannot continue" );
 
-   auto ind = blfs. at( f[0] ). first;
+   auto ind = blfs. at( f[0] );
 
    auto seq = calc::sequent( blfs, f. front( ));
    seq. apply_initial( "initial" );

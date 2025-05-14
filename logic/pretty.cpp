@@ -104,7 +104,7 @@ void logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          exact ex = tp. view_struct( ). def( );
          if( blfs. contains( ex ))
          { 
-            const auto& id = blfs. at( ex ). first. name( );
+            const auto& id = blfs. at( ex ). name( );
             out << id;
          }
          else
@@ -239,7 +239,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          exact ex = t. view_exact( ). ex( );
          if( blfs. contains( ex ))
          { 
-            const auto& id = blfs. at( ex ).first. name( );
+            const auto& id = blfs. at( ex ). name( );
             if( id. size( ) == 1 && !names. issafe( id. at(0)) )
                out << "::";
             out << id;

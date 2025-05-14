@@ -23,36 +23,38 @@
 
 int main( int argc, char* argv[] )
 {
-   tests::parser( );
+   logic::beliefstate blfs; 
+   tests::parser( blfs );
+   std::cout << blfs << "\n";
+   errorstack err;
+   checkandresolve( blfs, err );
 
-   // tests::truthtables( );
    return 0;
 
-   logic::beliefstate blfs;
+   // tests::truthtables( );
+   // return 0;
 
-   // logic::beliefstate blfs; 
    tests::add_strict_prod( blfs ); 
-#if 0
-   tests::add_function( blfs );
-#endif
-   tests::add_seq( blfs );
+   // tests::add_function( blfs );
+   // tests::add_seq( blfs );
 #if 0
    tests::add_unique( blfs );
 #endif
-   tests::add_settheory( blfs );
+   // tests::add_settheory( blfs );
    logic::pretty::print( std::cout, blfs ); 
    std::cout << "(before type checking)\n";
 
-   tests::structural( blfs );
+   // tests::structural( blfs );
    // tests::add_proof( blfs );
 
    logic::pretty::print( std::cout, blfs ); 
    std::cout << "(after type checking)\n";
 
-   tests::proofchecking( blfs );
-   return 0;
+   // tests::proofchecking( blfs );
 
-   tests::pretty( blfs );
+   std::cout << blfs << "\n";
+
+   // tests::pretty( blfs );
    return 0;
 
 #if 0

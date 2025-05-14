@@ -49,8 +49,10 @@ parsing::tokenizer::buildclassifier()
 
    cls.insert( word( "struct" ), symbolval::sym_STRUCT);
    cls.insert( word( "end" ), symbolval::sym_END );
-   cls.insert( word( "def" ), symbolval::sym_DEF);
-   cls.insert( word( "frm" ), symbolval::sym_FRM);
+   cls.insert( word( "def" ), symbolval::sym_DEF );
+   cls.insert( word( "form" ), symbolval::sym_FORM );
+   cls.insert( word( "assume" ), symbolval::sym_ASSUME );
+   cls.insert( word( "theorem" ), symbolval::sym_THEOREM );
 
    cls.insert( word( "TRUE" ), symbolval::sym_TRUE );
    cls.insert( word( "ERROR" ), symbolval::sym_ERROR );
@@ -58,6 +60,7 @@ parsing::tokenizer::buildclassifier()
    cls.insert( word( "LAMBDA" ), symbolval::sym_LAMBDA );
    cls.insert( word( "LET" ), symbolval::sym_LET );
    cls.insert( word( "IN" ), symbolval::sym_IN );
+   cls.insert( word( "eof" ), symbolval::sym_EOF );
 
    cls.insert( ( just( ' ' ) | just( '\f' ) | just( '\n' ) | just( '\r' ) | 
                  just( '\t' ) | just( '\v' ) ).plus(), symbolval::sym_WHITESPACE );

@@ -10,7 +10,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
 
    for( size_t nr = 0; nr != everything. size( ); ++ nr )
    {
-      auto& blf = everything. at( exact( nr )). first; 
+      auto& blf = everything. at( exact( nr )); 
 
       size_t errstart = err. size( );
 
@@ -73,6 +73,9 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
 
             {
                auto tm = def. extr_val( );
+               std::cout << "checking " << tm << "\n";
+               throw std::logic_error( "kut" );
+
                context ctxt;
                auto tp = checkandresolve( everything, err, ctxt, tm );
 
@@ -131,7 +134,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             // are automatically generated from the struct definitions.
 
             auto sdef = blf. view_field( ). sdef( );
-            if( everything. at( sdef ). first. sel( ) != bel_struct )
+            if( everything. at( sdef ). sel( ) != bel_struct )
             {
                // This means that the data structure is corrupted:
 
@@ -146,7 +149,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             // There is not much to check.
 
             auto sdef = blf. view_constr( ). tp( );
-            if( everything. at( sdef ). first. sel( ) != bel_struct )
+            if( everything. at( sdef ). sel( ) != bel_struct )
             {
                // This means that the data structure is corrupted. 
                throw std::runtime_error( "constr does not construct struct" );
@@ -901,7 +904,7 @@ logic::try_apply( const beliefstate& blfs, exact name,
    std::cout << "\n";
 #endif
 
-   const auto& bel = blfs. at( name ). first;
+   const auto& bel = blfs. at( name );
    switch( bel. sel( )) 
    {
       case bel_def: 
@@ -921,7 +924,7 @@ logic::try_apply( const beliefstate& blfs, exact name,
             auto fld = bel. view_field( ); 
             exact structtype = fld. sdef( );
 
-            const belief& parentblf = blfs. at( structtype ). first;
+            const belief& parentblf = blfs. at( structtype );
                // The belief in the parent.
             if( parentblf. sel( ) != bel_struct )
                throw std::runtime_error( "parent type not a structdef" );
@@ -949,7 +952,7 @@ logic::try_apply( const beliefstate& blfs, exact name,
       case bel_constr:
          {
             const auto& structblf = 
-               blfs. at( bel. view_constr( ). tp( )). first;
+               blfs. at( bel. view_constr( ). tp( ));
                   // Belief in the struct that we are trying to construct.
 
             if( structblf. sel( ) != bel_struct )

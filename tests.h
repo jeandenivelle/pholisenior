@@ -49,7 +49,7 @@ namespace tests
    void truthtables( );
       // check properties that can be checked by truth tables. 
 
-   void parser( );
+   void parser( logic::beliefstate& blfs );
    
 }
 

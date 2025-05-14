@@ -19,7 +19,6 @@
 %symbol{ logic::type } StructType func 
 %symbol{ std::vector< logic::type > } StructTypeSeq
 
-%symbol{std::vector<std::pair<std::vector<std::string>, logic::type>>} idents_type_list 
 %symbol{ std::string } VARIABLE
 %symbol{ identifier } Identifier IdentifierStart
 
@@ -27,10 +26,14 @@
 %symbol{ std::vector< logic::vartype > } VarTypeSeq VarsOneType 
    // VarsOneType has form v1, ..., vn : T 
 
+%symbol{ std::vector< std::vector< logic::vartype >> } ParSeqSeq 
+   // Used in definitions. A definition can have form
+   // def x( ) ( ) ( ) := t, so we need a vector of vector of vartypes.
+
 %symbol{ logic::fielddecl } FieldDecl 
 %symbol{ logic::structdef } FieldDeclSeq 
 
-%symbol{} STRUCT END DEF FRM
+%symbol{ } STRUCT END DEF THEOREM ASSUME FORM
 
 %symbol{ } EOF FILEBAD WHITESPACE COMMENT 
 %symbol{ } LPAR RPAR LBRACE RBRACE LBRACKET RBRACKET LEXISTS REXISTS
@@ -45,18 +48,47 @@
 %symbolcode_h { #include "location.h" }
 %symbolcode_h { #include <vector> }
 %symbolcode_h { #include <string> }
-%symbolcode_h { #include <stack> }
 %symbolcode_h { #include "logic/type.h" }
-%symbolcode_h { #include "./logic/selector.h" }
-%symbolcode_h { #include "./identifier.h" }
-%symbolcode_h { #include "./logic/belief.h"}
-%symbolcode_h { #include "./logic/beliefstate.h"}
+%symbolcode_h { #include "logic/selector.h" }
+%symbolcode_h { #include "identifier.h" }
+%symbolcode_h { #include "logic/beliefstate.h"}
+
+%parsercode_cpp
+{
+   namespace
+   {
+      logic::term 
+      abstract( const std::vector< std::vector< logic::vartype >> & abstr,
+                logic::term tm )
+      {
+         for( size_t i = abstr. size( ); i -- ; ) 
+         {
+            tm = logic::term( logic::op_lambda, tm,
+                              abstr[i]. begin( ), abstr[i]. end( ));
+         }
+         return tm;
+      }
+
+      logic::type
+      abstract( const std::vector< std::vector< logic::vartype >> & abstr,
+                logic::type tp )
+      {
+         for( size_t i = abstr. size( ); i -- ;  )
+         {
+            tp = logic::type( logic::type_func, tp, { } );
+            auto f = tp. view_func( );
+            for( const auto& vt : abstr[i] )
+               f. push_back( vt. tp );
+         }
+         return tp;  
+      }
+   }
+}
 
 %symbolspace parsing
 %parserspace parsing
 
 %parsercode_h { #include "tokenizer.h" }
-%parsercode_h { #include "logic/beliefstate.h" }
 
 %infotype{ location }
 
@@ -67,19 +99,40 @@
 
 %rules 
 
-//-------------------------common--------------------------------
+//------------------------- file --------------------------------
 
 
 File => 
-    | STRUCT Identifier : id ASSIGN FieldDeclSeq : def END SEMICOLON
+    | File STRUCT Identifier : id ASSIGN 
+      LBRACE FieldDeclSeq : def RBRACE SEMICOLON
        { std::cout << "the struct = " << def << "\n"; } 
-
-    | File Term : tm SEMICOLON 
-       { std::cout << "the term = " << tm << "\n"; }
+    | File DEF Identifier : id ParSeqSeq : abstr ASSIGN 
+      Term : tm COLON StructType : tp SEMICOLON
+       { 
+          tm = abstract( abstr, std::move(tm) ); 
+          tp = abstract( abstr, std::move(tp) );
+          blfs. append( logic::belief( logic::bel_def, id, tm, tp )); 
+       }
+    | File THEOREM Identifier : Id ParSeqSeq : abstr COLON Term : tm SEMICOLON 
+       { 
+          tm = abstract( abstr, tm );
+          std::cout << "theorem = " << tm << "\n"; 
+       } 
+    | File ASSUME Identifier : Id ParSeqSeq : abstr COLON Term : tm SEMICOLON
+       { 
+          tm = abstract( abstr, tm );
+          std::cout << "assumption = " << tm << "\n";
+       } 
+    | File FORM Identifier : Id ParSeqSeq : abstr COLON Term : tm SEMICOLON 
+       { 
+          tm = abstract( abstr, tm );
+          std::cout << "form = " << tm << "\n";
+       }
     | File _recover_ SEMICOLON
+       { std::cout << "recovered!!!\n"; } 
     ;
 
-// ----------------------- structs ---------------------------------
+// ----------------------- struct ---------------------------------
 
 FieldDeclSeq => 
    { return logic::structdef( ); }
@@ -94,7 +147,26 @@ FieldDecl => Identifier: id COLON StructType : tp SEMICOLON
 }
 ;
 
-// ----------------------------- terms ---------------------------
+// -------------------------- def ------------------------------
+
+ParSeqSeq => 
+   { 
+      return std::vector< std::vector< logic::vartype >> ( ); 
+   }
+| ParSeqSeq : abstr LPAR RPAR 
+   { 
+      abstr. push_back( std::vector< logic::vartype > ( )); 
+      return std::move( abstr ); 
+   }
+| ParSeqSeq : abstr LPAR VarTypeSeq : pars RPAR 
+   { 
+      abstr. push_back( pars ); 
+      return std::move( abstr ); 
+   }
+; 
+
+
+// ----------------------------- term ---------------------------
 
 Term => EquivTermWith : tm { return tm; }
 ;
@@ -160,25 +232,9 @@ Identifier => IdentifierStart : id VARIABLE : v { return id + v; }
            ;
 
 
-//-----------------------defs---------------------------------
-
-%skip 
-def_specifier => DEF VARIABLE args_seq ASSIGN Term {std::cout << "Definition!\n";};		  
-
-args_seq => args_seq:st LPAR idents_type_list:v RPAR {st.push(v); return st;}
-		  | LPAR idents_type_list:v RPAR {
-			  std::stack<std::vector<std::pair<std::vector<std::string>,
-		      logic::type>>> st; st.push(v); return st;
-		  }
-		  | LPAR RPAR {
-		      std::stack<std::vector<std::pair<std::vector<std::string>,
-		  	  logic::type>>> st; return st;
-		  };
-
-%endskip
 
 // These are these greedy prefix operators that eat everything
-// that comes behind them:
+// that is to the right of them:
 
 GreedyPrefTerm => LBRACKET VarTypeSeq : vars RBRACKET Term : body
 {
@@ -278,13 +334,13 @@ UnTermWithout =>
 ;
 
 EqTerm =>
-   DotTerm : t { return std::move( t ); }
+   DotTerm : t { return std::move(t); }
 |
-   DotTerm : t1 EQ DotTerm : t2 
+   DotTerm : t1  EQ  DotTerm : t2 
       { return logic::term( logic::op_equals, t1, t2 ); }
 
 |
-   DotTerm : t1 NE DotTerm : t2 
+   DotTerm : t1  NE  DotTerm : t2 
    { return logic::term( logic::op_not, 
                logic::term( logic::op_equals, t1, t2 ));
    }
@@ -323,6 +379,10 @@ ApplTerm =>
                             func, args. begin( ), args. end( )); }
 
 | Identifier : id  { return logic::term( logic::op_unchecked, id ); }
+| FALSE { return logic::term( logic::op_false ); }
+| ERROR { return logic::term( logic::op_error ); }
+| TRUE { return logic::term( logic::op_true ); }
+
 | LPAR Term : tm RPAR { return std::move(tm); } 
 ; 
 
