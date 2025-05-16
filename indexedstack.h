@@ -55,6 +55,12 @@ public:
       stack. pop_back( ); 
    }
 
+   void restore( size_t s )
+   {
+      while( stack. size( ) > s )
+         pop( );
+   }
+
    iterator find( const K& k )
    {
       auto p = index. find(k);

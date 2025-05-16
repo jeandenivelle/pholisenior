@@ -28,6 +28,7 @@ int main( int argc, char* argv[] )
    std::cout << blfs << "\n";
    errorstack err;
    checkandresolve( blfs, err );
+   std::cout << err << "\n";
 
    return 0;
 

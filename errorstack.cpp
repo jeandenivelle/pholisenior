@@ -2,7 +2,7 @@
 #include "errorstack.h"
 #include <list>
 
-void error::print( std::ostream& out ) const
+void error::print( indentation ind, std::ostream& out ) const
 {
    switch( ser )
    {
@@ -10,15 +10,22 @@ void error::print( std::ostream& out ) const
       break; 
 
    case error::warning: 
-      out << "warning: "; break;
+      out << ind << "warning: "; break;
 
    case error::serious: 
-      out << "error: "; break;
+      out << ind << "error: "; break;
 
-   default: out << "??? "; break;
+   default: out << ind << "??? "; break;
    }
 
-   out << top << '\n';
+   for( char c : top )
+   {
+      out << c;
+      if( c == '\n' )
+         out << ind;
+   }
+   out << '\n';
+
    reported = true;
 }
 
@@ -48,7 +55,7 @@ errorstack::print( indentation ind,
 void errorstack::print( indentation ind,
                         size_t pos, std::ostream& out ) const
 {
-   out << ind; vect[ pos ]. print( out );
+   vect[ pos ]. print( ind, out );
    print( ind + 3, sub[ pos ], pos, out );   
 }
 

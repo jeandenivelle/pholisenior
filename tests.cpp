@@ -1064,6 +1064,7 @@ void tests::proofchecking( logic::beliefstate& blfs )
 {
    auto id = identifier( ) + "just";
 
+#if 0
    const auto& f = blfs. getformulas( identifier( ) + "just" );
    if( f. size( ) != 1 )
       throw std::runtime_error( "cannot continue" );
@@ -1075,7 +1076,6 @@ void tests::proofchecking( logic::beliefstate& blfs )
 
    std::cout << seq << "\n";
 
-#if 0
    logic::beliefstate bel;
    add_kuratowski( bel );
    add_simple( bel );

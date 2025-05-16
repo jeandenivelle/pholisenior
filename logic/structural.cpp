@@ -3,7 +3,6 @@
 #include "pretty.h"
 #include "kbo.h"
 
-
 void logic::checkandresolve( beliefstate& everything, errorstack& err )
 {
    std::cout << "checking the complete belief state\n";
@@ -74,13 +73,17 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             {
                auto tm = def. extr_val( );
                std::cout << "checking " << tm << "\n";
-               throw std::logic_error( "kut" );
-
+               indexedstack< std::string, size_t > debruijn;
+               tm = replace_debruijn( debruijn, std::move(tm) );
+               std::cout << "after the check " << tm << "\n";
+               if( debruijn. size( ) > 0 )
+                  throw std::logic_error( "non-empty De Bruijn stack after check" );
+               
                context ctxt;
                auto tp = checkandresolve( everything, err, ctxt, tm );
 
                if( ctxt. size( ) > 0 )
-                  throw std::runtime_error( "context after check not empty" );
+                  throw std::logic_error( "non-empty context after check" );
 
                if( tp. has_value( ) && !equal( tp. value( ), def. tp( )))
                {
@@ -99,7 +102,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             if( err. size( ) > errstart )
             {
                errorstack::builder bld;
-               bld << "In the definition of " << blf. name( ) << ":";
+               bld << "In definition of " << blf. name( ) << ":";
                err. addheader( errstart, std::move( bld ));
             }
             break; 
@@ -110,9 +113,11 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             auto thm = blf. view_thm( );
             auto form = thm. extr_form( );
             context ctxt;
-            auto tp = checkandresolve( everything, err, ctxt, form );
+            throw std::runtime_error( "nicht fertig" );
+            // auto tp = checkandresolve( everything, err, ctxt, form );
             thm. update_form( form );
 
+#if 0
             if( tp. has_value( ) && tp. value( ). sel( ) != type_truthval )
             {
                throw std::runtime_error( "theorem not well-typed" );
@@ -124,7 +129,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
                bld << "In formula " << blf. name( ) << ": ";
                err. addheader( errstart, std::move( bld ));
             }
-
+#endif
             break;
          }
 
@@ -221,9 +226,104 @@ logic::checkproofterm( std::ostream& out, const beliefstate& state,
 #endif
 
 
+logic::term
+logic::replace_debruijn( indexedstack< std::string, size_t > & db, term t )
+{
+   if constexpr( false )
+   {
+      std::cout << "replacing De Bruijn:\n";
+      std::cout << db << "\n";
+      std::cout << t << "\n";
+
+   }
+
+   switch ( t. sel( ))
+   {
+
+   case op_unchecked:
+      {
+         auto un = t. view_unchecked( );
+         const auto& id = un. id( );
+         if( id. size( ) != 1 )
+            return t;
+ 
+         auto p = db. find( id. at(0));  
+         if( p != db. end( )) 
+            return term( op_debruijn, db. size( ) - ( p -> second ) - 1 );
+         else
+            return t;
+      }
+   case op_not:
+   case op_prop:
+      {
+         auto un = t. view_unary( );
+         un. update_sub( replace_debruijn( db, un. extr_sub( )));
+         return t;
+      }
+   case op_and:
+   case op_or:
+   case op_implies:
+   case op_equiv:
+   case op_lazy_and:
+   case op_lazy_or:
+   case op_lazy_implies: 
+   case op_equals:
+      {
+         auto bin = t. view_binary( );
+         bin. update_sub1( replace_debruijn( db, bin. extr_sub1( )));
+         bin. update_sub2( replace_debruijn( db, bin. extr_sub2( )));
+         return t;
+      }
+   case op_forall:
+   case op_exists:
+   case op_kleene_forall:
+   case op_kleene_exists: 
+      {
+         size_t dbsize = db. size( );
+
+         auto quant = t. view_quant( );
+         for( size_t i = 0; i != quant. size( ); ++ i )
+            db. push( quant. var(i). pref, db. size( ));  
+ 
+         quant. update_body( replace_debruijn( db, quant. extr_body( )));
+        
+         db. restore( dbsize );
+         return t;
+      }
+
+   case op_apply:
+      {
+         auto ap = t. view_apply( );
+         
+         ap. update_func( replace_debruijn( db, ap. extr_func( )));
+         for( size_t i = 0; i != ap. size( ); ++ i )
+            ap. update_arg( i, replace_debruijn( db, ap. extr_arg(i) ));
+
+         return t;
+      }
+ 
+   case op_lambda:
+      {
+         size_t dbsize = db. size( );
+
+         auto lamb = t. view_lambda( );
+         for( size_t i = 0; i != lamb. size( ); ++ i )
+            db. push( lamb. var(i). pref, db. size( ));  
+      
+         lamb. update_body( replace_debruijn( db, lamb. extr_body( ))); 
+
+         db. restore( dbsize );
+         return t;
+      }
+
+   }
+
+   std::cout << t. sel( ) << "\n";
+   throw std::logic_error( "replace De Bruijn: unhandled selector" ); 
+}
+
 bool 
-logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
-                        type& tp ) 
+logic::checkandresolve( const beliefstate& blfs, errorstack& errors, type& tp ) 
 {
    if constexpr( false )
    {
@@ -231,6 +331,9 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
       pretty::print( std::cout, blfs, tp, {0,0} );
       std::cout << "\n";
    }
+
+   const static identifier T = identifier( ) + "TT";
+   const static identifier O = identifier( ) + "Obj";
  
    switch( tp. sel( ))
    {
@@ -243,6 +346,18 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
          auto id = tp. view_unchecked( );
          auto& defs = blfs. getstructdefs( id. id( ));
 
+         if( id. id( ) == O )
+         {
+            tp = type( type_obj );
+            return true;
+         }
+
+         if( id. id( ) == T )
+         {
+            tp = type( type_truthval );
+            return true;
+         }
+ 
          if( defs. size( ) == 0 ) 
          {
             errorstack::builder bld;
@@ -308,7 +423,7 @@ namespace logic
                                        const term& t )
       {
          errorstack::builder res;
-         res << "\n";
+         res << '\n';
          for( unsigned int i = 0; i != 70; ++ i )
             res. put( '-' );
          res. put( '\n' );
@@ -324,9 +439,8 @@ namespace logic
 
 
 std::optional< logic::type > 
-logic::checkandresolve( const beliefstate& blfs, 
-                        errorstack& errors, context& ctxt, 
-                        term& t ) 
+logic::checkandresolve( const beliefstate& blfs, errorstack& errors,  
+                        context& ctxt, term& t ) 
 {
    if constexpr( false )
    {
@@ -354,6 +468,7 @@ logic::checkandresolve( const beliefstate& blfs,
       {
          auto un = t. view_unchecked( );
          const auto& ident = un. id( );
+
          const auto& overcands = blfs. getfunctions( ident ); 
 
          if( overcands. size( ) == 0 )
@@ -540,7 +655,6 @@ logic::checkandresolve( const beliefstate& blfs,
          auto quant = t. view_quant( );
 
          size_t contextsize = ctxt. size( );
-
          size_t errstart = errors. size( );
             // If we produce errors, they start here.
 
@@ -559,6 +673,7 @@ logic::checkandresolve( const beliefstate& blfs,
          if( !correct )
          {
             auto err = errorheader( blfs, ctxt, t );  
+            err << "in structural type of quantifier:";
             errors. addheader( errstart, std::move( err ));
             return type( type_truthval ); 
          }
@@ -690,7 +805,7 @@ logic::checkandresolve( const beliefstate& blfs,
          if( argtypes. size( ) < ap. size( ))
             return { };
 
-         // If ap. func( ) is an inexact identifier, we treat this
+         // If ap. func( ) is still an inexact identifier, we treat this
          // separately, because we cannot simply recurse. 
          // In order to find the correct overload of an identifier, 
          // we need to know the types of the arguments.
@@ -784,7 +899,6 @@ logic::checkandresolve( const beliefstate& blfs,
                err << "   "; 
                pretty::print( err, blfs, argtypes[i], {0,0} );
             }
-            std::cout << err. str( ) << "\n";
             errors. push( std::move( err ));
 
             return { };
@@ -812,12 +926,15 @@ logic::checkandresolve( const beliefstate& blfs,
 
          if( !correct )
          {
-            auto err = errorheader( blfs, ctxt, t );  
+            auto err = errorheader( blfs, ctxt, t ); 
+            err << "\n";
+            err << "in structural type of lambda";
             errors. addheader( errstart, std::move( err ));
             return { };
          }
 
          size_t contextsize = ctxt. size( );
+
          for( size_t i = 0; i != lamb. size( ); ++ i )
             ctxt. append( lamb. var(i). pref, lamb. var(i). tp );
 
@@ -842,8 +959,8 @@ logic::checkandresolve( const beliefstate& blfs,
          else
             return { };
       }
+
    }
-   
    std::cout << "typechecking: selector = " << t. sel( ) << "\n";
    throw std::logic_error( "typechecking: selector not implemented" );
 }

@@ -37,9 +37,6 @@
 
 %dir Source/calc
 %sources
-   sequent.cpp
-   extension.cpp
-   selector.cpp
    transformer.cpp
    splitequiv.cpp
    kleening.cpp

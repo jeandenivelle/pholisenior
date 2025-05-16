@@ -1,6 +1,9 @@
 
 // Written by Hans de Nivelle, Nov. 2024.
 // Changed the interface on 12.12.2024.
+// If you don't report the error stack, the
+// errors will be printed when destroyed. 
+// This will be ugly !
 
 #ifndef ERRORSTACK_
 #define ERRORSTACK_
@@ -51,12 +54,12 @@ struct error
 
    error& operator = ( const error& ) = delete;
   
-   void print( std::ostream& out ) const;
+   void print( indentation ind, std::ostream& out ) const;
 
    ~error( )
    {
       if( !reported && !top. empty( ))
-         print( std::cout );
+         print( indentation(3), std::cout );
    }
  
 };
@@ -102,7 +105,6 @@ public:
       sub. push_back( vect. size( ));
       vect. emplace_back( meh, ser );
    }
-
 
    using builder = std::ostringstream;
       // You can whine into the builder, and push the builder

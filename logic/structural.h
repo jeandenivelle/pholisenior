@@ -12,6 +12,7 @@
 #include "term.h"
 #include "beliefstate.h"
 #include "context.h"
+#include "indexedstack.h"
 
 namespace logic
 {
@@ -23,11 +24,12 @@ namespace logic
 
    void uncheck( type& tp );
       // Make type tp unchecked.
+
    void uncheck( term& t );
       // Make term t unchecked.
 
-   exact::unordered_set allexact( const term& t );
-      // Get the exact names in t.
+   logic::term
+   replace_debruijn( indexedstack< std::string, size_t > & db, term t );
 
    // Technically seen, we should return std::optional<T> ,
    // where T is some unit type. 
@@ -41,8 +43,8 @@ namespace logic
    std::optional< type > 
    checkandresolve( const beliefstate& blfs, errorstack& errors,
                     context& ctxt, term& t );
-      // We check and resolve the overloads. We don't care about
-      // dependencies. Dependencies are checked by a separate
+      // Check and resolve overloads. 
+      // We won't look at dependencies. Dependencies are checked by a separate
       // function. 
    
    std::optional< type >
@@ -52,6 +54,7 @@ namespace logic
    std::optional< type >
    try_apply( const beliefstate& blfs, exact name, 
               const std::vector< type > & argtypes, size_t pos ); 
+
 }
 
 #endif
