@@ -1,0 +1,6 @@
+
+def atleast( P : Form( Obj )) := < y : Obj > P(y) : Form;
+def atmost( P : Form( Obj )) := 
+   [ y1, y2 : Obj ] P(y1) & P(y2) -> y1 == y2: Form; 
+
+

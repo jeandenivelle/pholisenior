@@ -72,10 +72,8 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
 
             {
                auto tm = def. extr_val( );
-               std::cout << "checking " << tm << "\n";
                indexedstack< std::string, size_t > debruijn;
                tm = replace_debruijn( debruijn, std::move(tm) );
-               std::cout << "after the check " << tm << "\n";
                if( debruijn. size( ) > 0 )
                   throw std::logic_error( "non-empty De Bruijn stack after check" );
                
@@ -332,7 +330,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors, type& tp )
       std::cout << "\n";
    }
 
-   const static identifier T = identifier( ) + "TT";
+   const static identifier F = identifier( ) + "Form";
    const static identifier O = identifier( ) + "Obj";
  
    switch( tp. sel( ))
@@ -352,7 +350,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors, type& tp )
             return true;
          }
 
-         if( id. id( ) == T )
+         if( id. id( ) == F )
          {
             tp = type( type_truthval );
             return true;
@@ -673,7 +671,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
          if( !correct )
          {
             auto err = errorheader( blfs, ctxt, t );  
-            err << "in structural type of quantifier:";
+            err << "In structural type of quantifier:";
             errors. addheader( errstart, std::move( err ));
             return type( type_truthval ); 
          }
@@ -928,7 +926,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
          {
             auto err = errorheader( blfs, ctxt, t ); 
             err << "\n";
-            err << "in structural type of lambda";
+            err << "In structural type of lambda";
             errors. addheader( errstart, std::move( err ));
             return { };
          }

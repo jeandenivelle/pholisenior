@@ -19,10 +19,6 @@ namespace logic {
 namespace pretty 
 {
 
-   static constexpr bool csyntax_types = true;
-      // If true, functional types are printed with 
-      // C-syntax, i.e. T(O). Otherwise O -> T. 
-
    struct attractions
    {
       unsigned int left;
@@ -45,7 +41,7 @@ namespace pretty
 
    inline 
    std::ostream& operator << ( std::ostream& out, 
-                               std::pair< unsigned int , unsigned int > env )
+                               std::pair< unsigned int, unsigned int > env )
    { 
       out << env. first << '/' << env. second; 
       return out; 
@@ -112,7 +108,7 @@ namespace pretty
       // Exact names will be prefixed with :: if they conflict with a local
       // variable.
 
-   // This the main one that you should call: 
+   // This the main function that you should call: 
 
    void print( std::ostream& out, const beliefstate& blfs,
                context& ctxt, const term& t );
@@ -123,14 +119,12 @@ namespace pretty
                uniquenamestack& names, const logic::belief& );
 
    uniquenamestack 
-   print( std::ostream& out, const beliefstate& blfs,
-          const context& cxt ); 
+   print( std::ostream& out, const beliefstate& blfs, const context& cxt ); 
       // Print a context. Since a term is often printed
       // with its context, we remember the uniquenamestack,
       // so that it can be used for printing the term. 
 
    void print( std::ostream& out, const beliefstate& blfs, const belief& bel ); 
-   void print( std::ostream& out, const beliefstate& blfs );
 
 }}
 

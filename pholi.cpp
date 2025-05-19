@@ -25,30 +25,26 @@ int main( int argc, char* argv[] )
 {
    logic::beliefstate blfs; 
    tests::parser( blfs );
-   std::cout << blfs << "\n";
    errorstack err;
    checkandresolve( blfs, err );
    std::cout << err << "\n";
-
+   std::cout << blfs << "\n";
    return 0;
 
    // tests::truthtables( );
    // return 0;
 
-   tests::add_strict_prod( blfs ); 
    // tests::add_function( blfs );
    // tests::add_seq( blfs );
 #if 0
    tests::add_unique( blfs );
 #endif
    // tests::add_settheory( blfs );
-   logic::pretty::print( std::cout, blfs ); 
    std::cout << "(before type checking)\n";
 
    // tests::structural( blfs );
    // tests::add_proof( blfs );
 
-   logic::pretty::print( std::cout, blfs ); 
    std::cout << "(after type checking)\n";
 
    // tests::proofchecking( blfs );

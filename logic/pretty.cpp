@@ -93,10 +93,8 @@ void logic::pretty::print( std::ostream& out, const beliefstate& blfs,
    switch( tp. sel( ))
    {
    case type_obj:
-      out << "O";
-      return;
    case type_truthval:
-      out << "T";
+      out << tp; 
       return;
 
    case type_struct:
@@ -120,7 +118,7 @@ void logic::pretty::print( std::ostream& out, const beliefstate& blfs,
    if( tp. sel( ) != type_func )
       throw std::runtime_error( "structural type must be functional" );
 
-   if constexpr( csyntax_types )
+   if constexpr( true )
    {
       auto f = tp. view_func( );    
       out << f. result( ) << '(';
@@ -161,7 +159,7 @@ void logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          print( out, blfs, f. arg( f. size( ) - 1 ),  
                                between( prod_attr, arrow_attr ));
       }
-      out << " -> ";
+      out << " --> ";
       print( out, blfs, f. result( ), between( arrow_attr, env ));
       par. closing( out );
    }
@@ -299,7 +297,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
       case op_or:       out << " | "; break;
       case op_implies:  out << " -> "; break;
       case op_equiv:    out << " <-> "; break;
-      case op_equals:   out << " = "; break;
+      case op_equals:   out << " == "; break;
 
       default: out << " ??? "; break;
       }
@@ -467,12 +465,12 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 
          par.opening( out );
 
-         out << "LAMBDA"; 
+         out << "LAMBDA("; 
 
          auto lamb = t. view_lambda( );
          print( out, blfs, names,
                 [&lamb]( size_t i ) { return lamb. var(i); }, lamb. size( ));
-         out << " IN ";
+         out << " ) : ";
 
          print(out, blfs, names, lamb.body(), between( ourattr, env ));
          par. closing( out );
@@ -603,7 +601,7 @@ logic::pretty::print( std::ostream& out,
                       const beliefstate& blfs,  
                       const logic::belief& bel )
 {
-   switch( bel. sel( ) )
+   switch( bel. sel( ))
    {
 #if 0
    case logic::bel_decl:
@@ -613,21 +611,24 @@ logic::pretty::print( std::ostream& out,
          out << "\n";
          return;
       }
+#endif
 
    case logic::bel_def:
       {
-         auto def = bel. view_def( );
-         pretty::print( out, def. tp( ) );
          out << " := ";
-         pretty::print( out, names, def. val( ) ); 
+         auto def = bel. view_def( );
+         context ctxt; 
+         pretty::print( out, blfs, ctxt, def. val( )); 
+         out << " : ";
+         pretty::print( out, blfs, def. tp( ), {0,0} );
          out << "\n";
          return;
       }
-      
+#if 0      
    case logic::bel_asm:
       {
          auto assume = bel. view_asm( );
-         pretty::print( out, names, assume. form( ) ); 
+         pretty::print( out, names, assume. form( )); 
          out << "\n";
          return;
       }
@@ -638,7 +639,7 @@ logic::pretty::print( std::ostream& out,
          out << "theorem   " << bel. name( ) << " : ";
          auto thm = bel. view_thm( );
          context ctxt;
-         pretty::print( out, blfs, ctxt, thm. form( ) );
+         pretty::print( out, blfs, ctxt, thm. form( ));
          // pretty::print( out, names, thm. proof( ) );
          out << "\n";
          return; 
@@ -659,25 +660,4 @@ logic::pretty::print( std::ostream& out,
    throw std::runtime_error( "unknown selector" );
 }
 
-
-void 
-logic::pretty::print( std::ostream& out, const logic::beliefstate& blfs )
-{
-   out << "Belief State:\n";
-
-#if 0
-   for( size_t i = 0; i != blfs. size( ); ++ i )
-   {
-      out << "   " << i << "   " << blfs. at(i). first << "  : ";
-      print( out, names, bel. at(i). second );
-   }
-
-   if( false )
-   {
-      out << "this is the ugly version of this belief state:\n";
-      out << bel << "\n";
-   }
-#endif
-   out << "\n";
-}
 

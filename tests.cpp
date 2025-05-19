@@ -20,209 +20,15 @@
 
 #include "parsing/parser.h"
 
-void tests::add_strict_prod( logic::beliefstate& bel )
-{
-   using namespace logic;
-     
-   auto O = type( type_obj );
-   auto T = type( type_truthval );
-
-   auto O2T = type( type_func, T, { O } );  
-   auto OO2T = type( type_func, T, { O, O } );
-   auto OOO2T = type( type_func, T, { O, O, O } );
-
-   // strict1 :
-
-   {
-      auto s1 = lambda( { { "P", O2T } }, 
-      forall( {{ "x1", O }}, prop( apply( 1_db, { 0_db } )) ));
-
-      auto tp = type( type_func, T, { O2T } );
-
-      bel. append( belief( bel_def, identifier( ) + "strict", s1, tp ));
-   }
-
-   // strict2 :
-
-   {
-      auto s2 = lambda( { { "P", OO2T } }, 
-         forall( {{ "x1", O }, { "x2", O }}, 
-         prop( apply( 2_db, { 1_db, 0_db } )) ));
-
-      auto tp = type( type_func, T, { OO2T } );
-
-      bel. append( belief( bel_def, identifier( ) + "strict", s2, tp ));
-   }
- 
-   // strict3 :
-
-   {
-      auto s3 = lambda( {{ "P", OOO2T }},
-         forall( {{ "x1", O }, { "x2", O }, { "x3", O }}, 
-         prop( apply( 3_db, { 2_db, 1_db, 0_db } )) ));
-
-      auto tp = type( type_func, T, { OOO2T } );
-
-      bel. append( belief( bel_def, identifier( ) + "strict", s3, tp ));
-   }
-
-   // stricton1 :
-
-   {
-     auto s1 = implies(
-        apply( 2_db, { 0_db } ),
-        prop( apply( 1_db, { 0_db } )));
-
-      s1 = forall( {{ "x1", O }}, s1 );
-      s1 = lambda( {{ "P", O2T }, { "Q", O2T }}, s1 );
-
-      auto tp = type( type_func, T, { O2T, O2T } );
-
-      bel. append( belief( bel_def, identifier( ) + "stricton", s1, tp ));
-   }
-
-   // stricton2 : 
-
-   {
-      auto s2 = implies( 
-        apply( 3_db, { 1_db, 0_db } ),
-        prop( apply( 2_db, { 1_db, 0_db } )));
-
-      s2 = forall( {{ "x1", O }, { "x2", O }}, s2 );
-      s2 = lambda( { { "P", OO2T }, { "Q", OO2T } }, s2 );
-
-      auto tp = type( type_func, T, { OO2T, OO2T } );
-
-      bel. append( belief( bel_def, identifier( ) + "stricton", s2, tp ));
-   }
-
-   // stricton3 :
-
-   {
-      auto s3 = implies(
-        apply( 4_db, { 2_db, 1_db, 0_db } ),
-        prop( apply( 3_db, { 2_db, 1_db, 0_db } )));
-
-      s3 = forall( {{ "x1", O }, { "x2", O }, { "x3", O }}, s3 );
-      s3 = lambda( { { "P", OOO2T }, { "Q", OOO2T } }, s3 );
-
-      auto tp = type( type_func, T, { OOO2T, OOO2T } );
-
-      bel. append( belief( bel_def, identifier( ) + "stricton", s3, tp ));
-   }
-
-   // prod2 :
-
-   {
-      auto prod2 = apply( 3_db, { 1_db } ) && apply( 2_db, { 0_db } );
-      prod2 = lambda( {{ "x1", O }, { "x2", O }}, prod2 );
-      prod2 = lambda( {{ "P1", O2T }, { "P2", O2T }}, prod2 );
-
-      auto tp = type( type_func, type( type_func, T, { O, O } ), { O2T, O2T } );
-
-      bel. append( belief( bel_def, identifier( ) + "prod", prod2, tp ));
-   }
-
-   // prod3 :
-
-   {
-      auto prod3 = apply( 5_db, { 2_db } ) && apply( 4_db, { 1_db } ) && 
-                   apply( 3_db, { 0_db } );
-      prod3 = lambda( {{ "x1", O }, { "x2", O }, { "x3", O }}, prod3 );
-      prod3 = lambda( {{ "P1", O2T }, { "P2", O2T }, { "P3", O2T }}, prod3 ); 
-
-      auto tp = type( type_func, type( type_func, T, { O, O, O } ), { O2T, O2T, O2T } );
-    
-      bel. append( belief( bel_def, identifier( ) + "prod", prod3, tp ));
-   }
-
-}
-
-
-void tests::add_function( logic::beliefstate& bel )
-{
-#if 0
-   using namespace logic;
-
-   auto O = type( type_obj );
-   auto T = type( type_truthval );
-
-   auto O2T = type( type_func, T, { O } );
-   auto OO2T = type( type_func, T, { O, O } );
-   auto OOO2T = type( type_func, T, { O, O, O } );
-
-   auto O2O = type( type_func, O, { O } );
-   auto OO2O = type( type_func, O, { O, O } );
-   auto OOO2O = type( type_func, O, { O, O, O } );
-
-   // function1 :
-
-   {
-      auto bod = forall( { "x_1", O }, 
-         implies( apply( 3_db, { 0_db } ), 
-                  apply( 2_db, { apply( 1_db, { 0_db } ) } )));
-
-      bod = lambda( { { "P", O2T }, { "Q", O2T }, { "f", O2O } }, bod );
-
-      bel. add( identifier( ) + "function", belief( bel_def, bod, 
-          type( type_func, T, { O2T, O2T, O2O } )) );
-   }
-
-   // function2:
-
-   {
-      auto bod = forall( { "x_1", O }, forall( { "x_2", O }, 
-         implies( apply( 4_db, { 1_db, 0_db } ),
-                  apply( 3_db, { apply( 2_db, { 1_db, 0_db } ) } ))));
-
-      bod = lambda( { { "P", OO2T }, { "Q", O2T }, { "f", OO2O } }, bod );
-
-      bel. add( identifier( ) + "function", belief( bel_def, bod,
-          type( type_func, T, { OO2T, O2T, OO2O } )) );
-   }
-
-   // function3:
-
-   {
-      auto bod = forall( { "x_1", O }, forall( { "x_2", O }, forall( { "x_3", O }, 
-         implies( apply( 5_db, { 2_db, 1_db, 0_db } ),
-                  apply( 4_db, { apply( 3_db, { 2_db, 1_db, 0_db } ) } )))));
-
-      bod = lambda( { { "P", OOO2T }, { "Q", O2T }, { "f", OOO2O } }, bod );
-
-      bel. add( identifier( ) + "function", belief( bel_def, bod,
-          type( type_func, T, { OOO2T, O2T, OOO2O } )) );
-   }
-#endif
-}
 
 
 void tests::add_unique( logic::beliefstate& blfs )
 {
-#if 0
    using namespace logic;
 
    auto O = type( type_obj );
    auto T = type( type_truthval );
    auto O2T = type( type_func, T, { O } );
-
-   {
-      auto atleast = forall( { "y", O }, apply( 1_db, { 0_db } ));
-      atleast = lambda( { { "P", O2T } }, atleast );
-
-      blfs. add( identifier( ) + "atleastone", belief( bel_def, atleast,  
-         type( type_func, T, { O2T } ) ));
-   }
-
-   {
-      auto atmost = forall( { "x1", O }, forall( { "x2", O },
-         implies( apply( 2_db, { 1_db } ) && apply( 2_db, { 0_db } ),
-                  1_db == 0_db )));
-      atmost = lambda( { { "P", O2T } }, atmost );
-
-      blfs. add( identifier( ) + "atmostone", belief( bel_def, atmost,  
-         type( type_func, T, { O2T } ) ));
-   }
 
    auto un = forall( { "P", O2T },
                  lazy_implies( apply( "strict"_unchecked, { 0_db } ), 
@@ -234,7 +40,6 @@ void tests::add_unique( logic::beliefstate& blfs )
    auto tp = type( type_func, T, { type( type_func, O, { O2T } ) } );
 
    blfs. add( identifier( ) + "unique", belief( bel_def, un, tp ));
-#endif
 }
 
 
@@ -353,7 +158,6 @@ void tests::add_settheory( logic::beliefstate& blfs )
                      apply( "setlike"_unchecked, { 2_db, 0_db } ), powset );
    powset = lazy_implies( apply( "strict"_unchecked, { 1_db } ), powset );
    powset = forall( {{ "P", O2T }, { "Q", O2T }}, powset );
-
 
    auto settheory = lambda( {{ "t", type( type_unchecked, identifier( ) + "Settheory" ) }}, 
       lazy_and( typed, empty && singleton && setunion && repl && ext && bij && powset ));
@@ -890,67 +694,6 @@ void tests::add_seq( logic::beliefstate& blfs )
    }
 }
 
-
-void tests::structural( logic::beliefstate& blfs )
-{
-   using namespace logic;
-   
-   auto prod = blfs. at( exact(0));
-   // std::cout << prod << "\n";
-
-   errorstack err; 
-#if 0
-   context ctxt;
-
-   type Seq = type( type_unchecked, identifier( ) + "Seq" );
-   type Zig = type( type_unchecked, identifier( ) + "Zig" );
-   type Zag = type( type_unchecked, identifier( ) + "Zag" );
-
-   auto tm = apply( "0"_unchecked, { 0_db } );
-   tm = apply( "succ"_unchecked, { 0_db, tm } );
-   tm = prop( tm );
-   tm = forall( {{ "x", Seq }}, tm );
-
-   std::cout << tm << "\n";
-   tm. printstate( std::cout );
-
-   auto res = checkandresolve( blfs, err, ctxt, tm );
-
-   if( res. has_value( ))
-      std::cout << "type = " << res. value( ) << "\n";
-   else
-      std::cout << "(no type)\n";
-
-   std::cout << err << "\n";
-
-   std::cout << "tm after checking = " << tm << "\n";
-   tm. printstate( std::cout );
-
-   auto tm1 = apply( "0"_unchecked, { 0_db } );
-   auto tm2 = apply( "succ"_unchecked, { 1_db } );
-   tm = apply( "Seq"_unchecked, { tm1, tm2 } );
-   
-   tm = term( op_equals, 0_db, tm );
-
-   tm = lambda( {{ "x", Seq }, { "y", Seq }}, tm );
-   std::cout << "\n\n";
-   std::cout << tm << "\n";
-
-   res = checkandresolve( blfs, err, ctxt, tm );
-
-   if( res. has_value( ))
-      std::cout << "type = " << res. value( ) << "\n";
-   else
-      std::cout << "(no type)\n";
-
-   std::cout << err << "\n";
-
-   if( ctxt. size( ) > 0 )
-      throw std::runtime_error( "context not restored" );
-#endif
-
-   checkandresolve( blfs, err );
-}
 
 
 #if 0

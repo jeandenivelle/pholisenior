@@ -11,11 +11,11 @@ void logic::type::print( std::ostream& out ) const
    switch( sel( ))
    {
    case type_truthval:
-      out << 'T';
+      out << "Form";
       break;
 
    case type_obj:
-      out << 'O';
+      out << "Obj";
       break;
 
    case type_struct:

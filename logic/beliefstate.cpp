@@ -1,6 +1,6 @@
 
 #include "beliefstate.h"
-#include "termoperators.h"
+#include "pretty.h"
 
 logic::exact logic::beliefstate::append( belief&& bl )
 {
@@ -120,7 +120,10 @@ void logic::beliefstate::print( std::ostream& out ) const
 {
    out << "Beliefstate:\n"; 
    for( size_t i = 0; i != vect. size( ); ++ i )
-      out << "   " << exact(i) << " : " << vect[i] << "\n";
+   {
+      out << "   " << exact(i);
+      pretty::print( out, *this, vect[i] );
+   }
    out << "\n";
 
    out << "Functions:\n";
