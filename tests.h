@@ -10,9 +10,6 @@ namespace tests
 
    void add_settheory( logic::beliefstate& );
 
-   void add_seq( logic::beliefstate& );
-      // Add Seq and natural numbers. 
-
    void add_unique( logic::beliefstate& );
 
    void add_proof( logic::beliefstate& blfs );

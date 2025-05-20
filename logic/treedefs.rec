@@ -117,7 +117,7 @@
 
 %option field { bel_fld } => sdef : exact, offset : size_t 
    // The meanings are:
-   //    structtype is the exact structural type that we belong to,
+   //    sdef is the exact structural type that we belong to,
    //    and offset is our index in this struct.
 
 %option constr { bel_constr } => # tp : exact

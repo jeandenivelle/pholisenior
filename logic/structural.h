@@ -17,10 +17,12 @@
 namespace logic
 {
 
-   void
-   checkandresolve( beliefstate& everything, errorstack& err );
-      // Structurally check the beliefs.
-      // The beliefstate is not const, because we resolve overloads.
+   void checkandresolve( const beliefstate& blfs, 
+                         belief& bel, errorstack& err );
+      // blfs is const, but bel is a member of blds which is not
+      // const. We are likely to change bel because we resolve overloads.
+
+   void checkandresolve( beliefstate& everything, errorstack& err );
 
    void uncheck( type& tp );
       // Make type tp unchecked.
@@ -28,8 +30,11 @@ namespace logic
    void uncheck( term& t );
       // Make term t unchecked.
 
+
    logic::term
    replace_debruijn( indexedstack< std::string, size_t > & db, term t );
+
+   logic::term replace_debruijn( term t );
 
    // Technically seen, we should return std::optional<T> ,
    // where T is some unit type. 
@@ -45,6 +50,9 @@ namespace logic
       // Check and resolve overloads. 
       // We won't look at dependencies. Dependencies are checked by a separate
       // function. 
+
+   std::optional<type >
+   checkandresolve( const beliefstate& blfs, errorstack& errors, term& t );
    
    std::optional< type >
    try_apply( type ftype, const std::vector< type > & argtypes, size_t pos );

@@ -77,6 +77,15 @@ namespace logic
 
       bool contains( exact id ) const
          { return id. nr < vect. size( ); } 
+
+      using iterator = std::vector< belief > :: iterator;
+      using const_iterator = std::vector< belief > :: const_iterator;
+
+      iterator begin( ) { return vect. begin( ); }
+      iterator end( ) { return vect. end( ); }
+
+      const_iterator begin( ) const { return vect. begin( ); }
+      const_iterator end( ) const { return vect. end( ); }
  
       void print( std::ostream& out ) const;
    };

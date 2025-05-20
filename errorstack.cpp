@@ -7,7 +7,7 @@ void error::print( indentation ind, std::ostream& out ) const
    switch( ser )
    {
    case error::header:
-      break; 
+      out << ind; break; 
 
    case error::warning: 
       out << ind << "warning: "; break;

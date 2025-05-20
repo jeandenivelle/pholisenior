@@ -52,7 +52,7 @@ parsing::tokenizer::buildclassifier()
    cls.insert( word( "def" ), symbolval::sym_DEF );
    cls.insert( word( "symbol" ), symbolval::sym_SYMBOL );
 
-   cls.insert( word( "theorem" ), symbolval::sym_THEOREM );
+   cls.insert( word( "thm" ), symbolval::sym_THM );
    cls.insert( word( "axiom" ), symbolval::sym_AXIOM );
    cls.insert( word( "suppose" ), symbolval::sym_SUPPOSE );
 

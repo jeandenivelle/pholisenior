@@ -50,7 +50,6 @@ logic::pretty::getattractions( logic::selector sel )
    throw std::runtime_error( "dont know attraction" );
 }
 
-
 void
 logic::pretty::parentheses::check( attractions attr,
                               std::pair< unsigned int, unsigned int > env )
@@ -110,7 +109,7 @@ void logic::pretty::print( std::ostream& out, const beliefstate& blfs,
       return;
 
    case type_unchecked:
-      out << tp. view_unchecked( ). id( ) << '?';
+      out << '\'' << tp. view_unchecked( ). id( ) << '\'';
       return;
    }
 
@@ -184,7 +183,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
          ++ e;
 
       if(v)
-         out << "; ";
+         out << ", ";
       else
          out << " ";
 
@@ -269,11 +268,11 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
       return;
    
    case op_false:
-      out << "FALSE"; return;
+      out << "FF"; return;
    case op_error:
-      out << "ERROR"; return;
+      out << "EE"; return;
    case op_true:
-      out << "TRUE"; return;
+      out << "TT"; return;
    
    case op_and:
    case op_or:
@@ -415,9 +414,9 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
                 [&q]( size_t i ) { return q. var(i); }, q. size( ));
 
          if( t. sel( ) == op_forall || t. sel( ) == op_kleene_forall )
-            out << " ] : ";
+            out << " ] ";
          if( t. sel( ) == op_exists || t. sel( ) == op_kleene_exists )
-            out << " > : ";
+            out << " > ";
 
          print( out, blfs, names, q. body( ), between( ourattr, env ));
 
@@ -465,12 +464,12 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 
          par.opening( out );
 
-         out << "LAMBDA("; 
+         out << "LAMBDA["; 
 
          auto lamb = t. view_lambda( );
          print( out, blfs, names,
                 [&lamb]( size_t i ) { return lamb. var(i); }, lamb. size( ));
-         out << " ) : ";
+         out << " ] ";
 
          print(out, blfs, names, lamb.body(), between( ourattr, env ));
          par. closing( out );
@@ -635,7 +634,7 @@ logic::pretty::print( std::ostream& out,
 
    case logic::bel_thm:
       {
-         out << "theorem   " << bel. name( ) << " : ";
+         out << "  : theorem ";
          auto thm = bel. view_thm( );
          context ctxt;
          pretty::print( out, blfs, ctxt, thm. form( ));
@@ -654,6 +653,32 @@ logic::pretty::print( std::ostream& out,
          return; 
       }
 
+   case logic::bel_struct:
+      {
+         out << "   : struct\n"; 
+         const auto& def = bel. view_struct( ). def( ); 
+         for( const auto& fld : def )
+         {
+            out << "      " << fld. name << " : ";
+            pretty::print( out, blfs, fld. tp, {0,0} );
+            out << "\n";
+         } 
+         return;
+      }
+
+   case logic::bel_constr:
+      {
+         out << "   : constructor of " << bel. view_constr( ). tp( ) << "\n";
+         return; 
+      }
+
+   case logic::bel_fld:
+      {
+         auto fld = bel. view_field( );
+         out << "   : field #" << fld. offset( ) << " of ";
+         out << fld. sdef( ) << "\n";
+         return;
+      }
    }
    out << "print belief: " << bel. sel( ) << "\n";
    throw std::runtime_error( "unknown selector" );

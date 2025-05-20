@@ -15,7 +15,6 @@
 
 %symbol{ std::vector< logic::term > } ArgSeq
 
-%symbol{ logic::belief } struct_specifier
 %symbol{ logic::type } StructType func 
 %symbol{ std::vector< logic::type > } StructTypeSeq
 
@@ -33,7 +32,7 @@
 %symbol{ logic::fielddecl } FieldDecl 
 %symbol{ logic::structdef } FieldDeclSeq 
 
-%symbol{ } STRUCT END DEF SYMBOL THEOREM AXIOM SUPPOSE
+%symbol{ } STRUCT END DEF SYMBOL THM AXIOM SUPPOSE
 
 %symbol{ } EOF FILEBAD WHITESPACE COMMENT 
 %symbol{ } LPAR RPAR LBRACE RBRACE LBRACKET RBRACKET LEXISTS REXISTS
@@ -49,7 +48,6 @@
 %symbolcode_h { #include <vector> }
 %symbolcode_h { #include <string> }
 %symbolcode_h { #include "logic/type.h" }
-%symbolcode_h { #include "logic/selector.h" }
 %symbolcode_h { #include "identifier.h" }
 %symbolcode_h { #include "logic/beliefstate.h"}
 
@@ -104,8 +102,10 @@
 
 File => 
     | File STRUCT Identifier : id ASSIGN 
-      LBRACE FieldDeclSeq : def RBRACE SEMICOLON
-       { std::cout << "the struct = " << def << "\n"; } 
+      FieldDeclSeq : def END SEMICOLON
+       { 
+          blfs. append( logic::belief( logic::bel_struct, id, def ));
+       }
     | File DEF Identifier : id ParSeqSeq : abstr ASSIGN 
       Term : tm COLON StructType : tp SEMICOLON
        { 
@@ -118,10 +118,11 @@ File =>
          tp = abstract( abstr, std::move(tp) ); 
          blfs. append( logic::belief( logic::bel_symbol, id, tp ));
       }
-    | File THEOREM Identifier : id ParSeqSeq : abstr COLON Term : f SEMICOLON 
+    | File THM Identifier : id ParSeqSeq : abstr COLON Term : f SEMICOLON 
        { 
           f = abstract( abstr, f );
-          blfs. append( logic::belief( logic::bel_thm, id, f )); 
+          blfs. append( 
+                  logic::belief( logic::bel_thm, id, f, logic::proof( ))); 
        } 
     | File AXIOM Identifier : id ParSeqSeq : abstr COLON Term : f SEMICOLON
        { 

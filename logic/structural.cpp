@@ -4,207 +4,205 @@
 #include "kbo.h"
 
 
-void logic::checkandresolve( beliefstate& everything, errorstack& err )
+void 
+logic::checkandresolve( const beliefstate& everything, 
+                        belief& blf, errorstack& err )
 {
-   std::cout << "checking the complete belief state\n";
+   size_t errstart = err. size( );
 
-   for( size_t nr = 0; nr != everything. size( ); ++ nr )
+   switch( blf. sel( ))
    {
-      auto& blf = everything. at( exact( nr )); 
-
-      size_t errstart = err. size( );
-
-      switch( blf. sel( ))
+   case bel_struct:
       {
-      case bel_struct:
+         auto str = blf. view_struct( ). extr_def( );
+            // We need to extract the complete struct def. Frightening! 
+
+         for( auto& fld : str )
          {
-            auto str = blf. view_struct( ). extr_def( );
-               // We need to extract the complete struct def. Frightening! 
-
-            for( auto& fld : str )
-            {
-               checkandresolve( everything, err, fld. tp );
-               if( err. size( ) > errstart )
-               {
-                  throw std::runtime_error( "struct type is not OK" );
-               }
-            }
-
-            blf. view_struct( ). update_def( std::move( str ));
+            size_t errstartfield = err. size( );
  
-            const auto& ident = blf. name( );
-            if( everything. getstructdefs( ident ). size( ) > 1 )
-            {
-               throw std::runtime_error( "type has more than one def" );
-            }
-
-            break;
-         }
-
-      case bel_symbol:
-         {
-            auto sym = blf. view_symbol( );
-            auto tp = sym. extr_tp( );
-            checkandresolve( everything, err, tp ); 
-            sym. update_tp( tp );
-
-            if( err. size( ) > errstart )
+            checkandresolve( everything, err, fld. tp );
+            if( err. size( ) > errstartfield ) 
             {
                errorstack::builder bld;
-               bld << "In declaration of symbol " << blf. name( ) << ":";
-               err. addheader( errstart, std::move( bld ));
+               bld << "In type of field " << fld. name << ":";
+               err. addheader( errstartfield, std::move( bld ));
             }
-
-            break;
-         }  
-
-      case bel_def:
-         {
-            auto def = blf. view_def( );
-            {
-               auto tp = def. extr_tp( );
-               checkandresolve( everything, err, tp );
-               def. update_tp( tp );
-            }
-
-            {
-               auto tm = def. extr_val( );
-
-               indexedstack< std::string, size_t > debruijn;
-               tm = replace_debruijn( debruijn, std::move(tm) );
-               if( debruijn. size( ) > 0 )
-                  throw std::logic_error( "non-empty De Bruijn stack after check" );
-               
-               context ctxt;
-               auto tp = checkandresolve( everything, err, ctxt, tm );
-
-               if( ctxt. size( ) > 0 )
-                  throw std::logic_error( "non-empty context after check" );
-
-               if( tp. has_value( ) && !equal( tp. value( ), def. tp( )))
-               {
-                  errorstack::builder bld;
-                  bld << "Declared type differs from true type:\n";
-                  bld << "Declared :   "; 
-                  pretty::print( bld, everything, def. tp( ), {0,0} );
-                  bld << "\n";
-                  bld << "True :   ";
-                  pretty::print( bld, everything, tp. value( ), {0,0} ); 
-                  err. push( std::move( bld ));   
-               }
-               def. update_val( tm );
-            }
-
-            if( err. size( ) > errstart )
-            {
-               errorstack::builder bld;
-               bld << "In definition of " << blf. name( ) << ":";
-               err. addheader( errstart, std::move( bld ));
-            }
-            break; 
-         } 
-
-      case bel_thm:
-         {
-            auto thm = blf. view_thm( );
-            auto form = thm. extr_form( );
-            context ctxt;
-            throw std::runtime_error( "nicht fertig" );
-            // auto tp = checkandresolve( everything, err, ctxt, form );
-            thm. update_form( form );
-
-#if 0
-            if( tp. has_value( ) && tp. value( ). sel( ) != type_truthval )
-            {
-               throw std::runtime_error( "theorem not well-typed" );
-            }
-
-            if( err. size( ) > errstart )
-            {
-               errorstack::builder bld;
-               bld << "In formula " << blf. name( ) << ": ";
-               err. addheader( errstart, std::move( bld ));
-            }
-#endif
-            break;
          }
 
-      case bel_supp:
+         blf. view_struct( ). update_def( std::move( str ));
+ 
+         const auto& ident = blf. name( );
+         if( everything. getstructdefs( ident ). size( ) > 1 )
          {
-            auto sp = blf. view_supp( );
-            auto fm = sp. extr_form( );
-
-            indexedstack< std::string, size_t > debruijn;
-            fm = replace_debruijn( debruijn, std::move(fm) );
-            if( debruijn. size( ) > 0 )
-                throw std::logic_error( "non-empty De Bruijn stack after check" );
-
-            context ctxt;
-            auto tp = checkandresolve( everything, err, ctxt, fm );
-            if( ctxt. size( ) > 0 )
-               throw std::logic_error( "non empty context after type check" );
-
-            sp. update_form( fm );
-
-            if( tp. has_value( ) && tp. value( ). sel( ) != type_truthval )
-            {
-               errorstack::builder bld;
-               bld << "Supposed formula " << blf. name( );
-               bld << " does not have type Form, ";
-               bld << "instead it has type ";
-               pretty::print( bld, everything, tp. value( ), {0,0} );
-               bld << "\n";
-               err. push( std::move( bld )); 
-            }
-
-            if( err. size( ) > errstart )
-            {
-               errorstack::builder bld;
-               bld << "In supposed formula " << blf. name( ) << ": ";
-               err. addheader( errstart, std::move( bld ));
-            }
-
-            break;
+            errorstack::builder bld;
+            bld << "identifier " << ident << " has more than one structdef";
+            err. push( std::move( bld ));
          }
 
-      case bel_fld:
+         if( err. size( ) > errstart )
          {
-            // There is not much to check because field functions
-            // are automatically generated from the struct definitions.
-
-            auto sdef = blf. view_field( ). sdef( );
-            if( everything. at( sdef ). sel( ) != bel_struct )
-            {
-               // This means that the data structure is corrupted:
-
-               throw std::logic_error( "field does not refer to struct" );
-            }
-
-            break; 
+             errorstack::builder bld;
+             bld << "In definition of struct " << blf. name( ) << ":";
+             err. addheader( errstart, std::move( bld ));
          }
-
-      case bel_constr:
-         {
-            // There is not much to check.
-
-            auto sdef = blf. view_constr( ). tp( );
-            if( everything. at( sdef ). sel( ) != bel_struct )
-            {
-               // This means that the data structure is corrupted. 
-               throw std::runtime_error( "constr does not construct struct" );
-            }            
-
-            break;
-         }
-
-      default:
-         std::cout << "checkstructure not implemented for ";
-         std::cout << blf. sel( ) << "\n";
-         throw std::runtime_error( "quitting" );
+         return;
       }
+
+   case bel_symbol:
+      {
+         auto sym = blf. view_symbol( );
+         auto tp = sym. extr_tp( );
+         checkandresolve( everything, err, tp ); 
+         sym. update_tp( tp );
+
+         if( err. size( ) > errstart )
+         {
+            errorstack::builder bld;
+            bld << "In declaration of symbol " << blf. name( ) << ":";
+            err. addheader( errstart, std::move( bld ));
+         }
+
+         return;
+      }  
+
+   case bel_def:
+      {
+         auto def = blf. view_def( );
+         {
+            auto tp = def. extr_tp( );
+            checkandresolve( everything, err, tp );
+            def. update_tp( tp );
+         }
+
+         {
+            auto tm = def. extr_val( );
+
+            tm = replace_debruijn( std::move(tm));
+            auto tp = checkandresolve( everything, err, tm );
+            def. update_val( tm );
+
+            if( tp. has_value( ) && !equal( tp. value( ), def. tp( )))
+            {
+               errorstack::builder bld;
+               bld << "Declared type differs from true type:\n";
+               bld << "Declared :   "; 
+               pretty::print( bld, everything, def. tp( ), {0,0} );
+               bld << "\n";
+               bld << "True :   ";
+               pretty::print( bld, everything, tp. value( ), {0,0} ); 
+               err. push( std::move( bld ));   
+            }
+         }
+
+         if( err. size( ) > errstart )
+         {
+            errorstack::builder bld;
+            bld << "In definition of " << blf. name( ) << ":";
+            err. addheader( errstart, std::move( bld ));
+         }
+         return; 
+      } 
+
+   case bel_thm:
+      {
+         auto thm = blf. view_thm( );
+         auto form = thm. extr_form( );
+         form = replace_debruijn( std::move( form ));
+         auto tp = checkandresolve( everything, err, form );
+         thm. update_form( form );
+
+         if( tp. has_value( ) && tp. value( ). sel( ) != type_truthval )
+         {
+            throw std::runtime_error( "theorem not well-typed" );
+         }
+
+         if( err. size( ) > errstart )
+         {
+            errorstack::builder bld;
+            bld << "In theorem " << blf. name( ) << ": ";
+            err. addheader( errstart, std::move( bld ));
+         }
+         return;
+      }
+
+   case bel_supp:
+      {
+         auto sp = blf. view_supp( );
+         auto fm = sp. extr_form( );
+
+         fm = replace_debruijn( std::move(fm) );
+
+         context ctxt;
+         auto tp = checkandresolve( everything, err, ctxt, fm );
+         if( ctxt. size( ) > 0 )
+            throw std::logic_error( "non empty context after type check" );
+
+         sp. update_form( fm );
+
+         if( tp. has_value( ) && tp. value( ). sel( ) != type_truthval )
+         {
+            errorstack::builder bld;
+            bld << "Supposed formula " << blf. name( );
+            bld << " does not have type Form, ";
+            bld << "instead it has type ";
+            pretty::print( bld, everything, tp. value( ), {0,0} );
+            bld << "\n";
+            err. push( std::move( bld )); 
+         }
+
+         if( err. size( ) > errstart )
+         {
+            errorstack::builder bld;
+            bld << "In supposed formula " << blf. name( ) << ": ";
+            err. addheader( errstart, std::move( bld ));
+         }
+
+         return;
+      }
+
+   case bel_fld:
+      {
+         // There is not much to check because field functions
+         // are automatically generated from the struct definitions.
+
+         auto sdef = blf. view_field( ). sdef( );
+         if( everything. at( sdef ). sel( ) != bel_struct )
+         {
+            // This means that the data structure is corrupted:
+
+            throw std::logic_error( "field does not refer to struct" );
+         }
+
+         return; 
+      }
+
+   case bel_constr:
+      {
+         // Again, there is not much to check.
+
+         auto sdef = blf. view_constr( ). tp( );
+         if( everything. at( sdef ). sel( ) != bel_struct )
+         {
+            // This means that the data structure is corrupted. 
+            throw std::runtime_error( "constr does not construct struct" );
+         }            
+
+         return;
+      }
+
+   default:
+      std::cout << "checkstructure not implemented for ";
+      std::cout << blf. sel( ) << "\n";
+      throw std::runtime_error( "quitting" );
    }
 }
 
+void logic::checkandresolve( beliefstate& everything, errorstack& err )
+{
+   for( auto& bel : everything )
+      checkandresolve( everything, bel, err );
+}
 
 namespace
 {
@@ -358,6 +356,17 @@ logic::replace_debruijn( indexedstack< std::string, size_t > & db, term t )
    throw std::logic_error( "replace De Bruijn: unhandled selector" ); 
 }
 
+logic::term logic::replace_debruijn( term t ) 
+{
+   indexedstack< std::string, size_t > debruijn;
+   t = replace_debruijn( debruijn, std::move(t));
+
+   if( debruijn. size( ) > 0 )
+      throw std::logic_error( "non-empty De Bruijn stack after check" );
+
+   return t;
+}
+
 bool 
 logic::checkandresolve( const beliefstate& blfs, errorstack& errors, type& tp ) 
 {
@@ -449,6 +458,16 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors, type& tp )
    throw std::runtime_error( "not implemented for this case" );
 }
 
+std::optional< logic::type >
+logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
+                        term& t )
+{
+   context ctxt;
+   auto tp = checkandresolve( blfs, errors, ctxt, t );
+   if( ctxt. size( ) > 0 )
+      throw std::logic_error( "non empty context after type check" );
+   return tp;
+}
 
 namespace logic
 {

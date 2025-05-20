@@ -1,0 +1,34 @@
+
+struct Seq := 
+   0 : Obj;
+   succ : Obj( Obj );
+end;
+
+def isclosed( s: Seq ) ( P: Form(Obj) ) :=
+    P( s.0 ) & [ x: Obj ] P( x ) -> P( s. succ( x )) : Form;
+
+def gen( s : Seq )( x : Obj ) :=
+   [ P : Form( Obj ) ] { strict(P) } -> s. isclosed(P) -> P(x) : Form ;
+
+thm induction : [ s: Seq, Q: Form(Obj) ] 
+   { stricton( s. gen, Q ) } -> Q( s.0 ) -> 
+      ( [ x: Obj ] { s. gen(x) } -> Q( x ) -> Q( s. succ( x ))) -> 
+         [ x: Obj ] { s. gen(x) } -> Q( x );
+
+def homrel( s1,s2: Seq )( P: Form(Obj,Obj) ) :=
+   P( s1.0, s2.0 ) & [ x1,x2: Obj ] { s1. gen( x1 ) & s2. gen( x2 ) } -> 
+        P( x1, x2 ) -> P( s1. succ( x1 ), s2. succ(x2) ) : Form; 
+
+def minhomrel( s1,s2: Seq )( x1,x2: Obj ) :=
+   [ P: Form(Obj,Obj) ] { stricton( prod( s1. gen, s2. gen ), P ) } -> 
+      homrel( s1, s2, P ) -> P( x1, x2 ) : Form ;
+
+thm just : [ s1,s2: Seq ] [ x1,x2: Obj ] 
+   { s1. gen(x1) & s2.gen(x2) } -> minhomrel( s1, s2, x1, x2 ) -> 
+      x1 == s1.0 & x2 == s2.0 | 
+      < y1,y2: Obj > { s1. gen( y1 ) & s2. gen( y2 ) } & 
+          minhomrel( s1, s2, y1, y2 ) & 
+             x1 == s1. succ( y1 ) & x2 == s2. succ( y2 );
+
+
+

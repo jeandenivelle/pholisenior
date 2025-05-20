@@ -121,7 +121,7 @@ void logic::beliefstate::print( std::ostream& out ) const
    out << "Beliefstate:\n"; 
    for( size_t i = 0; i != vect. size( ); ++ i )
    {
-      out << "   " << exact(i);
+      out << vect[i]. name( ) << '/' << exact(i) << "   "; 
       pretty::print( out, *this, vect[i] );
    }
    out << "\n";

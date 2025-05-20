@@ -27,8 +27,6 @@ int main( int argc, char* argv[] )
    tests::parser( blfs );
    errorstack err;
 
-   tests::add_seq( blfs );
-
    checkandresolve( blfs, err );
    std::cout << err << "\n";
    std::cout << blfs << "\n";
