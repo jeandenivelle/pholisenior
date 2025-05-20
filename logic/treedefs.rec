@@ -105,16 +105,15 @@
 
 %option empty { bel_empty } => 
 %option struct { bel_struct } => def : structdef 
-%option decl { bel_decl } => tp : type 
+%option symbol { bel_symbol } => tp : type 
 %option def { bel_def } => val : term, tp : type
 
 %option thm { bel_thm } => form : term, prf : proof
-%option asm { bel_asm } => form : term, prf : proof
-   // Assumption has proof of #F. Theorem has proof of
+%option axiom { bel_axiom } => form : term, prf : proof
+   // An axiom has proof of #F. A theorem has a proof of
    // #F * F.
-
-%option form { bel_form } => form : term
-   // form is used only in refutation proofs.
+%option supp { bel_supp } => form : term
+   // supp (suppose) is used only in refutation proofs.
 
 %option field { bel_fld } => sdef : exact, offset : size_t 
    // The meanings are:

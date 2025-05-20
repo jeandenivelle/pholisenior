@@ -50,11 +50,11 @@ logic::exact logic::beliefstate::append( belief&& bl )
          return exstruct;
       }      
 
-   case bel_decl:
+   case bel_symbol:
    case bel_def: 
    case bel_thm:
-   case bel_asm:
-   case bel_form:
+   case bel_axiom:
+   case bel_supp:
       {
          exact ex = exact( vect. size( ));
          functions[ bl. name( ) ]. push_back( ex );

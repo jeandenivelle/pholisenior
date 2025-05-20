@@ -87,7 +87,6 @@ logic::pretty::parentheses::closing( std::ostream& out ) const
 void logic::pretty::print( std::ostream& out, const beliefstate& blfs,
                 const type& tp, std::pair< unsigned int, unsigned int > env ) 
 {
-  
    // The following types are always printed the same:
 
    switch( tp. sel( ))
@@ -121,11 +120,12 @@ void logic::pretty::print( std::ostream& out, const beliefstate& blfs,
    if constexpr( true )
    {
       auto f = tp. view_func( );    
-      out << f. result( ) << '(';
+      print( out, blfs, f. result( ), between( env, {500,0} ));
+      out << '(';
       for( size_t i = 0; i != f. size( ); ++ i )
       {
          if(i) out << ',';
-         out << f. arg(i);
+         print( out, blfs, f. arg(i), {0,0} );
       }
       out << ')';
    }
@@ -603,15 +603,14 @@ logic::pretty::print( std::ostream& out,
 {
    switch( bel. sel( ))
    {
-#if 0
-   case logic::bel_decl:
+   case logic::bel_symbol:
       {
-         auto decl = bel. view_decl( );
-         pretty::print( out, decl. tp( ) );
+         out << " : ";
+         auto sym = bel. view_symbol( );
+         pretty::print( out, blfs, sym. tp( ), {0,0} );
          out << "\n";
          return;
       }
-#endif
 
    case logic::bel_def:
       {
@@ -645,12 +644,12 @@ logic::pretty::print( std::ostream& out,
          return; 
       }
 
-   case logic::bel_form:
+   case logic::bel_supp:
       {
-         out << "formula   " << bel. name( ) << " : "; 
-         auto fm = bel. view_form( );
+         out << "   : "; 
+         auto sp = bel. view_supp( );
          context ctxt;
-         pretty::print( out, blfs, ctxt, fm. form( ) );
+         pretty::print( out, blfs, ctxt, sp. form( ));
          out << "\n";
          return; 
       }

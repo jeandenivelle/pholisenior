@@ -33,7 +33,7 @@
 %symbol{ logic::fielddecl } FieldDecl 
 %symbol{ logic::structdef } FieldDeclSeq 
 
-%symbol{ } STRUCT END DEF THEOREM ASSUME FORM
+%symbol{ } STRUCT END DEF SYMBOL THEOREM AXIOM SUPPOSE
 
 %symbol{ } EOF FILEBAD WHITESPACE COMMENT 
 %symbol{ } LPAR RPAR LBRACE RBRACE LBRACKET RBRACKET LEXISTS REXISTS
@@ -113,20 +113,25 @@ File =>
           tp = abstract( abstr, std::move(tp) );
           blfs. append( logic::belief( logic::bel_def, id, tm, tp )); 
        }
-    | File THEOREM Identifier : Id ParSeqSeq : abstr COLON Term : tm SEMICOLON 
+    | File SYMBOL Identifier : id ParSeqSeq : abstr COLON StructType : tp SEMICOLON 
+      {
+         tp = abstract( abstr, std::move(tp) ); 
+         blfs. append( logic::belief( logic::bel_symbol, id, tp ));
+      }
+    | File THEOREM Identifier : id ParSeqSeq : abstr COLON Term : f SEMICOLON 
        { 
-          tm = abstract( abstr, tm );
-          std::cout << "theorem = " << tm << "\n"; 
+          f = abstract( abstr, f );
+          blfs. append( logic::belief( logic::bel_thm, id, f )); 
        } 
-    | File ASSUME Identifier : Id ParSeqSeq : abstr COLON Term : tm SEMICOLON
+    | File AXIOM Identifier : id ParSeqSeq : abstr COLON Term : f SEMICOLON
        { 
-          tm = abstract( abstr, tm );
-          std::cout << "assumption = " << tm << "\n";
+          f = abstract( abstr, f );
+          blfs. append( logic::belief( logic::bel_axiom, id, f )); 
        } 
-    | File FORM Identifier : Id ParSeqSeq : abstr COLON Term : tm SEMICOLON 
+    | File SUPPOSE Identifier : id ParSeqSeq : abstr COLON Term : f SEMICOLON 
        { 
-          tm = abstract( abstr, tm );
-          std::cout << "form = " << tm << "\n";
+          f = abstract( abstr, f );
+          blfs. append( logic::belief( logic::bel_supp, id, f ));  
        }
     | File _recover_ SEMICOLON
        { std::cout << "recovered!!!\n"; } 

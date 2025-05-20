@@ -21,28 +21,6 @@
 #include "parsing/parser.h"
 
 
-
-void tests::add_unique( logic::beliefstate& blfs )
-{
-   using namespace logic;
-
-   auto O = type( type_obj );
-   auto T = type( type_truthval );
-   auto O2T = type( type_func, T, { O } );
-
-   auto un = forall( { "P", O2T },
-                 lazy_implies( apply( "strict"_unchecked, { 0_db } ), 
-                    implies( apply( "atleastone"_unchecked, { 0_db } ) &&
-                             apply( "atmostone"_unchecked, { 0_db } ),
-                           apply( 0_db, { apply( 1_db, { 0_db } ) } ))));
-   un = lambda( {{ "u", type( type_func, O, { O2T } ) }}, un );
-
-   auto tp = type( type_func, T, { type( type_func, O, { O2T } ) } );
-
-   blfs. add( identifier( ) + "unique", belief( bel_def, un, tp ));
-}
-
-
 void tests::add_settheory( logic::beliefstate& blfs )
 {
    using namespace logic;
@@ -181,8 +159,8 @@ void tests::add_proof( logic::beliefstate& blfs )
 
    type Seq = type( type_unchecked, identifier( ) + "Seq" );
 
-   blfs. append( belief( bel_decl, identifier( ) + "s1", Seq ));
-   blfs. append( belief( bel_decl, identifier( ) + "s2", Seq ));
+   blfs. append( belief( bel_symbol, identifier( ) + "s1", Seq ));
+   blfs. append( belief( bel_symbol, identifier( ) + "s2", Seq ));
 
    // We could create more Skolem constants.
 
@@ -205,7 +183,7 @@ void tests::add_proof( logic::beliefstate& blfs )
    std::cout << cls << "\n";
    throw std::runtime_error( "quitting" );
 
-   blfs. append( belief( bel_asm, identifier( ) + "initial", cls, { proof( ) } ));
+   blfs. append( belief( bel_axiom, identifier( ) + "initial", cls, { proof( ) } ));
 #if 0
    cls = term( op_kleene_or, { } );
    cl_view = cls. view_kleeneprop( );

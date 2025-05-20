@@ -37,8 +37,7 @@ namespace logic
    // This is a bit overdone, so we just use bool.
 
    bool
-   checkandresolve( const beliefstate& blfs, errorstack& errors, 
-                    type& tp );
+   checkandresolve( const beliefstate& blfs, errorstack& errors, type& tp );
     
    std::optional< type > 
    checkandresolve( const beliefstate& blfs, errorstack& errors,

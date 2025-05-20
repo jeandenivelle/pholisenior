@@ -204,8 +204,8 @@ void logic::belief::print( std::ostream& out ) const
       out << name( ) << " := " << view_struct( ). def( );
       return;
 
-   case bel_decl:
-      out << "decl " << name( ) << " : " << view_decl( ). tp( );
+   case bel_symbol:
+      out << "symbol " << name( ) << " : " << view_symbol( ). tp( );
       return;
 
    case bel_def:
@@ -220,12 +220,12 @@ void logic::belief::print( std::ostream& out ) const
       out << "theorem " << name( ) << " : " << view_thm( ). form( );
       return;
 
-   case bel_asm:
-      out << "assumption " << name( ) << " : " << view_asm( ). form( );
+   case bel_axiom:
+      out << "axiom " << name( ) << " : " << view_axiom( ). form( );
       return;
 
-   case bel_form:
-      out << "form " << name( ) << " : " << view_form( ). form( );
+   case bel_supp:
+      out << "suppose " << name( ) << " : " << view_supp( ). form( );
       return;
 
    case bel_fld:

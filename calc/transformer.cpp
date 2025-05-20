@@ -85,7 +85,7 @@ calc::transformer::add_initial( logic::beliefstate& blfs, logic::term conj )
    auto name = fresh_ident( blfs, "initial" );
 
    std::cout << name << "\n";
-   auto decl = logic::belief( logic::bel_decl, name,
+   auto decl = logic::belief( logic::bel_symbol, name,
                               logic::type( logic::type_truthval ));
 
    auto pred = blfs. append( std::move( decl ));
@@ -167,7 +167,7 @@ calc::transformer::newpredsym( logic::beliefstate& blfs,
 
    auto pred = fresh_ident( blfs, namebase );
   
-   auto pred_exact = blfs. append( logic::belief( logic::bel_decl, pred, tp ));
+   auto pred_exact = blfs. append( logic::belief( logic::bel_symbol, pred, tp ));
    return pred_exact;
 }
 

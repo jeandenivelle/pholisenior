@@ -3,6 +3,7 @@
 #include "pretty.h"
 #include "kbo.h"
 
+
 void logic::checkandresolve( beliefstate& everything, errorstack& err )
 {
    std::cout << "checking the complete belief state\n";
@@ -15,11 +16,9 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
 
       switch( blf. sel( ))
       {
-
       case bel_struct:
          {
             auto str = blf. view_struct( ). extr_def( );
-            std::cout << str << "\n";
                // We need to extract the complete struct def. Frightening! 
 
             for( auto& fld : str )
@@ -42,24 +41,22 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             break;
          }
 
-#if 0
-      case bel_decl:
+      case bel_symbol:
          {
-               auto decl = onename.second[i]. view_decl( );
-               metastructchecker meta( everything, rk, fullname, decl. tp( ));
+            auto sym = blf. view_symbol( );
+            auto tp = sym. extr_tp( );
+            checkandresolve( everything, err, tp ); 
+            sym. update_tp( tp );
 
-               auto dontcare = meta. check( );
-               if( !meta. good( ))
-               {
-                  errors. extend( );
-                  errors. last( ) << "in declaration " << fullname << " ";  
-                  errors. last( ) << "the type is not well formed ";
-                  errors. last( ) << decl. tp( ); 
-               }
+            if( err. size( ) > errstart )
+            {
+               errorstack::builder bld;
+               bld << "In declaration of symbol " << blf. name( ) << ":";
+               err. addheader( errstart, std::move( bld ));
+            }
 
-               break; 
-            }  
-#endif
+            break;
+         }  
 
       case bel_def:
          {
@@ -72,6 +69,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
 
             {
                auto tm = def. extr_val( );
+
                indexedstack< std::string, size_t > debruijn;
                tm = replace_debruijn( debruijn, std::move(tm) );
                if( debruijn. size( ) > 0 )
@@ -128,6 +126,44 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
                err. addheader( errstart, std::move( bld ));
             }
 #endif
+            break;
+         }
+
+      case bel_supp:
+         {
+            auto sp = blf. view_supp( );
+            auto fm = sp. extr_form( );
+
+            indexedstack< std::string, size_t > debruijn;
+            fm = replace_debruijn( debruijn, std::move(fm) );
+            if( debruijn. size( ) > 0 )
+                throw std::logic_error( "non-empty De Bruijn stack after check" );
+
+            context ctxt;
+            auto tp = checkandresolve( everything, err, ctxt, fm );
+            if( ctxt. size( ) > 0 )
+               throw std::logic_error( "non empty context after type check" );
+
+            sp. update_form( fm );
+
+            if( tp. has_value( ) && tp. value( ). sel( ) != type_truthval )
+            {
+               errorstack::builder bld;
+               bld << "Supposed formula " << blf. name( );
+               bld << " does not have type Form, ";
+               bld << "instead it has type ";
+               pretty::print( bld, everything, tp. value( ), {0,0} );
+               bld << "\n";
+               err. push( std::move( bld )); 
+            }
+
+            if( err. size( ) > errstart )
+            {
+               errorstack::builder bld;
+               bld << "In supposed formula " << blf. name( ) << ": ";
+               err. addheader( errstart, std::move( bld ));
+            }
+
             break;
          }
 
@@ -237,6 +273,8 @@ logic::replace_debruijn( indexedstack< std::string, size_t > & db, term t )
 
    switch ( t. sel( ))
    {
+   case op_debruijn:
+      return t;
 
    case op_unchecked:
       {
@@ -1028,9 +1066,9 @@ logic::try_apply( const beliefstate& blfs, exact name,
             return try_apply( tp, argtypes, 0 );
          }
 
-      case bel_decl:
+      case bel_symbol:
          {
-            const auto& tp = bel. view_decl( ). tp( );
+            const auto& tp = bel. view_symbol( ). tp( );
             return try_apply( tp, argtypes, 0 );
          }
 
