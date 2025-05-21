@@ -271,7 +271,7 @@ namespace
       if( sel == logic::type_obj )
          return { semantics::prim_obj, nrobjects };
 
-      if( sel == logic::type_truthval )
+      if( sel == logic::type_form )
          return { semantics::prim_truthval, 3 };
 
       throw std::logic_error( "cannot convert type" );

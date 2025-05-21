@@ -32,7 +32,7 @@
 %symbol{ logic::fielddecl } FieldDecl 
 %symbol{ logic::structdef } FieldDeclSeq 
 
-%symbol{ } STRUCT END DEF SYMBOL THM AXIOM SUPPOSE
+%symbol{ } STRUCT END DEF SYMBOL THM AXIOM FRM
 
 %symbol{ } EOF FILEBAD WHITESPACE COMMENT 
 %symbol{ } LPAR RPAR LBRACE RBRACE LBRACKET RBRACKET LEXISTS REXISTS
@@ -40,7 +40,6 @@
 %symbol{ } NOT PROP
 %symbol{ } AND OR IMPLIES EQUIV 
 %symbol{ } COLON SEMICOLON COMMA DOT SEP
-%symbol{ } FALSE ERROR TRUE
 %symbol{ } LET LAMBDA IN 
 %symbol{ std::string } SCANERROR
 
@@ -129,7 +128,7 @@ File =>
           f = abstract( abstr, f );
           blfs. append( logic::belief( logic::bel_axiom, id, f )); 
        } 
-    | File SUPPOSE Identifier : id ParSeqSeq : abstr COLON Term : f SEMICOLON 
+    | File FRM Identifier : id ParSeqSeq : abstr COLON Term : f SEMICOLON 
        { 
           f = abstract( abstr, f );
           blfs. append( logic::belief( logic::bel_supp, id, f ));  
@@ -385,10 +384,6 @@ ApplTerm =>
                             func, args. begin( ), args. end( )); }
 
 | Identifier : id  { return logic::term( logic::op_unchecked, id ); }
-| FALSE { return logic::term( logic::op_false ); }
-| ERROR { return logic::term( logic::op_error ); }
-| TRUE { return logic::term( logic::op_true ); }
-
 | LPAR Term : tm RPAR { return std::move(tm); } 
 ; 
 

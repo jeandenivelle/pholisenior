@@ -10,7 +10,7 @@ void logic::type::print( std::ostream& out ) const
 {
    switch( sel( ))
    {
-   case type_truthval:
+   case type_form:
       out << "Form";
       break;
 

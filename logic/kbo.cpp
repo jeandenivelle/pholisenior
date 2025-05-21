@@ -6,7 +6,7 @@ logic::kbo::weight_t logic::kbo::weight( const type& tp )
 #if 0
    switch( tp. sel( )) 
    {
-   case type_truthval:
+   case type_form:
    case type_obj:
       return 1;
    case type_ident:
@@ -118,7 +118,7 @@ logic::kbo::topleftright( const type& tp1, const type& tp2 )
  
    switch( tp1. sel()) 
    {
-   case type_truthval:
+   case type_form:
    case type_obj:
       return std::strong_ordering::equal;
 

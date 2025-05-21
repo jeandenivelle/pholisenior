@@ -19,12 +19,36 @@
 #include "logic/pretty.h"
 #include "logic/replacements.h"
 
-#include "parsing/tokenizer.h"
+#include "parsing/parser.h"
+
+void readfromfile( logic::beliefstate& blfs, const std::string& name ) 
+{ 
+   std::ifstream in( name );
+   if( !in )
+   {
+      std::cout << "the file is: " << name << "\n";
+      throw std::runtime_error( "could not open it" );
+   }
+ 
+   lexing::filereader inp( &in, name );
+
+   parsing::tokenizer tok( std::move( inp ));
+   parsing::parser prs( tok, blfs );
+
+   prs. debug = 0;
+   prs. checkattrtypes = 0;
+
+   auto res = prs. parse( parsing::sym_File );
+}
+
 
 int main( int argc, char* argv[] )
 {
-   logic::beliefstate blfs; 
-   tests::parser( blfs );
+   logic::beliefstate blfs;  
+   readfromfile( blfs, "examples/strict_prod.phl" ); 
+   readfromfile( blfs, "examples/natural.phl" );
+   readfromfile( blfs, "examples/automata.phl" );
+
    errorstack err;
 
    checkandresolve( blfs, err );

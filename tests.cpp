@@ -26,7 +26,7 @@ void tests::add_settheory( logic::beliefstate& blfs )
    using namespace logic;
 
    type O = type( logic::type_obj );
-   type T = type( logic::type_truthval );
+   type T = type( logic::type_form );
 
    type O2O = type( type_func, O, { O } );
    type O2T = type( type_func, T, { O } );
@@ -152,7 +152,7 @@ void tests::add_proof( logic::beliefstate& blfs )
    using namespace logic;
 
    type O = type( logic::type_obj );
-   type T = type( logic::type_truthval );
+   type T = type( logic::type_form );
 
    type O2O = type( type_func, O, { O } );
    type O2T = type( type_func, T, { O } );
@@ -197,7 +197,7 @@ void tests::transformations( logic::beliefstate& blfs )
 
    using namespace logic;
    type O = type( logic::type_obj );
-   type T = type( logic::type_truthval );
+   type T = type( logic::type_form );
    type O2T = type( type_func, T, { O } );
    type O2O = type( type_func, O, { O } );
 
@@ -302,7 +302,7 @@ void tests::pretty( const logic::beliefstate& blfs )
    using namespace logic;
 
    auto O = type( type_obj );
-   auto T = type( type_truthval );
+   auto T = type( type_form );
 
    auto N2T = type( type_func, T, { } );
 
@@ -430,7 +430,7 @@ void tests::replacements( )
    using namespace logic;
 
    type O = type( logic::type_obj );
-   type T = type( logic::type_truthval );
+   type T = type( logic::type_form );
    
    type O2O = type( type_func, O, { O } );
    type O2T = type( type_func, T, { O } );
@@ -1341,7 +1341,7 @@ void tests::truthtables( )
    using namespace logic;
 
    auto O = type( type_obj );
-   auto T = type( type_truthval );
+   auto T = type( type_form );
 
    auto O2T = type( type_func, T, { O } );
    auto O2O = type( type_func, O, { O } );

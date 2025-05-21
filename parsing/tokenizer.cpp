@@ -54,11 +54,8 @@ parsing::tokenizer::buildclassifier()
 
    cls.insert( word( "thm" ), symbolval::sym_THM );
    cls.insert( word( "axiom" ), symbolval::sym_AXIOM );
-   cls.insert( word( "suppose" ), symbolval::sym_SUPPOSE );
+   cls.insert( word( "frm" ), symbolval::sym_FRM );
 
-   cls.insert( word( "TRUE" ), symbolval::sym_TRUE );
-   cls.insert( word( "ERROR" ), symbolval::sym_ERROR );
-   cls.insert( word( "FALSE" ), symbolval::sym_FALSE ); 
    cls.insert( word( "LAMBDA" ), symbolval::sym_LAMBDA );
    cls.insert( word( "LET" ), symbolval::sym_LET );
    cls.insert( word( "IN" ), symbolval::sym_IN );

@@ -86,7 +86,7 @@ calc::transformer::add_initial( logic::beliefstate& blfs, logic::term conj )
 
    std::cout << name << "\n";
    auto decl = logic::belief( logic::bel_symbol, name,
-                              logic::type( logic::type_truthval ));
+                              logic::type( logic::type_form ));
 
    auto pred = blfs. append( std::move( decl ));
  
@@ -156,7 +156,7 @@ calc::transformer::newpredsym( logic::beliefstate& blfs,
 {
 
    auto tp = logic::type( logic::type_func, 
-                logic::type( logic::type_truthval ), { } );
+                logic::type( logic::type_form ), { } );
 
    size_t db = ctxt. size( );
    while( db )

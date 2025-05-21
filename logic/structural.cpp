@@ -112,7 +112,7 @@ logic::checkandresolve( const beliefstate& everything,
          auto tp = checkandresolve( everything, err, form );
          thm. update_form( form );
 
-         if( tp. has_value( ) && tp. value( ). sel( ) != type_truthval )
+         if( tp. has_value( ) && tp. value( ). sel( ) != type_form )
          {
             throw std::runtime_error( "theorem not well-typed" );
          }
@@ -140,7 +140,7 @@ logic::checkandresolve( const beliefstate& everything,
 
          sp. update_form( fm );
 
-         if( tp. has_value( ) && tp. value( ). sel( ) != type_truthval )
+         if( tp. has_value( ) && tp. value( ). sel( ) != type_form )
          {
             errorstack::builder bld;
             bld << "Supposed formula " << blf. name( );
@@ -269,6 +269,10 @@ logic::replace_debruijn( indexedstack< std::string, size_t > & db, term t )
 
    }
 
+   static const identifier ff = identifier( ) + "FF";
+   static const identifier ee = identifier( ) + "EE";
+   static const identifier tt = identifier( ) + "TT";
+
    switch ( t. sel( ))
    {
    case op_debruijn:
@@ -278,14 +282,22 @@ logic::replace_debruijn( indexedstack< std::string, size_t > & db, term t )
       {
          auto un = t. view_unchecked( );
          const auto& id = un. id( );
+
+         if( id == ff )
+            return logic::term( op_false );
+         if( id == ee )
+            return logic::term( op_error );
+         if( id == tt )
+            return logic::term( op_true );
+ 
          if( id. size( ) != 1 )
             return t;
  
          auto p = db. find( id. at(0));  
          if( p != db. end( )) 
             return term( op_debruijn, db. size( ) - ( p -> second ) - 1 );
-         else
-            return t;
+
+         return t;
       }
    case op_not:
    case op_prop:
@@ -382,7 +394,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors, type& tp )
  
    switch( tp. sel( ))
    {
-   case type_truthval:
+   case type_form:
    case type_obj:
       return true;
  
@@ -399,7 +411,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors, type& tp )
 
          if( id. id( ) == F )
          {
-            tp = type( type_truthval );
+            tp = type( type_form );
             return true;
          }
  
@@ -571,7 +583,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
    case op_false:
    case op_error:
    case op_true:
-      return type( type_truthval );
+      return type( type_form );
 
    case op_not:
    case op_prop:
@@ -585,7 +597,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
             un. update_sub( sub );
          }
 
-         if( tp. has_value( ) && tp. value( ). sel( ) != type_truthval )
+         if( tp. has_value( ) && tp. value( ). sel( ) != type_form )
          {
             auto err = errorheader( blfs, ctxt, t );
             err << "argument of logical operator has wrong type ";
@@ -593,7 +605,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
             errors. push( std::move( err ));
          }
 
-         return type( type_truthval );
+         return type( type_form );
       }
 
    case op_and:
@@ -620,7 +632,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
             bin. update_sub2( sub2 );
          }
 
-         if( tp1. has_value( ) && tp1. value( ). sel( ) != type_truthval )
+         if( tp1. has_value( ) && tp1. value( ). sel( ) != type_form )
          {
             auto err = errorheader( blfs, ctxt, t );
             err << "first argument of logical operator has wrong type ";
@@ -628,7 +640,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
             errors. push( std::move( err ));
          }
 
-         if( tp2. has_value( ) && tp2. value( ). sel( ) != type_truthval )
+         if( tp2. has_value( ) && tp2. value( ). sel( ) != type_form )
          {
             auto err = errorheader( blfs, ctxt, t );
             err << "second argument of logical operator has wrong type ";
@@ -636,7 +648,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
             errors. push( std::move( err ));
          }
 
-         return type( type_truthval ); 
+         return type( type_form ); 
       }
 
    case op_equals:
@@ -674,7 +686,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
             errors. push( std::move( err ));
          }
 
-         return type( type_truthval ); 
+         return type( type_form ); 
       }
 
    case op_kleene_and:
@@ -688,7 +700,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
 
             auto tp = checkandresolve( blfs, errors, ctxt, sub );
 
-            if( tp. has_value( ) && tp. value( ). sel( ) != type_truthval )
+            if( tp. has_value( ) && tp. value( ). sel( ) != type_form )
             {
                auto err = errorheader( blfs, ctxt, t );
                err << i << "-th argument of equality must be T, but is ";
@@ -699,7 +711,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
             kl. update_sub( i, sub );
          }
 
-         return type( type_truthval );
+         return type( type_form );
       }
 
    case op_forall:
@@ -730,7 +742,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
             auto err = errorheader( blfs, ctxt, t );  
             err << "In structural type of quantifier:";
             errors. addheader( errstart, std::move( err ));
-            return type( type_truthval ); 
+            return type( type_form ); 
          }
 
          for( size_t i = 0; i != quant. size( ); ++ i )
@@ -750,16 +762,16 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
          // complain:
 
          if( bodytype. has_value( ) &&
-             bodytype. value( ). sel( ) != type_truthval )
+             bodytype. value( ). sel( ) != type_form )
          {
             auto err = errorheader( blfs, ctxt, t );
             err << "body of quantifier does have type T: ";
             pretty::print( err, blfs, bodytype. value( ), {0,0} );
          }
 
-         // Whatever happened, the result is always truthval:
+         // Whatever happened, the result is always form:
 
-         return type_truthval; 
+         return type_form; 
       }
 
    case op_let:
