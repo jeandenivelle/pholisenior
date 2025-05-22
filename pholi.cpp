@@ -46,6 +46,7 @@ int main( int argc, char* argv[] )
 {
    logic::beliefstate blfs;  
    readfromfile( blfs, "examples/strict_prod.phl" ); 
+   readfromfile( blfs, "examples/functional.phl" );
    readfromfile( blfs, "examples/natural.phl" );
    readfromfile( blfs, "examples/automata.phl" );
 
