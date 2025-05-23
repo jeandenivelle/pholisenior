@@ -3,79 +3,205 @@
 #include "pretty.h"
 #include "kbo.h"
 
-
 void 
-logic::checkandresolve( const beliefstate& everything, 
-                        belief& blf, errorstack& err )
+logic::checkformula( const beliefstate& blfs, 
+                     const identifier& name, term& fm, 
+                     const char* descr, errorstack& err )
 {
-   size_t errstart = err. size( );
+   const size_t errstart = err. size( );
 
-   switch( blf. sel( ))
+   fm = replace_debruijn( std::move( fm ));
+   auto tp = checkandresolve( blfs, err, fm );
+
+   if( tp. has_value( ) && tp. value( ). sel( ) != type_form )
    {
-   case bel_struct:
+      errorstack::builder bld;
+      bld << "Formula " << name << " does not have type Form. ";
+      bld << "Instead it has type ";
+      pretty::print( bld, blfs, tp. value( ), {0,0} );
+      err. push( std::move( bld )); 
+   }
+
+   if( err. size( ) > errstart )
+   {
+      errorstack::builder bld;
+      bld << "In " << descr << " " << name << ": ";
+      err. addheader( errstart, std::move( bld ));
+   }
+}
+
+
+void logic::checkandresolve( beliefstate& everything, errorstack& err )
+{
+   // The identifiers that have a repeated struct definition,
+   // that we already complained about. It is a bit tricky
+   // to get out the exact identifier. If it would be easier,
+   // we could check that we are the first overload.
+
+   std::unordered_set< identifier, identifier::hash, identifier::equal_to > 
+      complained;
+
+   for( const auto& blf : everything )
+   {
+      if( blf. sel( ) == bel_struct )
       {
-         auto str = blf. view_struct( ). extr_def( );
-            // We need to extract the complete struct def. Frightening! 
+         const auto& id = blf. name( );
+         const auto& sdef = everything. getstructdefs( id );
 
-         for( auto& fld : str )
-         {
-            size_t errstartfield = err. size( );
- 
-            checkandresolve( everything, err, fld. tp );
-            if( err. size( ) > errstartfield ) 
-            {
-               errorstack::builder bld;
-               bld << "In type of field " << fld. name << ":";
-               err. addheader( errstartfield, std::move( bld ));
-            }
-         }
-
-         blf. view_struct( ). update_def( std::move( str ));
- 
-         const auto& ident = blf. name( );
-         if( everything. getstructdefs( ident ). size( ) > 1 )
+         if( sdef. size( ) > 1 && !complained. contains( id ))
          {
             errorstack::builder bld;
-            bld << "identifier " << ident << " has more than one structdef";
+            bld << "identifier " << id << " has " << sdef. size( ); 
+            bld << " struct-defs: ";
+            for( auto p = sdef. begin( ); p != sdef. end( ); ++ p )
+            {
+               if( p != sdef. begin( ))
+                  bld << ", ";
+               bld << *p;
+            }
+            err. push( std::move( bld ));
+
+            complained. insert( id );
+         }
+
+      }
+   }      
+   complained. clear( );
+
+   // We check that certain identifiers are not used as
+   // struct:
+
+   const static identifier F = identifier( ) + "Form";
+   const static identifier O = identifier( ) + "Obj";
+
+   for( const auto& blf : everything )
+   {
+      if( blf. sel( ) == bel_struct )
+      {
+         const auto& id = blf. name( );
+         if( id == F || id == O )
+         {
+            errorstack::builder bld;
+            bld << "identifier cannot be used for a struct def: " << id;
             err. push( std::move( bld ));
          }
-
-         if( err. size( ) > errstart )
-         {
-             errorstack::builder bld;
-             bld << "In definition of struct " << blf. name( ) << ":";
-             err. addheader( errstart, std::move( bld ));
-         }
-         return;
       }
+   }
 
-   case bel_symbol:
+   // We check and overload structural types:
+
+   for( auto& blf : everything )
+   {
+      size_t errstart = err. size( );
+
+      switch( blf. sel( ))
       {
-         auto sym = blf. view_symbol( );
-         auto tp = sym. extr_tp( );
-         checkandresolve( everything, err, tp ); 
-         sym. update_tp( tp );
-
-         if( err. size( ) > errstart )
+      case bel_struct:
          {
-            errorstack::builder bld;
-            bld << "In declaration of symbol " << blf. name( ) << ":";
-            err. addheader( errstart, std::move( bld ));
+            auto str = blf. view_struct( ). extr_def( );
+               // We need to extract the complete structdef. Frightening! 
+
+            for( auto& fld : str )
+            {
+               size_t errstartfield = err. size( );
+ 
+               checkandresolve( everything, err, fld. tp );
+               if( err. size( ) > errstartfield ) 
+               {
+                  errorstack::builder bld;
+                  bld << "In type of field " << fld. name << ":";
+                  err. addheader( errstartfield, std::move( bld ));
+               }
+            }
+
+            blf. view_struct( ). update_def( std::move( str ));
+ 
+            if( err. size( ) > errstart )
+            {
+                errorstack::builder bld;
+                bld << "In definition of struct " << blf. name( ) << ":";
+                err. addheader( errstart, std::move( bld ));
+            }
          }
+         break;
 
-         return;
-      }  
+      case bel_symbol:
+         {
+            auto sym = blf. view_symbol( );
+            auto tp = sym. extr_tp( );
+            checkandresolve( everything, err, tp ); 
+            sym. update_tp( tp );
 
-   case bel_def:
+            if( err. size( ) > errstart )
+            {
+               errorstack::builder bld;
+               bld << "In declaration of symbol " << blf. name( ) << ":";
+               err. addheader( errstart, std::move( bld ));
+            }
+         }
+         break;
+
+      case bel_def:
+         {
+            // We check the type, but not the term:
+
+            auto def = blf. view_def( );
+            {
+               auto tp = def. extr_tp( );
+               checkandresolve( everything, err, tp );
+               def. update_tp( tp );
+            }
+
+            if( err. size( ) > errstart )
+            {
+               errorstack::builder bld;
+               bld << "In definition of " << blf. name( ) << ":";
+               err. addheader( errstart, std::move( bld ));
+            }
+         }
+         break;
+
+      case bel_fld:
+         {
+            // There is not much to check because field functions
+            // are automatically generated from struct definitions:
+
+            auto sdef = blf. view_field( ). sdef( );
+            if( everything. at( sdef ). sel( ) != bel_struct )
+            {
+               // This actually means that the data structure is rotten:
+
+               throw std::logic_error( "field does not refer to struct" );
+            }
+         }
+         break; 
+
+      case bel_constr:
+         {
+            // Again, there is not much to check.
+
+            auto sdef = blf. view_constr( ). tp( );
+            if( everything. at( sdef ). sel( ) != bel_struct )
+            {
+               // This means that the data structure is corrupted:
+               throw std::runtime_error( "constr does not construct struct" );
+            }            
+         }
+         break;
+      }
+   }
+
+   // Finally, we type check terms:
+
+   for( auto& blf : everything )
+   {
+      size_t errstart = err. size( );
+
+      switch( blf. sel( ))
       {
-         auto def = blf. view_def( );
+      case bel_def:
          {
-            auto tp = def. extr_tp( );
-            checkandresolve( everything, err, tp );
-            def. update_tp( tp );
-         }
-
-         {
+            auto def = blf. view_def( );
             auto tm = def. extr_val( );
 
             tm = replace_debruijn( std::move(tm));
@@ -93,151 +219,47 @@ logic::checkandresolve( const beliefstate& everything,
                pretty::print( bld, everything, tp. value( ), {0,0} ); 
                err. push( std::move( bld ));   
             }
-         }
 
-         if( err. size( ) > errstart )
-         {
-            errorstack::builder bld;
-            bld << "In definition of " << blf. name( ) << ":";
-            err. addheader( errstart, std::move( bld ));
+            if( err. size( ) > errstart )
+            {
+               errorstack::builder bld;
+               bld << "In definition of " << blf. name( ) << ":";
+               err. addheader( errstart, std::move( bld ));
+            }
          }
-         return; 
+         break; 
+
+      case bel_thm:
+         {
+            auto thm = blf. view_thm( ); 
+            term fm = thm. extr_form( );
+            checkformula( everything, blf. name( ), fm, "theorem", err );
+            thm. update_form( fm );
+         }
+         break; 
+
+      case bel_axiom:
+         {
+            auto ax = blf. view_axiom( );
+            term fm = ax. extr_form( );
+            checkformula( everything, blf. name( ), fm, "axiom", err );
+            ax. update_form( fm );
+         }
+         break;
+
+      case bel_supp:
+         {
+            auto sp = blf. view_supp( );
+            auto fm = sp. extr_form( );
+            checkformula( everything, blf. name( ), fm, "supposition", err ); 
+            sp. update_form( fm );
+         }
+         break;
       } 
 
-   case bel_thm:
-      {
-         auto thm = blf. view_thm( );
-         auto form = thm. extr_form( );
-         form = replace_debruijn( std::move( form ));
-         auto tp = checkandresolve( everything, err, form );
-         thm. update_form( form );
-
-         if( tp. has_value( ) && tp. value( ). sel( ) != type_form )
-         {
-            throw std::runtime_error( "theorem not well-typed" );
-         }
-
-         if( err. size( ) > errstart )
-         {
-            errorstack::builder bld;
-            bld << "In theorem " << blf. name( ) << ": ";
-            err. addheader( errstart, std::move( bld ));
-         }
-         return;
-      }
-
-   case bel_supp:
-      {
-         auto sp = blf. view_supp( );
-         auto fm = sp. extr_form( );
-
-         fm = replace_debruijn( std::move(fm) );
-
-         context ctxt;
-         auto tp = checkandresolve( everything, err, ctxt, fm );
-         if( ctxt. size( ) > 0 )
-            throw std::logic_error( "non empty context after type check" );
-
-         sp. update_form( fm );
-
-         if( tp. has_value( ) && tp. value( ). sel( ) != type_form )
-         {
-            errorstack::builder bld;
-            bld << "Supposed formula " << blf. name( );
-            bld << " does not have type Form, ";
-            bld << "instead it has type ";
-            pretty::print( bld, everything, tp. value( ), {0,0} );
-            bld << "\n";
-            err. push( std::move( bld )); 
-         }
-
-         if( err. size( ) > errstart )
-         {
-            errorstack::builder bld;
-            bld << "In supposed formula " << blf. name( ) << ": ";
-            err. addheader( errstart, std::move( bld ));
-         }
-
-         return;
-      }
-
-   case bel_fld:
-      {
-         // There is not much to check because field functions
-         // are automatically generated from the struct definitions.
-
-         auto sdef = blf. view_field( ). sdef( );
-         if( everything. at( sdef ). sel( ) != bel_struct )
-         {
-            // This means that the data structure is corrupted:
-
-            throw std::logic_error( "field does not refer to struct" );
-         }
-
-         return; 
-      }
-
-   case bel_constr:
-      {
-         // Again, there is not much to check.
-
-         auto sdef = blf. view_constr( ). tp( );
-         if( everything. at( sdef ). sel( ) != bel_struct )
-         {
-            // This means that the data structure is corrupted. 
-            throw std::runtime_error( "constr does not construct struct" );
-         }            
-
-         return;
-      }
-
-   default:
-      std::cout << "checkstructure not implemented for ";
-      std::cout << blf. sel( ) << "\n";
-      throw std::runtime_error( "quitting" );
+   
    }
-}
 
-void logic::checkandresolve( beliefstate& everything, errorstack& err )
-{
-   for( auto& bel : everything )
-      checkandresolve( everything, bel, err );
-}
-
-namespace
-{
-   // Returns true if blfs contains a field function for field
-   // fld/offset of struct structname. 
-
-#if 0
-   bool isthere( const logic::beliefstate& blfs,
-                 const logic::fielddef fld, size_t offset, 
-                 normident structname )
-   {
-      // std::cout << "checking presence of field ";
-      // std::cout << fld << "/" << offset << " " << structname << "\n";
-
-      auto p = blfs. find( fld. name );
-
-      if( p == blfs. end( ))
-         return false;
-
-      for( const auto& b : p -> second )
-      {
-         if( b. sel( ) == logic::bel_fld )
-         {
-            auto f = b. view_field( ); 
-            if( equal( f. tp( ), fld. tp ) &&
-                f. parent( ) == structname &&
-                f. offset( ) == offset )
-            {
-               return true; 
-            } 
-         }
-      }
-      return false;
-   }
-#endif
 }
 
 
@@ -721,8 +743,8 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
       {
          auto quant = t. view_quant( );
 
-         size_t contextsize = ctxt. size( );
-         size_t errstart = errors. size( );
+         const size_t contextsize = ctxt. size( );
+         const size_t errstart = errors. size( );
             // If we produce errors, they start here.
 
          bool correct = true;
@@ -765,8 +787,9 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
              bodytype. value( ). sel( ) != type_form )
          {
             auto err = errorheader( blfs, ctxt, t );
-            err << "body of quantifier does have type T: ";
+            err << "body of quantifier does have type Form. Instead it is: ";
             pretty::print( err, blfs, bodytype. value( ), {0,0} );
+            errors. push( std::move( err ));
          }
 
          // Whatever happened, the result is always form:
@@ -916,7 +939,14 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
             {
                auto err = errorheader( blfs, ctxt, t );
                err << "no applicable overload found for " << ident;
-               err << " in application term"; 
+               err << " in application term\n"; 
+               err << "the arguments have types:  ";
+               for( size_t i = 0; i != argtypes. size( ); ++ i )  
+               {
+                  if(i) err << ", ";
+                  logic::pretty::print( err, blfs, argtypes[i], {0,0} ); 
+               }
+
                errors. push( std::move( err )); 
                return { };
             }
@@ -1060,7 +1090,7 @@ logic::try_apply( type ftype,
 
       if( pos + fun. size( ) > argtypes. size( ))
          return { };  
- 
+
       for( size_t i = 0; i != fun. size( ); ++ i )
       {
          if( !is_eq( kbo::topleftright( fun. arg(i), argtypes[ pos ] )))
@@ -1081,89 +1111,97 @@ std::optional< logic::type >
 logic::try_apply( const beliefstate& blfs, exact name, 
                   const std::vector< type > & argtypes, size_t pos )
 {
-#if 0
-   std::cout << "trying to apply belief " << name << " on\n";
-   for( size_t i = pos; i != argtypes. size( ); ++ i )
-      std::cout << "   arg[" << i << "] : " << argtypes[i];
-   std::cout << "\n";
-#endif
+
+   if constexpr( false )
+   {
+      std::cout << "trying to apply belief " << name << " on\n";
+      for( size_t i = pos; i != argtypes. size( ); ++ i )
+         std::cout << "   arg[" << i << "] : " << argtypes[i];
+      std::cout << "\n";
+   }
 
    const auto& bel = blfs. at( name );
    switch( bel. sel( )) 
    {
-      case bel_def: 
-         {
-            const auto& tp = bel. view_def( ). tp( ); 
-            return try_apply( tp, argtypes, 0 );
-         }
+   case bel_def: 
+      {
+         const auto& tp = bel. view_def( ). tp( ); 
+         return try_apply( tp, argtypes, 0 );
+      }
 
-      case bel_symbol:
-         {
-            const auto& tp = bel. view_symbol( ). tp( );
-            return try_apply( tp, argtypes, 0 );
-         }
+   case bel_symbol:
+      {
+         const auto& tp = bel. view_symbol( ). tp( );
+         return try_apply( tp, argtypes, 0 );
+      }
 
-      case bel_fld:
-         {
-            auto fld = bel. view_field( ); 
-            exact structtype = fld. sdef( );
+   case bel_fld:
+      {
+         auto fld = bel. view_field( ); 
+         exact structtype = fld. sdef( );
 
-            const belief& parentblf = blfs. at( structtype );
-               // The belief in the parent.
-            if( parentblf. sel( ) != bel_struct )
-               throw std::runtime_error( "parent type not a structdef" );
+         const belief& parentblf = blfs. at( structtype );
+            // The belief in the parent.
+         if( parentblf. sel( ) != bel_struct )
+            throw std::runtime_error( "parent type not a structdef" );
             
-            const structdef& parentdef = parentblf. view_struct( ). def( ); 
+         const structdef& parentdef = parentblf. view_struct( ). def( ); 
 
-            auto ftype = parentdef. at( fld. offset( )). tp;
-              // Type with which the field was declared.
+         auto ftype = parentdef. at( fld. offset( )). tp;
+           // Type with which the field was declared.
 
-            if( pos == argtypes. size( ))
-            {
-               return type( type_func, ftype, 
-                                       { type( type_struct, structtype ) } );
-            }
+         if( pos == argtypes. size( ))
+         {
+            return type( type_func, ftype, 
+                                    { type( type_struct, structtype ) } );
+         }
            
-            if( pos + 1 <= argtypes. size( ) && 
-                argtypes[ pos ]. sel( ) == type_struct &&
-                argtypes[ pos ]. view_struct( ). def( ) == structtype )
-            {
-               return try_apply( ftype, argtypes, pos + 1 );
-            }
-            return { };
-         }  
-
-      case bel_constr:
+         if( pos + 1 <= argtypes. size( ) && 
+             argtypes[ pos ]. sel( ) == type_struct &&
+             argtypes[ pos ]. view_struct( ). def( ) == structtype )
          {
-            const auto& structblf = 
-               blfs. at( bel. view_constr( ). tp( ));
-                  // Belief in the struct that we are trying to construct.
-
-            if( structblf. sel( ) != bel_struct )
-               throw std::runtime_error( "constructed type not a structdef" );
-
-            const structdef& sdef =
-               structblf. view_struct( ). def( ); 
-
-            if( pos + sdef. size( ) != argtypes. size( ))
-               return { };
-                  // No currying for constructors.
-
-            for( size_t i = 0; i != sdef. size( ); ++ i )
-            {
-               if( !is_eq( kbo::topleftright( sdef. at(i). tp, 
-                                              argtypes[ pos + i ] )))
-               {
-                  return { };
-               }
-
-               std::cout << "check passed " << sdef. at(i). tp << "\n";
-            }
-            
-            return type( type_struct, bel. view_constr( ). tp( )); 
+            return try_apply( ftype, argtypes, pos + 1 );
          }
+
+         return { };
+      }  
+
+   case bel_constr:
+      {
+         const auto& structblf = 
+            blfs. at( bel. view_constr( ). tp( ));
+               // Belief in the struct that we are trying to construct.
+
+         if( structblf. sel( ) != bel_struct )
+            throw std::runtime_error( "constructed type not a structdef" );
+
+         const structdef& sdef =
+            structblf. view_struct( ). def( ); 
+
+         if( pos + sdef. size( ) != argtypes. size( ))
+            return { };
+               // No currying for constructors.
+
+         for( size_t i = 0; i != sdef. size( ); ++ i )
+         {
+            if( !is_eq( kbo::topleftright( sdef. at(i). tp, 
+                                           argtypes[ pos + i ] )))
+            {
+               return { };
+            }
+
+         }
+            
+         return type( type_struct, bel. view_constr( ). tp( )); 
+      }
+
+   case bel_thm:
+   case bel_axiom:
+   case bel_supp:
+      return { };   // They cannot be used in usual terms. 
    }
 
+   std::cout << bel. sel( ) << " " << bel. name( ) << "\n";
    throw std::runtime_error( "try_apply, belief is not implemented" );
 }
 

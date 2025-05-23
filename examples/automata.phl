@@ -24,7 +24,7 @@ def homrel( m1, m2 : Monoid )( P: Form(Obj,Obj) ) :=
       { m2. gen( y1 ) & m2. gen( y2 ) } ->  
         P( x1, y1 ) & P(x2,y2) -> P( m1.prod(x1,x2), m2.prod(y1,y2) ) : Form; 
 
-thm prop : [ m1, m2 : Monoid ] strict(m1) & strict(m2) -> 
+// thm prop : [ m1, m2 : Monoid ] strict(m1) & strict(m2) -> 
    
 
 def minhomrel( m1, m2 : Monoid )( x1,x2: Obj ) :=

@@ -40,7 +40,7 @@
 %symbol{ } NOT PROP
 %symbol{ } AND OR IMPLIES EQUIV 
 %symbol{ } COLON SEMICOLON COMMA DOT SEP
-%symbol{ } LET LAMBDA IN 
+%symbol{ } LET LAMBDA
 %symbol{ std::string } SCANERROR
 
 %symbolcode_h { #include "location.h" }
@@ -126,7 +126,8 @@ File =>
     | File AXIOM Identifier : id ParSeqSeq : abstr COLON Term : f SEMICOLON
        { 
           f = abstract( abstr, f );
-          blfs. append( logic::belief( logic::bel_axiom, id, f )); 
+          blfs. append( logic::belief( logic::bel_axiom, id, f, 
+                                       logic::proof( ))); 
        } 
     | File FRM Identifier : id ParSeqSeq : abstr COLON Term : f SEMICOLON 
        { 
@@ -249,7 +250,7 @@ GreedyPrefTerm => LBRACKET VarTypeSeq : vars RBRACKET Term : body
 {
    return logic::term( logic::op_exists, body, vars. begin( ), vars. end( ));
 }
-| LAMBDA VarTypeSeq : vars IN Term : body
+| LAMBDA LPAR VarTypeSeq : vars RPAR Term : body
 {
    return logic::term( logic::op_lambda, body, vars. begin( ), vars. end( ));
 }

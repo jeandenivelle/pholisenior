@@ -56,9 +56,8 @@ parsing::tokenizer::buildclassifier()
    cls.insert( word( "axiom" ), symbolval::sym_AXIOM );
    cls.insert( word( "frm" ), symbolval::sym_FRM );
 
-   cls.insert( word( "LAMBDA" ), symbolval::sym_LAMBDA );
+   cls.insert( word( "??" ), symbolval::sym_LAMBDA );
    cls.insert( word( "LET" ), symbolval::sym_LET );
-   cls.insert( word( "IN" ), symbolval::sym_IN );
    cls.insert( word( "eof" ), symbolval::sym_EOF );
 
    cls.insert( ( just( ' ' ) | just( '\f' ) | just( '\n' ) | just( '\r' ) | 

@@ -17,10 +17,12 @@
 namespace logic
 {
 
-   void checkandresolve( const beliefstate& blfs, 
-                         belief& bel, errorstack& err );
-      // blfs is const, but bel is a member of blds which is not
-      // const. We are likely to change bel because we resolve overloads.
+   void checkformula( const beliefstate& blfs, 
+                      const identifier& name, term& fm,
+                      const char* descr, errorstack& err );
+      // blfs is const, but at the same time fm occurs in
+      // blfs, which is not const. 
+      // descr is used when an error is produced.
 
    void checkandresolve( beliefstate& everything, errorstack& err );
 

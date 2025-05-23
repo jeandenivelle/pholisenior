@@ -464,12 +464,12 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 
          par.opening( out );
 
-         out << "LAMBDA["; 
+         out << "?? ("; 
 
          auto lamb = t. view_lambda( );
          print( out, blfs, names,
                 [&lamb]( size_t i ) { return lamb. var(i); }, lamb. size( ));
-         out << " ] ";
+         out << " ) ";
 
          print(out, blfs, names, lamb.body(), between( ourattr, env ));
          par. closing( out );
@@ -641,6 +641,16 @@ logic::pretty::print( std::ostream& out,
          // pretty::print( out, names, thm. proof( ) );
          out << "\n";
          return; 
+      }
+
+     case logic::bel_axiom:
+      {
+         out << "   : ";
+         auto ax = bel. view_axiom( );
+         context ctxt;
+         pretty::print( out, blfs, ctxt, ax. form( ));
+         out << "\n";
+         return;
       }
 
    case logic::bel_supp:

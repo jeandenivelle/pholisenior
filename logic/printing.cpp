@@ -23,7 +23,7 @@ void logic::type::print( std::ostream& out ) const
       break;
 
    case type_unchecked:
-      out << view_unchecked( ). id( );
+      out << '\'' << view_unchecked( ). id( ) << '\'';
       break;
 
    case type_func:
