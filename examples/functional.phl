@@ -1,0 +1,48 @@
+
+def atleastone( R : Form( Obj )) := < y : Obj > R(y) : Form;
+def atmostone( R : Form( Obj )) := 
+   [ y1, y2 : Obj ] R(y1) & R(y2) -> y1 == y2 : Form;
+
+symbol the : Obj( Form( Obj ));
+
+axiom the :
+   [ P : Form( Obj ) ]  
+   { strict(P) } -> atleastone(P) -> atmostone(P) ->
+   P( the(P));
+
+
+// Can be overloaded for different arities:
+
+def total( P : Form( Obj ), Q : Form( Obj, Obj )) :=
+   [ x : Obj ] { P(x) } -> < y : Obj > Q(x,y) : Form ;
+
+def unique( P : Form( Obj ), Q : Form( Obj, Obj )) :=
+   [ x : Obj ] { P(x) } -> 
+      < y1, y2 : Obj > Q(x,y1) & Q(x,y2) -> y1 == y2 : Form ;
+
+def functional( P : Form( Obj ), Q : Form( Obj, Obj )) :=
+   total(P,Q) & unique(P,Q) : Form ; 
+
+def func( P : Form( Obj ), Q : Form( Obj, Obj )) :=
+   ??( x : Obj ) the( ??( y : Obj ) Q(x,y) ) : Obj( Obj ); 
+
+
+thm func : [ P : Form( Obj ) ] 
+   strict(P) -> 
+   [ Q : Form( Obj, Obj ) ] stricton( P, ?? ( x : Obj ) < y : Obj > Q(x,y) ) ->
+   functional( P, Q ) -> from_to( P, Q, func( P, Q )) ; 
+   
+def from_to( P : Form( Obj ), Q : Form( Obj, Obj )) ( f : Obj( Obj )) :=
+    [ x1 : Obj ] { P(x1) } -> Q(x1, f(x1)) : Form;
+
+/*
+def from_to( P : Form( Obj, Obj ), Q : Form( Obj )) ( f : Obj( Obj, Obj )) :=
+   [ x1, x2 : Obj ] P( x1, x2 ) -> Q( f(x1,x2) ) : Form;
+
+def from_to( P : Form( Obj, Obj, Obj ), Q : Form( Obj ))
+            ( f : Obj( Obj, Obj, Obj )) :=
+   [ x1, x2, x3 : Obj ] P( x1, x2, x3 ) -> Q( f( x1, x2, x3 )) : Form;
+*/
+
+eof
+
