@@ -119,7 +119,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             if( err. size( ) > errstart )
             {
                 errorstack::builder bld;
-                bld << "In definition of struct " << blf. name( ) << ":";
+                bld << "In a definition of struct " << blf. name( ) << ":";
                 err. addheader( errstart, std::move( bld ));
             }
          }
@@ -135,7 +135,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             if( err. size( ) > errstart )
             {
                errorstack::builder bld;
-               bld << "In declaration of symbol " << blf. name( ) << ":";
+               bld << "In a declaration of symbol " << blf. name( ) << ":";
                err. addheader( errstart, std::move( bld ));
             }
          }
@@ -155,7 +155,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             if( err. size( ) > errstart )
             {
                errorstack::builder bld;
-               bld << "In definition of " << blf. name( ) << ":";
+               bld << "In a definition of " << blf. name( ) << ":";
                err. addheader( errstart, std::move( bld ));
             }
          }
@@ -223,7 +223,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             if( err. size( ) > errstart )
             {
                errorstack::builder bld;
-               bld << "In definition of " << blf. name( ) << ":";
+               bld << "In a definition of " << blf. name( ) << ":";
                err. addheader( errstart, std::move( bld ));
             }
          }
@@ -288,7 +288,6 @@ logic::replace_debruijn( indexedstack< std::string, size_t > & db, term t )
       std::cout << "replacing De Bruijn:\n";
       std::cout << db << "\n";
       std::cout << t << "\n";
-
    }
 
    static const identifier ff = identifier( ) + "FF";
@@ -357,6 +356,21 @@ logic::replace_debruijn( indexedstack< std::string, size_t > & db, term t )
         
          db. restore( dbsize );
          return t;
+      }
+
+   case op_let:
+      {
+         auto let = t. view_let( ); 
+
+         let. update_val( replace_debruijn( db, let. extr_val( )));
+         
+         size_t dbsize = db. size( );
+
+         db. push( let. var( ). pref, db. size( ));
+         let. update_body( replace_debruijn( db, let. extr_body( )));
+
+         db. restore( dbsize ); 
+         return t; 
       }
 
    case op_apply:
@@ -910,7 +924,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
             if( overcands. size( ) == 0 )
             {
                auto err = errorheader( blfs, ctxt, t );
-               err << "unknown identifier " << ident << " used as function";
+               err << "unknown identifier '" << ident << "' used as function";
                errors. push( std::move( err ));
                return { };
             }
@@ -938,8 +952,8 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
             if( results. size( ) == 0 )
             {
                auto err = errorheader( blfs, ctxt, t );
-               err << "no applicable overload found for " << ident;
-               err << " in application term\n"; 
+               err << "no applicable overload found for '" << ident;
+               err << "' in application term,\n"; 
                err << "the arguments have types:  ";
                for( size_t i = 0; i != argtypes. size( ); ++ i )  
                {

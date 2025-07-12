@@ -544,7 +544,7 @@ void tests::parser( logic::beliefstate& blfs ) {
    prs. debug = 0;
    prs. checkattrtypes = 0;
 
-   auto res = prs. parse( parsing::sym_File );
+   auto res = prs. parse( parsing::sym_File, std::cout );
 
 }
 

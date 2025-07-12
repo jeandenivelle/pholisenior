@@ -29,6 +29,10 @@
    // Used in definitions. A definition can have form
    // def x( ) ( ) ( ) := t, so we need a vector of vector of vartypes.
 
+%symbol{ std::vector< std::pair< logic::vartype, logic::term >> } LetDefSeq 
+   // Symbols that are defined in the scope of a let,
+   // first is the declaration, second is the given value. 
+
 %symbol{ logic::fielddecl } FieldDecl 
 %symbol{ logic::structdef } FieldDeclSeq 
 
@@ -40,7 +44,7 @@
 %symbol{ } NOT PROP
 %symbol{ } AND OR IMPLIES EQUIV 
 %symbol{ } COLON SEMICOLON COMMA DOT SEP
-%symbol{ } LET LAMBDA
+%symbol{ } LET IN LAMBDA
 %symbol{ std::string } SCANERROR
 
 %symbolcode_h { #include "location.h" }
@@ -171,6 +175,21 @@ ParSeqSeq =>
    }
 ; 
 
+// ----------------------------- used in let --------------------
+
+LetDefSeq => VARIABLE : v ASSIGN Term : val COLON StructType : tp 
+{
+   std::vector< std::pair< logic::vartype, logic::term >> res;
+   res. push_back( std::pair( logic::vartype( v, tp ), val ));
+   return res;
+}
+| LetDefSeq : defs COMMA 
+    VARIABLE : v ASSIGN Term : val COLON StructType : tp 
+{
+   defs. push_back( std::pair( logic::vartype( v, tp ), val ));
+   return std::move( defs ); 
+}
+;
 
 // ----------------------------- term ---------------------------
 
@@ -238,9 +257,8 @@ Identifier => IdentifierStart : id VARIABLE : v { return id + v; }
            ;
 
 
-
 // These are these greedy prefix operators that eat everything
-// that is to the right of them:
+// they find to the right of them:
 
 GreedyPrefTerm => LBRACKET VarTypeSeq : vars RBRACKET Term : body
 {
@@ -254,7 +272,6 @@ GreedyPrefTerm => LBRACKET VarTypeSeq : vars RBRACKET Term : body
 {
    return logic::term( logic::op_lambda, body, vars. begin( ), vars. end( ));
 }
-
 | LBRACE Term : t1 RBRACE AND Term : t2 
 {
    return logic::term( logic::op_lazy_and, t1, t2 );
@@ -266,6 +283,16 @@ GreedyPrefTerm => LBRACKET VarTypeSeq : vars RBRACKET Term : body
 | LBRACE Term : t1 RBRACE OR Term : t2
 {
    return logic::term( logic::op_or, t1, t2 );
+}
+| LET LetDefSeq : defs IN Term : tm 
+{
+   size_t i = defs. size( );
+   while(i)
+   { 
+      -- i;
+      tm = logic::term( logic::op_let, defs[i]. first, defs[i]. second, tm );
+   }
+   return tm;
 }
 ;
 

@@ -2,6 +2,7 @@
 #include "semantics/interpretation.h"
 
 #include "errorstack.h"
+#include "filehasher.h"
 
 #include "identifier.h"
 #include "tests.h"
@@ -21,16 +22,38 @@
 
 #include "parsing/parser.h"
 
-void readfromfile( logic::beliefstate& blfs, const std::string& name ) 
-{ 
-   std::ifstream in( name );
+void
+includefile( logic::beliefstate& blfs, 
+             filehasher& seen, const std::filesystem::path& file,
+             errorstack& err ) 
+{
+   if( !exists( file ))
+   {
+      errorstack::builder bld;
+      bld << "file " << file. string( ) << " does not exist";
+      err. push( std::move( bld ));
+      return;
+   }
+
+   // If the file was read already, we ignore it:
+
+   if( !seen. insert( file ))
+      return;
+ 
+   std::cout << "file " << file << " is new and will be read\n";
+
+   // We checked existence of file, but one never knows ...
+
+   std::ifstream in( file );
    if( !in )
    {
-      std::cout << "the file is: " << name << "\n";
-      throw std::runtime_error( "could not open it" );
+      errorstack::builder bld; 
+      bld << "could not open file " << file. string( ) << "\n";
+      err. push( std::move( bld ));  
+      return; 
    }
- 
-   lexing::filereader inp( &in, name );
+
+   lexing::filereader inp( &in, file );
 
    parsing::tokenizer tok( std::move( inp ));
    parsing::parser prs( tok, blfs );
@@ -38,23 +61,40 @@ void readfromfile( logic::beliefstate& blfs, const std::string& name )
    prs. debug = 0;
    prs. checkattrtypes = 0;
 
-   auto res = prs. parse( parsing::sym_File );
+   errorstack::builder bld;
+
+   auto res = prs. parse( parsing::sym_File, bld );
+
+   if( bld. view( ). size( ))
+   {
+      size_t s = err. size( );
+      err. push( std::move( bld ));
+
+      errorstack::builder header;
+      header << "there were parse errors in file "
+             << file. string( ) << ": ";
+      err. addheader( s, std::move( header ));       
+   }
+
 }
 
 
 int main( int argc, char* argv[] )
 {
-   logic::beliefstate blfs;  
-   readfromfile( blfs, "examples/strict_prod.phl" ); 
-   readfromfile( blfs, "examples/functional.phl" );
-   readfromfile( blfs, "examples/natural.phl" );
-   readfromfile( blfs, "examples/automata.phl" );
-
    errorstack err;
 
+   logic::beliefstate blfs;  
+   filehasher seen;
+   includefile( blfs, seen, "examples/standard.phl", err ); 
+   includefile( blfs, seen, "aa1", err );
+   includefile( blfs, seen, "examples/natural.phl", err );
+   // includefile( blfs, "examples/automata.phl" );
+
+   seen. print( std::cout );
+
    checkandresolve( blfs, err );
-   std::cout << err << "\n";
    std::cout << blfs << "\n";
+   std::cout << err << "\n";
    return 0;
 
    // tests::truthtables( );
@@ -65,7 +105,6 @@ int main( int argc, char* argv[] )
 #if 0
    tests::add_unique( blfs );
 #endif
-   // tests::add_settheory( blfs );
    std::cout << "(before type checking)\n";
 
    // tests::structural( blfs );

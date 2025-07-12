@@ -5,7 +5,7 @@
    Source = .
    Lexing = /home/nivelle/programs
    Tvm = /home/nivelle/programs
-   Maph = /home/nivelle/programs/maphoon2024
+   Maph = /home/nivelle/programs/maphoon2025
    Treegen = /home/nivelle/programs/treegen2023
    Util = /home/nivelle/programs
 
@@ -16,6 +16,7 @@
    identifier.cpp
    tests.cpp
    errorstack.cpp
+   filehasher.cpp
 
 %dir Source/logic 
 %sources

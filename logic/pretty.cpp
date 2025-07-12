@@ -464,7 +464,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 
          par.opening( out );
 
-         out << "?? ("; 
+         out << "??("; 
 
          auto lamb = t. view_lambda( );
          print( out, blfs, names,
@@ -488,7 +488,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
 
          par. opening( out );
 
-         out << "LET";
+         out << "let";
 
          size_t nr = 0;
 
@@ -504,19 +504,29 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
             else
                out << " ";
 
+            // Unfortunately, the only way of getting
+            // the exact representation of the assumed
+            // variable is by extending names. 
+            // Since we still need to print the value
+            // without assuming the variable, we immmediately remove
+            // the name agin.
+
             out << names. extend( let. var(). pref ); 
             names. restore( names. size( ) - 1 );
+
+            out << " := ";
+            print( out, blfs, names, let. val( ), {0,0} );
+
             out << ": "; 
             print( out, blfs, let. var(). tp, {0,0} ); 
-            out << " := ";
+
             names. extend( let. var(). pref );
-            print( out, blfs, names, let. val( ), {0,0} );
   
             p = &let. body( );
             ++ nr;
          }
 
-         out << " IN ";
+         out << " in ";
          print( out, blfs, names, *p, between( ourattr, env )); 
          par. closing( out );
          names. restore( ss );
