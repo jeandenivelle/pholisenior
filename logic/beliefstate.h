@@ -75,8 +75,15 @@ namespace logic
       const belief& at( exact id ) const
          { return vect. at( id. nr ); } 
 
-      bool contains( exact id ) const
-         { return id. nr < vect. size( ); } 
+      bool contains( exact ex ) const
+         { return ex. nr < vect. size( ); } 
+
+      bool contains( const identifier& id ) const
+      {
+         return !getfunctions( id ). empty( ) || 
+                !getstructdefs( id ). empty( ) ||
+                !getformulas( id ). empty( );
+      }
 
       using iterator = std::vector< belief > :: iterator;
       using const_iterator = std::vector< belief > :: const_iterator;
@@ -86,7 +93,7 @@ namespace logic
 
       const_iterator begin( ) const { return vect. begin( ); }
       const_iterator end( ) const { return vect. end( ); }
- 
+
       void print( std::ostream& out ) const;
    };
 

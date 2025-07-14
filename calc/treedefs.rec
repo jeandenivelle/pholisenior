@@ -1,0 +1,22 @@
+
+%dir calc
+%namespace calc
+
+%define extension ( ext_empty )
+%prefix visible : bool
+
+%option empty { ext_empty } => 
+%option initial { ext_truth, ext_prop } => ex : logic::exact 
+   // Already negated. name must be a formula in the beliefstate. 
+
+%option eigen { ext_eigen } => nr : unsigned int  
+%option hide { ext_hide } => ind : size_t 
+
+
+%h_incl {
+   #include "logic/term.h" 
+   #include "logic/exact.h"
+}
+
+
+

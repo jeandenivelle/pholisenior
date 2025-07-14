@@ -32,7 +32,7 @@ logic::exact logic::beliefstate::append( belief&& bl )
 
          const structdef& sdef = bl. view_struct( ). def( ); 
             // sdef is not in vect. That would be dangerous,
-            // because we adding the fields as functions to vect.
+            // because we are adding the fields as functions to vect.
 
          for( size_t offset = 0; offset != sdef. size( ); ++ offset )
          {
@@ -52,15 +52,23 @@ logic::exact logic::beliefstate::append( belief&& bl )
 
    case bel_symbol:
    case bel_def: 
-   case bel_thm:
-   case bel_axiom:
-   case bel_supp:
       {
          exact ex = exact( vect. size( ));
          functions[ bl. name( ) ]. push_back( ex );
          vect. push_back( std::move( bl ));
          return ex; 
       }
+
+   case bel_thm:
+   case bel_axiom:
+   case bel_form:
+      {
+         exact ex = exact( vect. size( ));
+         formulas[ bl. name( ) ]. push_back( ex );
+         vect. push_back( std::move( bl ));
+         return ex;      
+      }
+
    }
 
    std::cout << "dont know how to append : " << bl << "\n";

@@ -54,7 +54,7 @@ parsing::tokenizer::buildclassifier()
 
    cls.insert( word( "thm" ), symbolval::sym_THM );
    cls.insert( word( "axiom" ), symbolval::sym_AXIOM );
-   cls.insert( word( "frm" ), symbolval::sym_FRM );
+   cls.insert( word( "form" ), symbolval::sym_FORM );
 
    cls.insert( word( "??" ), symbolval::sym_LAMBDA );
    cls.insert( word( "let" ), symbolval::sym_LET );

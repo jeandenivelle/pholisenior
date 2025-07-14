@@ -232,27 +232,27 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
       case bel_thm:
          {
             auto thm = blf. view_thm( ); 
-            term fm = thm. extr_form( );
+            term fm = thm. extr_frm( );
             checkformula( everything, blf. name( ), fm, "theorem", err );
-            thm. update_form( fm );
+            thm. update_frm( fm );
          }
          break; 
 
       case bel_axiom:
          {
             auto ax = blf. view_axiom( );
-            term fm = ax. extr_form( );
+            term fm = ax. extr_frm( );
             checkformula( everything, blf. name( ), fm, "axiom", err );
-            ax. update_form( fm );
+            ax. update_frm( fm );
          }
          break;
 
-      case bel_supp:
+      case bel_form:
          {
-            auto sp = blf. view_supp( );
-            auto fm = sp. extr_form( );
+            auto sp = blf. view_form( );
+            auto fm = sp. extr_frm( );
             checkformula( everything, blf. name( ), fm, "supposition", err ); 
-            sp. update_form( fm );
+            sp. update_frm( fm );
          }
          break;
       } 
@@ -1211,7 +1211,7 @@ logic::try_apply( const beliefstate& blfs, exact name,
 
    case bel_thm:
    case bel_axiom:
-   case bel_supp:
+   case bel_form:
       return { };   // They cannot be used in usual terms. 
    }
 

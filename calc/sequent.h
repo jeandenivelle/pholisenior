@@ -18,31 +18,32 @@ namespace calc
    struct sequent
    {
       logic::beliefstate& blfs; 
-      logic::exact goal; 
-      std::vector< extension > ext;
+      std::vector< extension > steps;
          // The extensions.
 
       namegenerator gen;
 
-      sequent( logic::beliefstate& blfs, logic::exact goal )
-         : blfs( blfs ), goal( goal ) 
+      sequent( logic::beliefstate& blfs ) noexcept
+         : blfs( blfs )
       { } 
-         // Must be a theorem or an assumption.
 
-      void apply_initial( std::string_view namebase );
-         // Extend with the initial formula.
+      logic::exact add_initial( selector sel, std::string_view namebase,
+                                logic::term goal );
+         // Extend with an initial formula. The sel
+         // must be extr_truth or ext_prop. We return
+         // the given name. The goal should be not negated or propped.
+         // We take care of that.  
 
       void ugly( std::ostream& out ) const;      
-      void pretty( std::ostream& out ) const;
+      void pretty( std::ostream& out, bool showhidden = false ) const;
 
       void
-      addformula( std::string_view namebase, const logic::term& f,
+      addformula( std::string namebase, const logic::term& f,
                   unsigned int par1, unsigned int par2,
                   unsigned int br, unsigned int nr );
          // Add a comment parameter !
 
-      identifier fresh_ident( std::string_view namebase );
-
+      identifier get_fresh_ident( std::string namebase );
    };
 
    inline std::ostream& operator << ( std::ostream& out, const sequent& seq )

@@ -38,6 +38,8 @@
 
 %dir Source/calc
 %sources
+   selector.cpp
+   extension.cpp
    transformer.cpp
    splitequiv.cpp
    kleening.cpp
@@ -45,6 +47,7 @@
    util.cpp
    polarity.cpp
    namegenerator.cpp
+   sequent.cpp
  
 %dir Source/semantics
 %sources
@@ -92,10 +95,10 @@
    belief.h
    belief.cpp
 
-%preproc $(Treegen)/treegen calc/calculus.rec
+%preproc $(Treegen)/treegen calc/treedefs.rec
 %dir Source/calc
 %in
-   calculus.rec
+   treedefs.rec
 %out 
    selector.h
    selector.cpp

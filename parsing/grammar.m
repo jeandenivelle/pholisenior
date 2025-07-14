@@ -36,7 +36,7 @@
 %symbol{ logic::fielddecl } FieldDecl 
 %symbol{ logic::structdef } FieldDeclSeq 
 
-%symbol{ } STRUCT END DEF SYMBOL THM AXIOM FRM
+%symbol{ } STRUCT END DEF SYMBOL THM AXIOM FORM
 
 %symbol{ } EOF FILEBAD WHITESPACE COMMENT 
 %symbol{ } LPAR RPAR LBRACE RBRACE LBRACKET RBRACKET LEXISTS REXISTS
@@ -125,7 +125,8 @@ File =>
        { 
           f = abstract( abstr, f );
           blfs. append( 
-                  logic::belief( logic::bel_thm, id, f, logic::proof( ))); 
+                  logic::belief( logic::bel_thm, id, f, 
+                                 logic::proof( ), logic::proof( ))); 
        } 
     | File AXIOM Identifier : id ParSeqSeq : abstr COLON Term : f SEMICOLON
        { 
@@ -133,10 +134,10 @@ File =>
           blfs. append( logic::belief( logic::bel_axiom, id, f, 
                                        logic::proof( ))); 
        } 
-    | File FRM Identifier : id ParSeqSeq : abstr COLON Term : f SEMICOLON 
+    | File FORM Identifier : id ParSeqSeq : abstr COLON Term : f SEMICOLON 
        { 
           f = abstract( abstr, f );
-          blfs. append( logic::belief( logic::bel_supp, id, f ));  
+          blfs. append( logic::belief( logic::bel_form, id, f ));  
        }
     | File _recover_ SEMICOLON
        { std::cout << "recovered!!!\n"; } 

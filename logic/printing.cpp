@@ -217,15 +217,15 @@ void logic::belief::print( std::ostream& out ) const
       return;
 
    case bel_thm:
-      out << "theorem " << name( ) << " : " << view_thm( ). form( );
+      out << "theorem " << name( ) << " : " << view_thm( ). frm( );
       return;
 
    case bel_axiom:
-      out << "axiom " << name( ) << " : " << view_axiom( ). form( );
+      out << "axiom " << name( ) << " : " << view_axiom( ). frm( );
       return;
 
-   case bel_supp:
-      out << "suppose " << name( ) << " : " << view_supp( ). form( );
+   case bel_form:
+      out << "form " << name( ) << " : " << view_form( ). frm( );
       return;
 
    case bel_fld:

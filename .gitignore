@@ -15,5 +15,8 @@ parsing/symbol.cpp
 parsing/parser.h
 parsing/parser.cpp
 
+calc/selector.h
+calc/selector.cpp
+
 Makefile
 

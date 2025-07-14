@@ -632,22 +632,13 @@ logic::pretty::print( std::ostream& out,
          out << "\n";
          return;
       }
-#if 0      
-   case logic::bel_asm:
-      {
-         auto assume = bel. view_asm( );
-         pretty::print( out, names, assume. form( )); 
-         out << "\n";
-         return;
-      }
-#endif
 
    case logic::bel_thm:
       {
          out << "  : theorem ";
          auto thm = bel. view_thm( );
          context ctxt;
-         pretty::print( out, blfs, ctxt, thm. form( ));
+         pretty::print( out, blfs, ctxt, thm. frm( ));
          // pretty::print( out, names, thm. proof( ) );
          out << "\n";
          return; 
@@ -658,17 +649,17 @@ logic::pretty::print( std::ostream& out,
          out << "   : ";
          auto ax = bel. view_axiom( );
          context ctxt;
-         pretty::print( out, blfs, ctxt, ax. form( ));
+         pretty::print( out, blfs, ctxt, ax. frm( ));
          out << "\n";
          return;
       }
 
-   case logic::bel_supp:
+   case logic::bel_form:
       {
          out << "   : "; 
-         auto sp = bel. view_supp( );
+         auto sp = bel. view_form( );
          context ctxt;
-         pretty::print( out, blfs, ctxt, sp. form( ));
+         pretty::print( out, blfs, ctxt, sp. frm( ));
          out << "\n";
          return; 
       }

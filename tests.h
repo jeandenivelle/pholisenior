@@ -19,7 +19,6 @@ namespace tests
 #if 0
    void kbo( );
 #endif
-   
    void replacements( );
 
    void betareduction( );

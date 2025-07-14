@@ -11,7 +11,8 @@
 #include "calc/kleening.h"
 #include "calc/alternating.h"
 #include "calc/distribute.h"
-// #include "calc/sequent.h"
+
+#include "calc/sequent.h"
 
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
@@ -605,16 +606,20 @@ void tests::proofchecking( logic::beliefstate& blfs )
 {
    auto id = identifier( ) + "just";
 
-#if 0
    const auto& f = blfs. getformulas( identifier( ) + "just" );
+   std::cout << f. size( ) << "\n";
    if( f. size( ) != 1 )
       throw std::runtime_error( "cannot continue" );
 
-   auto ind = blfs. at( f[0] );
+   auto seq = calc::sequent( blfs );
+   seq. add_initial( calc::ext_prop, "", 
+                     blfs. at( f. front( )). view_thm( ). frm( ));
 
-   auto seq = calc::sequent( blfs, f. front( ));
-   seq. apply_initial( "initial" );
+   std::cout << blfs << "\n";
 
+   std::cout << seq << "\n";
+
+#if 0
    std::cout << seq << "\n";
 
    logic::beliefstate bel;
