@@ -5,6 +5,8 @@
 #include "logic/context.h"
 #include "logic/beliefstate.h"
 
+#include "errorstack.h"
+
 namespace tests
 {
 
@@ -25,7 +27,7 @@ namespace tests
       // Test beta reduction, using Church numerals.
       // I am also interested in performance.
 
-   void proofchecking( logic::beliefstate& blfs );
+   void proofchecking( logic::beliefstate& blfs, errorstack& err );
 
 #if 0
    void unification( );

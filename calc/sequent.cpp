@@ -1,53 +1,35 @@
 
 #include "sequent.h"
-#include "alternating.h"
 #include "logic/pretty.h"
 
-logic::exact 
-calc::sequent::add_initial( selector sel, 
-                            std::string_view namebase,
-                            logic::term goal )  
+logic::exact
+calc::sequent::push( std::string_view namebase, logic::term frm )  
 {
    if( namebase. empty( )) 
-   {
-      switch( sel ) 
-      {
-      case ext_truth:
-         namebase = "neggoal";
-         break; 
-      case ext_prop: 
-         namebase = "negprop";
-         break;
-      default:
-         namebase = "initial";
-         break; 
-      }
-   }
-
-
-   switch( sel )
-   {
-   case ext_truth:
-      goal = logic::term( logic::op_not, goal );
-      break;
-   case ext_prop:
-      goal = logic::term( logic::op_not, 
-               logic::term( logic::op_prop, goal ));
-      break;
-   default:
-      throw std::logic_error( "unknown initial type" );
-   }
-
-   std::cout << goal << "\n";
+      namebase = "assume";
 
    auto id = get_fresh_ident( std::string( namebase ));
    std::cout << id << "\n";
 
-   auto ex = blfs. append( logic::belief( logic::bel_form, id, goal ));
-   steps. push_back( extension( sel, true, ex ));
-   return ex; 
+   auto ex = blfs. append( logic::belief( logic::bel_form, id, frm ));
+   steps. push_back( extension( seq_form, ex, true ));
+   return ex;
 }
 
+
+logic::term
+calc::sequent::getformula( logic::exact ex )
+{
+   if( blfs. contains( ex ))
+   {
+      const auto& bel = blfs. at( ex );
+      if( bel. sel( ) == logic::bel_thm )
+         return bel. view_thm( ). frm( );
+
+   }
+
+   throw std::logic_error( "name not found" );
+}
 
 identifier
 calc::sequent::get_fresh_ident( std::string namebase ) 
@@ -59,6 +41,7 @@ calc::sequent::get_fresh_ident( std::string namebase )
 
    return id;
 }
+
 
 #if 0
 void
@@ -93,11 +76,10 @@ void calc::sequent::pretty( std::ostream& out, bool showhidden ) const
       {
          switch( e. sel( ))
          {
-         case ext_prop:
-         case ext_truth: 
+         case seq_form:
             {
-               auto name = e. view_initial( ). ex( ); 
-               out << e. sel( ) << " " << blfs. at( name ). name( );
+               auto name = e. name( );
+               out << blfs. at( name ). name( );
                logic::pretty::print( out, blfs, blfs. at( name )); 
                break;
             } 

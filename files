@@ -40,14 +40,13 @@
 %sources
    selector.cpp
    extension.cpp
-   transformer.cpp
-   splitequiv.cpp
-   kleening.cpp
-   alternating.cpp
-   util.cpp
    polarity.cpp
    namegenerator.cpp
+   removelets.cpp
+   util.cpp
    sequent.cpp
+   proofterm.cpp
+   proofchecking.cpp
  
 %dir Source/semantics
 %sources

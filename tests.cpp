@@ -7,12 +7,8 @@
 #include "logic/kbo.h"
 #include "logic/structural.h"
 
-#include "calc/transformer.h"
-#include "calc/kleening.h"
-#include "calc/alternating.h"
-#include "calc/distribute.h"
-
-#include "calc/sequent.h"
+#include "calc/proofterm.h"
+#include "calc/proofchecking.h"
 
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
@@ -20,7 +16,6 @@
 #include "semantics/interpretation.h"
 
 #include "parsing/parser.h"
-
 
 void tests::add_settheory( logic::beliefstate& blfs )
 {
@@ -191,7 +186,6 @@ void tests::add_proof( logic::beliefstate& blfs )
 #endif
 }
 
-
 void tests::transformations( logic::beliefstate& blfs )
 {
    std::cout << "testing clause transformations\n";
@@ -210,7 +204,7 @@ void tests::transformations( logic::beliefstate& blfs )
    if( false )
    {
       // Test calc::distr:
-
+#if 0
       auto all1 =
          forall( { { "y", O }}, 
             apply( "p1"_unchecked, { 0_db, 1_db } ) ||
@@ -248,6 +242,7 @@ void tests::transformations( logic::beliefstate& blfs )
       }
 
       return; 
+#endif
    }
 
    if( true ) 
@@ -259,20 +254,9 @@ void tests::transformations( logic::beliefstate& blfs )
       f = logic::term( logic::op_kleene_forall, f, {{ "x", T }, { "y", O2O }} ); 
       std::cout << f << "\n";
 
-      f = calc::alt_conj(f);
+      // f = calc::alt_conj(f);
       std::cout << "\n" << f << "\n";
 
-      std::cout << "ANF:  " << f << "\n";
-      calc::transformer trans;
-      logic::context ctxt;
-      std::cout << calc::alternation_rank(f) << "\n";
-
-      f = calc::restrict_alternation( trans, blfs, ctxt, f, 
-                                      logic::op_kleene_and, 1 );
-
-      std::cout << "result = " << f << "\n";
-
-      std::cout << trans << "\n"; 
       return; 
    }
 
@@ -284,16 +268,6 @@ void tests::transformations( logic::beliefstate& blfs )
 
    logic::context ctxt;
 
-   calc::transformer trans; 
-   // trans. add_initial( blfs, ! ind. view_thm( ). form( ));
-   trans. add_initial( blfs, 
-      !forall( { { "a", O }, { "b", T }, { "c", O2T }, { "d", O2O }},
-                equiv( 0_db, equiv( ! 1_db, equiv( 2_db, 3_db ))) ));
-
-   std::cout << trans << "\n";
-   trans. flush( blfs );
-   // std::cout << blfs << "\n";
-   // std::cout << trans << "\n";
  
 }
 
@@ -602,31 +576,29 @@ void tests::betareduction( )
 
 #endif
 
-void tests::proofchecking( logic::beliefstate& blfs )
+void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
 {
-   auto id = identifier( ) + "just";
+   auto id = identifier( ) + "find2";
 
-   const auto& f = blfs. getformulas( identifier( ) + "just" );
+   const auto& f = blfs. getformulas( id );
    std::cout << f. size( ) << "\n";
    if( f. size( ) != 1 )
       throw std::runtime_error( "cannot continue" );
 
-   auto seq = calc::sequent( blfs );
-   seq. add_initial( calc::ext_prop, "", 
-                     blfs. at( f. front( )). view_thm( ). frm( ));
-
-   std::cout << blfs << "\n";
+   auto seq = calc::sequent( blfs, err );
+   seq. push( "initial", ! prop( blfs. at( f. front( )). view_thm( ). frm( )));
 
    std::cout << seq << "\n";
+
+
+   calc::proofterm prf = calc::proofterm( calc::prf_truthconst );
+   auto res = eval( seq, prf, err ); 
+   std::cout << "evaluation result in " << res << "\n";
+
+   prf = calc::proofterm( calc::prf_ident, identifier( ) + "initial0001" );
+   res = eval( seq, prf, err ); 
 
 #if 0
-   std::cout << seq << "\n";
-
-   logic::beliefstate bel;
-   add_kuratowski( bel );
-   add_simple( bel );
-   add_addition( bel );
-
    pretty::print( std::cout, bel ); 
    check_everything( std::cout, bel );
 

@@ -17,6 +17,10 @@ parsing/parser.cpp
 
 calc/selector.h
 calc/selector.cpp
+calc/extension.h
+calc/extension.cpp
+calc/proofterm.h
+calc/proofterm.cpp
 
 Makefile
 

@@ -55,21 +55,21 @@ namespace logic
    };
 
 
-   // A contextsubst stores definitions in combination with a 
+   // A letsubst stores definitions in combination with a 
    // context. 
    // The numbers inside are not De Bruijn indices, but the
    // level of the variable. 
    // In let x:T := true, y:O := whatever, the substitution will
    // (0,true), (1,whatever). Lookup needs to know the current
-   // number of variables. CURRENTLY NOT USED.
+   // number of variables. WILL PROBABLY NOT BE USED.
 
-   class contextsubst
+   class parallelsubst
    {
-      std::vector< std::pair< size_t, term >> vect;
+      std::vector< std::pair< size_t, term >> vect; 
       size_t nrvars; 
 
    public:
-      contextsubst( ) noexcept 
+      parallelsubst( ) noexcept
       { }
 
       void extend( size_t nr ) 

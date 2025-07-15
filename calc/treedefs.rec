@@ -2,21 +2,56 @@
 %dir calc
 %namespace calc
 
-%define extension ( ext_empty )
+%define extension ( seq_form )
+%prefix name : logic::exact 
 %prefix visible : bool
 
-%option empty { ext_empty } => 
-%option initial { ext_truth, ext_prop } => ex : logic::exact 
-   // Already negated. name must be a formula in the beliefstate. 
-
-%option eigen { ext_eigen } => nr : unsigned int  
-%option hide { ext_hide } => ind : size_t 
-
+%option form { seq_form } =>
+%option sym { seq_sym } =>
 
 %h_incl {
    #include "logic/term.h" 
    #include "logic/exact.h"
 }
 
+%define proofterm ( prf_truthconst )
+%option truthconst { prf_truthconst } =>
+   // The truth constant (in Kleene logic).
+%option exact { prf_exact } => exact : logic::exact
+%option ident { prf_ident } => ident : identifier
+%option clausify { prf_clausify } => par : proofterm
+%option andelim { prf_andelim } => par : proofterm, ind : size_t 
 
+%h_incl {
+   #include "sequent.h"
+}
+
+%h_methods {
+
+   void print( std::ostream& out ) const;
+}
+
+
+%cpp_back
+{
+   void calc::proofterm::print( std::ostream& out ) const
+   {
+      switch( sel( ))
+      {
+
+      case prf_truthconst:
+         out << "truthconst( )";
+         return; 
+
+      case prf_ident:
+         out << "ident( " << view_ident( ). ident( ) << " )"; 
+         return; 
+      }
+
+      out << sel( ) << "\n";
+      throw std::logic_error( "don't know how to print" );
+   }
+
+
+}
 
