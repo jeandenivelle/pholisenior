@@ -9,7 +9,8 @@
 
 #include "calc/proofterm.h"
 #include "calc/proofchecking.h"
-#include "calc/clausify.h"
+#include "calc/kleening.h"
+#include "calc/alternating.h"
 
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
@@ -187,6 +188,7 @@ void tests::add_proof( logic::beliefstate& blfs )
 #endif
 }
 
+
 void tests::clausify( logic::beliefstate& blfs )
 {
    std::cout << "testing clausify\n";
@@ -218,8 +220,11 @@ void tests::clausify( logic::beliefstate& blfs )
             exists( {{ "u", T }}, apply( "b"_unchecked, { 0_db, 1_db } )) ||
             ( all1 && all2 ));
 
-      form = prop( !form );
-      form = calc::kleene_top( form, calc::pol_neg );
+      form = 5_db; 
+      // form = prop( !form );
+      std::cout << "the formula is " << form << "\n";
+
+      form = calc::alternating( form, logic::op_kleene_or, 2 );
 
       {
          logic::context ctxt; 

@@ -8,7 +8,7 @@
 
 namespace calc
 {
-   // We won't create a quantifier if ctxt is empty:
+   // We don't create a quantifier if ctxt is empty:
 
    logic::term
    quantify( logic::selector op, const logic::context& ctxt,
@@ -19,8 +19,8 @@ namespace calc
 
    logic::context 
    restriction( const logic::context& ctxt, 
-             const logic::debruijn_counter& used ); 
-      // Restrict of ctxt to the used variables. 
+                const logic::debruijn_counter& used ); 
+      // Restriction of ctxt to the used variables. 
 
    logic::term
    application( const logic::term& f, 

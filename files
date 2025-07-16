@@ -44,7 +44,8 @@
    namegenerator.cpp
    util.cpp
    removelets.cpp
-   clausify.cpp
+   kleening.cpp
+   alternating.cpp
    sequent.cpp
    proofterm.cpp
    proofchecking.cpp

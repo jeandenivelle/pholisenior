@@ -1,163 +1,88 @@
 
 #include "alternating.h"
+#include "kleening.h"
 #include "util.h"
 
-
-bool calc::isatom( const logic::term& f )
+logic::selector
+calc::quantof( logic::selector op )
 {
-   switch( f. sel( ))
+   if( op == logic::op_kleene_and )
+      return logic::op_kleene_forall;
+   if( op == logic::op_kleene_or )
+      return logic::op_kleene_exists;
+   std::cout << op << "\n";
+   throw std::logic_error( "quantof: not a Kleene connective" );
+}
+
+logic::selector
+calc::alternation( logic::selector op )
+{
+   if( op == logic::op_kleene_and )
+      return logic::op_kleene_or;
+   if( op == logic::op_kleene_or )
+      return logic::op_kleene_and;
+   std::cout << op << "\n";
+   throw std::logic_error( "alternation: not a Kleene connective" );
+}
+
+logic::term 
+calc::alternating( const logic::term& f, logic::selector op, 
+                   unsigned int rank ) 
+{
+   std::cout << "make anf " << op << " " << rank << " : " << f << "\n";
+
+   if( rank == 0 )
+      return f;
+   else
    {
-   case logic::op_not:
-   case logic::op_prop:
-   case logic::op_kleene_forall:
-   case logic::op_kleene_exists:
-   case logic::op_kleene_and:
-   case logic::op_kleene_or:
-      return false;
-   default:
-      return true;
+      std::vector< logic::term > args;
+      logic::context ctxt; 
+      flatten( ctxt, f, op, rank, args );
+      return logic::term( op, args. begin( ), args. end( ));
    }
-}
-
-
-bool calc::isliteral( const logic::term& f )
-{
-   const auto* p = &f;
-   if( p -> sel( ) == logic::op_not )
-      p = & ( p -> view_unary( ). sub( ));
-
-   if( p -> sel( ) == logic::op_prop )
-      p = & ( p -> view_unary( ). sub( ));
-
-   return isatom( *p );
-}
-
-
-logic::term calc::alt_disj( logic::term f )
-{
-   std::cout << "alt disj: " << f << "\n";
-
-   std::vector< logic::term > disj;
-   logic::context ctxt; 
-   flatten_disj( ctxt, f, disj );
-   return logic::term( logic::op_kleene_or, disj. begin( ), disj. end( ));
 }
 
 
 void 
-calc::flatten_disj( logic::context& ctxt, const logic::term& f, 
-                    std::vector< logic::term > & into )
+calc::flatten( logic::context& ctxt, const logic::term& frm, 
+               logic::selector op, unsigned int rank,
+               std::vector< logic::term > & into )
 {
-   if( f. sel( ) == logic::op_kleene_or )
+   if constexpr( true )
    {
-      auto kl = f. view_kleene( );
-      for( size_t i = 0; i != kl. size( ); ++ i )
-         flatten_disj( ctxt, kl. sub(i), into );
+      std::cout << "flatten " << op << "/" << rank << " : ";
+      std::cout << frm << "\n";
+   }
+
+   auto kln = kleene_top( frm, pol_pos );
+
+   if( kln. sel( ) == op )
+   {
+      auto nary = kln. view_kleene( );
+      for( size_t i = 0; i != nary. size( ); ++ i )
+         flatten( ctxt, nary. sub(i), op, rank, into );
       return;
    }
 
-   if( f. sel( ) == logic::op_kleene_exists )
+   if( kln. sel( ) == quantof( op ))
    {
-      auto ex = f. view_quant( );
+      auto ex = kln. view_quant( );
       size_t csize = ctxt. size( );
       for( size_t i = 0; i != ex. size( ); ++ i )
          ctxt. append( ex. var(i). pref, ex. var(i). tp );  
-      flatten_disj( ctxt, ex. body( ), into );
+      flatten( ctxt, ex. body( ), op, rank, into );
       ctxt. restore( csize );  
       return; 
    }
 
-   if( isliteral(f))
-   {
-      into. push_back( quantify( logic::op_kleene_exists, ctxt, f ));
-      return;
-   }
-
-   if( f. sel( ) == logic::op_kleene_forall ||
-       f. sel( ) == logic::op_kleene_and )
-   {
-      into. push_back( quantify( logic::op_kleene_exists, ctxt,
-                                 alt_conj(f)));
-      return;
-   }
-
-   throw std::runtime_error( "alt_conj: formula not in KNF" );
-}
-
-logic::term calc::alt_conj( logic::term f )
-{
-   std::cout << "alt conj: " << f << "\n";
-
-   std::vector< logic::term > conj;
-   logic::context ctxt;
-   flatten_conj( ctxt, f, conj );
-
-   return logic::term( logic::op_kleene_and, conj. begin( ), conj. end( ));
+   into. push_back( quantify( quantof( op ), ctxt,
+                    alternating( kln, alternation( op ), rank - 1 )));
 }
 
 
-void
-calc::flatten_conj( logic::context& ctxt, const logic::term& f,
-                    std::vector< logic::term > & into )
-{
-   if( f. sel( ) == logic::op_kleene_and )
-   {
-      auto kl = f. view_kleene( );
-      for( size_t i = 0; i != kl. size( ); ++ i )
-         flatten_conj( ctxt, kl. sub(i), into );
-      return;
-   }
-
-   if( f. sel( ) == logic::op_kleene_forall )
-   {
-      auto all = f. view_quant( );
-      size_t csize = ctxt. size( );
-      for( size_t i = 0; i != all. size( ); ++ i )
-         ctxt. append( all. var(i). pref, all. var(i). tp );
-      flatten_conj( ctxt, all. body( ), into );
-      ctxt. restore( csize );
-      return;  
-   }
-
-   if( isliteral(f))
-   {
-      into. push_back( quantify( logic::op_kleene_forall, ctxt, f ));
-      return;
-   }
-
-   if( f. sel( ) == logic::op_kleene_exists || 
-       f. sel( ) == logic::op_kleene_or )
-   {
-      into. push_back( quantify( logic::op_kleene_forall, ctxt,
-                                 alt_disj(f))); 
-      return;
-   }
-
-   throw std::runtime_error( "alt_conj: formula not in KNF" );
-}
-
-
-namespace
-{
-   // If we have change from (forall/and) to (exists/or):
-
-   bool ischange( logic::selector op1, logic::selector op2 )
-   {
-      if( op1 == logic::op_kleene_forall )
-         op1 = logic::op_kleene_and;
-      if( op1 == logic::op_kleene_exists )
-         op1 = logic::op_kleene_or;
-
-      if( op2 == logic::op_kleene_forall )
-         op2 = logic::op_kleene_and;
-      if( op2 == logic::op_kleene_exists )
-         op2 = logic::op_kleene_or;
-
-      return op1 != op2; 
-   }
-}
-
-bool calc::isinanf( const logic::term& f )
+bool 
+calc::isalternating( const logic::term& f, 
+                     logic::selector op, unsigned int rank )
 {
    if( f. sel( ) == logic::op_kleene_and )
    {
@@ -171,6 +96,7 @@ bool calc::isinanf( const logic::term& f )
       {
          const auto* p = &kl. sub(i);
 
+#if 0
          // If it is a Kleene exists, we replace p by the body: 
 
          if( p -> sel( ) == logic::op_kleene_exists )
@@ -186,11 +112,15 @@ bool calc::isinanf( const logic::term& f )
             if( !isliteral( *p ))
                return false;
          }
+#endif
       }
       return true;
    }
    return false;
 }
+
+
+#if 0
 
 size_t
 calc::alternation_rank( const logic::term& f )
@@ -261,7 +191,9 @@ calc::alternation_rank( const logic::term& f )
 #endif
    throw std::logic_error( "rank: not in ANF" );
 }
+#endif
 
+#if 0
 
 logic::term
 calc::restrict_alternation( transformer& trans, logic::beliefstate& blfs,
@@ -333,3 +265,4 @@ calc::restrict_alternation( transformer& trans, logic::beliefstate& blfs,
    throw std::runtime_error( "splitalt: should be not reachable" );
 }
 
+#endif

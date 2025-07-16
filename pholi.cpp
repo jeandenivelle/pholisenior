@@ -96,7 +96,9 @@ int main( int argc, char* argv[] )
    std::cout << blfs << "\n";
    std::cout << err << "\n";
 
-   tests::proofchecking( blfs, err ); 
+   tests::clausify( blfs );
+
+   // tests::proofchecking( blfs, err ); 
    return 0;
 
    // tests::truthtables( );
