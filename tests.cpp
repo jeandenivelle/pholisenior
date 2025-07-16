@@ -9,6 +9,7 @@
 
 #include "calc/proofterm.h"
 #include "calc/proofchecking.h"
+#include "calc/clausify.h"
 
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
@@ -186,9 +187,9 @@ void tests::add_proof( logic::beliefstate& blfs )
 #endif
 }
 
-void tests::transformations( logic::beliefstate& blfs )
+void tests::clausify( logic::beliefstate& blfs )
 {
-   std::cout << "testing clause transformations\n";
+   std::cout << "testing clausify\n";
 
    using namespace logic;
    type O = type( logic::type_obj );
@@ -199,12 +200,8 @@ void tests::transformations( logic::beliefstate& blfs )
    type Seq = type( type_unchecked, identifier( ) + "Seq" );
    type X = type( type_unchecked, identifier( ) + "X" );
 
-   type Seqex = type( type_struct, exact(8));
-
-   if( false )
+   if( true )
    {
-      // Test calc::distr:
-#if 0
       auto all1 =
          forall( { { "y", O }}, 
             apply( "p1"_unchecked, { 0_db, 1_db } ) ||
@@ -216,18 +213,23 @@ void tests::transformations( logic::beliefstate& blfs )
             exists( {{ "t", T }}, 
                apply( "q2"_unchecked, { 2_db, 1_db, 0_db } )));
 
-      auto form = forall( { { "x", T }}, 
+      auto form = exists( { { "x", T }},
             apply( "a"_unchecked, { 0_db } ) &&
             exists( {{ "u", T }}, apply( "b"_unchecked, { 0_db, 1_db } )) ||
             ( all1 && all2 ));
 
-      form = calc::knf( form, calc::pol_pos ); 
-      std::cout << "testing distr\n";
+      form = prop( !form );
+      form = calc::kleene_top( form, calc::pol_neg );
+
       {
          logic::context ctxt; 
-         pretty::print( std::cout, blfs, ctxt, form );
+         std::cout << "result = ";
+         std::cout << form << "\n";
+
+         // pretty::print( std::cout, blfs, ctxt, form );
       }
 
+#if 0
       calc::disj_stack disj;
       disj. append( form, 0 );
       std::vector< logic::term > conj;
@@ -245,7 +247,7 @@ void tests::transformations( logic::beliefstate& blfs )
 #endif
    }
 
-   if( true ) 
+   if( false ) 
    {
       std::cout << "testing ANF\n";
       auto f = logic::term( logic::op_kleene_or, {  0_db == 2_db, 1_db == 3_db } );
@@ -598,6 +600,7 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
    prf = calc::proofterm( calc::prf_ident, identifier( ) + "initial0001" );
    res = eval( seq, prf, err ); 
 
+   std::cout << res << "\n";
 #if 0
    pretty::print( std::cout, bel ); 
    check_everything( std::cout, bel );

@@ -3,7 +3,7 @@
 #define CALC_POLARITY_
 
 #include <iostream>
-#include "logic/term.h"
+#include "logic/selector.h"
 
 namespace calc
 {
@@ -19,6 +19,7 @@ namespace calc
    logic::selector demorgan( polarity pol, logic::selector sel );
       // Apply the De Morgan rule on a Kleene operator.
       // It doesn't work for other operators.
+
 }
 
 #endif

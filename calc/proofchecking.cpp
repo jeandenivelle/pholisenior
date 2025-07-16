@@ -17,6 +17,17 @@ calc::eval( sequent& seq, const proofterm& prf, errorstack& err )
          return seq. getformula( ex ); 
       }
 
+   case prf_ident:
+      {
+         auto id = prf. view_ident( ). ident( );
+         const auto& f = seq. blfs. getformulas( id ); 
+         if( f. empty( ))
+            throw std::logic_error( "not found" );
+         if( f. size( ) > 1 )
+            throw std::logic_error( "too many" ); 
+
+         return seq. getformula( f. front( ));
+      }
    }
 
    std::cout << prf. sel( ) << "\n";

@@ -5,6 +5,7 @@
 #include "polarity.h"
 #include "logic/term.h"
 
+// Currently not used, but we keep the code.
 
 namespace calc
 {
@@ -15,7 +16,6 @@ namespace calc
 
    logic::term knf( const logic::term& f, polarity pol );
    logic::term knf_prop( const logic::term& f, polarity pol );
-
 }
 
 #endif

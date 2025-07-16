@@ -152,6 +152,7 @@ logic::term calc::knf( const logic::term& f, polarity pol )
    throw std::runtime_error( "operator not implemented" );
 }
 
+
 logic::term
 calc::knf_prop( const logic::term& f, polarity pol )
 {

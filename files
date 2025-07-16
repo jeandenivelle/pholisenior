@@ -42,8 +42,9 @@
    extension.cpp
    polarity.cpp
    namegenerator.cpp
-   removelets.cpp
    util.cpp
+   removelets.cpp
+   clausify.cpp
    sequent.cpp
    proofterm.cpp
    proofchecking.cpp

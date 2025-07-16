@@ -4,6 +4,9 @@
 
 #include "transformer.h"
 
+// This code is not used in the current version, 
+// but we are still keeping it.
+
 namespace calc
 {
    bool isatom( const logic::term& f );

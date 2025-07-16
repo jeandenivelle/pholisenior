@@ -16,7 +16,7 @@ namespace tests
 
    void add_proof( logic::beliefstate& blfs );
    
-   void transformations( logic::beliefstate& blfs ); 
+   void clausify( logic::beliefstate& blfs ); 
 
 #if 0
    void kbo( );

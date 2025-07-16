@@ -19,9 +19,8 @@ calc::polarity calc::operator - ( polarity pol )
    case pol_neg:       return pol_pos;
    }
    std::cout << pol << "\n";
-   throw std::logic_error( "cannot negate" ); 
+   throw std::logic_error( "cannot negate unknown polarity" ); 
 }
-
 
 logic::selector 
 calc::demorgan( polarity pol, logic::selector op )

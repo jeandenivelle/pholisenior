@@ -26,9 +26,18 @@ calc::sequent::getformula( logic::exact ex )
       if( bel. sel( ) == logic::bel_thm )
          return bel. view_thm( ). frm( );
 
+      if( bel. sel( ) == logic::bel_axiom )
+         return bel. view_axiom( ). frm( );
+
+      if( bel. sel( ) == logic::bel_form )
+         return bel. view_form( ). frm( );
    }
 
-   throw std::logic_error( "name not found" );
+   errorstack::builder bld;
+   bld << "proof checking: unknown exact name: " << ex << "\n";
+   err. push( std::move( bld ));
+
+   throw failure( );
 }
 
 identifier
