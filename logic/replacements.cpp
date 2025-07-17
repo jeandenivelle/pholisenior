@@ -70,73 +70,48 @@ void logic::sparse_subst::print( std::ostream& out ) const
 }
 
 
-#if 0
 logic::term
-logic::contextsubst::operator( ) ( term t, size_t vardepth,
-                                   bool& change ) const
+logic::fullsubst::operator( ) ( term t, size_t vardepth, bool& change ) const
 {
-   std::cout << "contextsubst " << t << " [" << vardepth << "]\n";
-
    if( t. sel( ) == op_debruijn ) 
    {
       size_t ind = t. view_debruijn( ). index( ); 
       if( ind >= vardepth )
       {
-         // id -= vardepth;  
-         if( ind >= nrvars ) throw std::logic_error( "contextsubst: wrong De Bruijn" ); 
-         ind = nrvars - ind - 1;
-         std::cout << "absolute = " << ind << "\n";
+         change = true; 
 
-         if( vect. size( ) && ind <= vect. back( ). first )
+         if( ind < vardepth + values. size( ))
          {
-            size_t i0 = 0;
-            size_t i1 = vect. size( );
-            while( i1 - i0 > 1 )
-            {
-               size_t mid = i0 + ( i1 - i0 ) / 2;
-               if( ind < vect[ mid ]. first )
-                  i1 = mid;
-               else
-                  i0 = mid; 
-            }
+            ind -= vardepth; 
 
-            if( i0 >= vect. size( )) 
-               throw std::logic_error( "cannot happen I think" );
-                  // We checked before that the vector is not empty.
+            // We need to lift, but we don't lift over 0:
 
-            if( vect[i0]. first == ind )
+            if( vardepth == 0 )
+               return values[ ind ];
+            else
             {
-               change = true;
                bool c = false;
-               return topdown( lifter( vardepth ), vect[i0]. second, 0, c );
+               return topdown( lifter( vardepth ), values[ ind ], 0, c );
+            }
+ 
+            throw std::logic_error( "unreachable" ); 
          }
-         }
+         else
+         {
+            ind -= values. size( );
+            return term( op_debruijn, ind );
+         }   
       }
-      else
-         std::cout << "dont even bother for " << ind << "\n";
    }
    return t;
 }
-#endif
 
-#if 0
-void logic::contextsubst::restore( size_t s )
+void logic::fullsubst::print( std::ostream& out ) const
 {
-   while( nrvars > s )
-   {
-      -- nrvars; 
-      if( vect. size( ) && vect. back( ). first == nrvars )
-         vect. pop_back( ); 
-   }
+   out << "Full Substitution:\n";
+   for( size_t i = 0; i != values. size( ); ++ i ) 
+      out << "   #" << i << " := " << values[i] << "\n";
 }
-
-void logic::contextsubst::print( std::ostream& out ) const
-{
-   out << "Contextsubst( nrvars = " << nrvars << " ):\n";
-   for( const auto& v : vect )
-      out << "   " << v. first << " := " << v. second << "\n";
-}
-#endif
 
 #if 0
 

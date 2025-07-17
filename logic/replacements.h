@@ -34,6 +34,7 @@ namespace logic
 
    // A sparse subst assigns values to some, but not
    // necessarily all, De Bruijn indices. 
+   // Variables that do not occur, are not changed.
 
    class sparse_subst
    {
@@ -55,33 +56,21 @@ namespace logic
    };
 
 
-   // A letsubst stores definitions in combination with a 
-   // context. 
-   // The numbers inside are not De Bruijn indices, but the
-   // level of the variable. 
-   // In let x:T := true, y:O := whatever, the substitution will
-   // (0,true), (1,whatever). Lookup needs to know the current
-   // number of variables. WILL PROBABLY NOT BE USED.
+   // A fullsubst completely removes the nearest DeBruijn indices 
+   // #0,#1,#2, ... 
+   // DeBruijn that are not in the fullsubst are shifted down. 
 
-   class parallelsubst
+   class fullsubst
    {
-      std::vector< std::pair< size_t, term >> vect; 
-      size_t nrvars; 
+      std::vector< term > values;
 
    public:
-      parallelsubst( ) noexcept
+      fullsubst( ) noexcept
       { }
 
-      void extend( size_t nr ) 
-         { nrvars += nr; } 
-            // Add variables without defining them. 
-
-      void append( const term& val )
-         { vect. push_back( std::pair( nrvars, val )); ++ nrvars; }
-            // Add a variable with definition. If val contains
-            // De Bruijn indices, they look back from nrvars. 
-
-      void restore( size_t s );
+      fullsubst( std::vector< term > && values ) noexcept
+         : values( std::move( values ))
+      { }
 
       term operator( ) ( term t, size_t vardepth, bool& change ) const;
 

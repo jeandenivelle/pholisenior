@@ -48,7 +48,7 @@ calc::norm_debruijns( logic::term ff )
       ++ var;
    }
 
-   std::cout << "normalizer = " << norm << "\n";
+   // std::cout << "normalizer = " << norm << "\n";
 
    bool change = false;
    ff = topdown( norm, std::move(ff), 0, change );
@@ -60,6 +60,8 @@ logic::context
 calc::restriction( const logic::context& ctxt, 
                    const logic::debruijn_counter& used )
 {
+   throw std::runtime_error( "this function should not be used any more" );
+
    // context look back from the end. Because of that, the
    // highest De Bruijn variable comes first in the context.
 
@@ -74,25 +76,76 @@ calc::restriction( const logic::context& ctxt,
    return res;
 }
 
+
 logic::term
-calc::application( const logic::term& f, 
-                   const logic::debruijn_counter& vars )
+calc::application( logic::term fm, const logic::debruijn_counter& vars )
 {
-   auto res = logic::term( logic::op_apply, f,
-                           std::initializer_list< logic::term > ( ));
-
-   auto view = res. view_apply( );
-
-   // We need to go in reverse order, because we want the
-   // type of the furthest De Bruijn variable first:
-
-   for( auto it = vars. end( ); it != vars. begin( ); )
+   if( vars. size( ))
    {
-      -- it;
-      size_t vv = it -> first;
-      view. push_back( logic::term( logic::op_debruijn, vv ));
+      fm = logic::term( logic::op_apply, fm,
+                         std::initializer_list< logic::term > ( ));
+
+      auto appl = fm. view_apply( );
+
+      // We need to iterate in reverse order, because we want the
+      // type of the furthest De Bruijn variable first:
+
+      auto it = vars. end( ); 
+      while( it != vars. begin( ))
+      {
+         -- it;
+         size_t vv = it -> first;
+         appl. push_back( logic::term( logic::op_debruijn, vv ));
+      }
    }
 
-   return res;
+   return fm;
+}
+
+
+logic::type
+calc::functype( logic::type tp, const logic::context& ctxt,
+                const logic::debruijn_counter& used )
+{
+   // We won't create a functional type without arguments: 
+
+   if( used. size( ))
+   {
+      tp = logic::type( logic::type_func, tp, { } );
+      auto fun = tp. view_func( );
+
+      auto it = used. end( );
+      while( it != used. begin( ))
+      {
+         -- it;
+         size_t vv = it -> first; 
+         fun. push_back( ctxt. gettype( vv ));
+      } 
+   } 
+   return tp;  
+}
+
+
+logic::term
+calc::abstraction( logic::term fm, const logic::context& ctxt,
+                   const logic::debruijn_counter& used )
+{
+   if( used. size( ))
+   {
+      fm = logic::term( logic::op_lambda, fm, 
+                        std::initializer_list< logic::vartype > ( ));
+      auto lam = fm. view_lambda( ); 
+
+      auto it = used. end( );
+      while( it != used. begin( ))
+      {
+         -- it;
+         size_t vv = it -> first;
+         lam. push_back( 
+                 logic::vartype( ctxt. getname( vv ), ctxt. gettype( vv )) );
+      }
+   }
+
+   return fm;
 }
 

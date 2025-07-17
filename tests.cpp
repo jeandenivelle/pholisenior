@@ -11,6 +11,7 @@
 #include "calc/proofchecking.h"
 #include "calc/kleening.h"
 #include "calc/alternating.h"
+#include "calc/removelets.h"
 
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
@@ -202,7 +203,7 @@ void tests::clausify( logic::beliefstate& blfs )
    type Seq = type( type_unchecked, identifier( ) + "Seq" );
    type X = type( type_unchecked, identifier( ) + "X" );
 
-   if( true )
+   if constexpr( true )
    {
       auto all1 =
          forall( { { "y", O }}, 
@@ -227,55 +228,31 @@ void tests::clausify( logic::beliefstate& blfs )
       form = calc::alternating( form, logic::op_kleene_or, 2 );
 
       {
-         logic::context ctxt; 
+         context ctxt; 
          std::cout << "result = ";
          std::cout << form << "\n";
 
          // pretty::print( std::cout, blfs, ctxt, form );
       }
-
-#if 0
-      calc::disj_stack disj;
-      disj. append( form, 0 );
-      std::vector< logic::term > conj;
-
-      logic::context ctxt;
-      calc::distr( ctxt, disj, conj );
-      std::cout << "result is \n";
-      for( const auto& c : conj )
-      {
-         pretty::print( std::cout, blfs, ctxt, c ); 
-         std::cout << "\n";
-      }
-
-      return; 
-#endif
    }
 
-   if( false ) 
+   if constexpr( true ) 
    {
-      std::cout << "testing ANF\n";
-      auto f = logic::term( logic::op_kleene_or, {  0_db == 2_db, 1_db == 3_db } );
-
-      f = logic::term( logic::op_kleene_exists, f, {{ "a", O }, { "b", T }} );
-      f = logic::term( logic::op_kleene_forall, f, {{ "x", T }, { "y", O2O }} ); 
+      std::cout << "\n\n";
+      std::cout << "testing removelets\n";
+      auto f = term( op_or, 0_db == 2_db, 1_db == 3_db );
+      f = term( op_let, { "bbb", T }, 1_db == 3_db, f );
+      f = term( op_forall, f, {{ "x", T }, { "y", O2O }} ); 
+      f = term( op_exists, f, {{ "a", O }, { "b", T }} );
       std::cout << f << "\n";
 
-      // f = calc::alt_conj(f);
       std::cout << "\n" << f << "\n";
-
+      calc::namegenerator gen;
+      logic::context ctxt;
+      f = removelets( blfs, gen, ctxt, f ); 
+      std::cout << "result of removing lets " << f << "\n";
       return; 
    }
-
-   const auto& f = blfs. getformulas( identifier( ) + "just" );
-   if( f. size( ) != 1 )
-      throw std::runtime_error( "cannot continue" );
-
-   auto ind = blfs. at( f[0] );
-
-   logic::context ctxt;
-
- 
 }
 
 
