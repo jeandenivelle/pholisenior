@@ -240,17 +240,26 @@ void tests::clausify( logic::beliefstate& blfs )
    {
       std::cout << "\n\n";
       std::cout << "testing removelets\n";
-      auto f = term( op_or, 0_db == 2_db, 1_db == 3_db );
-      f = term( op_let, { "bbb", T }, 1_db == 3_db, f );
+      auto f = ( 0_db == 2_db );
+      f = apply( "ppp"_unchecked, { 0_db, 1_db, 2_db } );
+      f = term( op_let, { "zz", O }, apply( "gg"_unchecked, { 0_db } ), f );
+      f = !f;
+      f = term( op_let, { "yy", T }, apply( "ff"_unchecked, { 1_db } ), f );
       f = term( op_forall, f, {{ "x", T }, { "y", O2O }} ); 
       f = term( op_exists, f, {{ "a", O }, { "b", T }} );
-      std::cout << f << "\n";
+      f = term( op_lambda, f, {{ "hallo", O2T }} );
+      {
+         context ctxt;
+         pretty::print( std::cout, blfs, ctxt, f );
+      }
 
-      std::cout << "\n" << f << "\n";
       calc::namegenerator gen;
       logic::context ctxt;
-      f = removelets( blfs, gen, ctxt, f ); 
-      std::cout << "result of removing lets " << f << "\n";
+      f = removelets( blfs, gen, ctxt, std::move(f) ); 
+      {
+         context ctxt; 
+         pretty::print( std::cout, blfs, ctxt, f );
+      }
       return; 
    }
 }
@@ -419,24 +428,19 @@ void tests::replacements( )
    std::cout << "change = " << change << "\n";
 
    {
-      // contextsubst:
-#if 0
-      logic::contextsubst subst;
-      subst. extend(4);
-      subst. append( 4_db );
-      subst. append( 3_db );
-      subst. append( 2_db );
-      subst. extend(2);
+      fullsubst subst =
+         std::vector< term > { !0_db, apply( 0_db, { 1_db } ) }; 
       std::cout << subst << "\n";
-   
+ 
       bool change = false;
-      auto tm = 1_db && 2_db && 3_db && 4_db;
-      std::cout << tm << "\n";
+      auto tm = term( op_let, { "aaa", O }, 2_db,  apply( 0_db, { 1_db } ));
+
+      std::cout << "before: " << tm << "\n";
       tm. printstate( std::cout );
       auto tm2 = topdown( subst, std::move(tm), 0, change );
-      std::cout << tm2 << "\n"; 
+      std::cout << "after: " << tm2 << "\n"; 
+      std::cout << "change = " << change << "\n";
       tm2. printstate( std::cout );
-#endif
    }
 
 #if 0

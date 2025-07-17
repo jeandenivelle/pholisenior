@@ -99,6 +99,16 @@ namespace logic
          }
          return t; 
 
+      case op_let:
+         {
+            auto let = t. view_let( );
+            let. update_val( 
+               topdown( repl, let. extr_val( ), vardepth, change ));
+            let. update_body(
+               topdown( repl, let. extr_body( ), vardepth + 1, change ));
+         }
+         return t;
+
       case op_apply:
          {
             auto ap = t. view_apply( );

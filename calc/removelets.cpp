@@ -25,6 +25,14 @@ calc::removelets( logic::beliefstate& blfs, namegenerator& gen,
    case logic::op_true:
       return f;
 
+   case logic::op_not:
+   case logic::op_prop:
+      {
+         auto un = f. view_unary( );
+         un. update_sub( removelets( blfs, gen, ctxt, un. extr_sub( )));
+         return f;
+      }
+
    case logic::op_and:
    case logic::op_or:
    case logic::op_implies:
@@ -52,16 +60,14 @@ calc::removelets( logic::beliefstate& blfs, namegenerator& gen,
             removelets( blfs, gen, ctxt, quant. extr_body( )));
              
          ctxt. restore( ss );
+         return f;
       }
-      return f;
 
    case logic::op_let:
       {
          auto let = f. view_let( );
          
          auto pr = norm_debruijns( let. val( ));
-         std::cout << pr. first << "\n";
-         std::cout << pr. second << "\n";
 
          // First element counts de free variables of let. val( ).
          // We don't care about number of occurrens, only about
@@ -71,10 +77,9 @@ calc::removelets( logic::beliefstate& blfs, namegenerator& gen,
 
          auto str = gen. create( let. var( ). pref ); 
          identifier freshid = identifier( ) + str;
-         std::cout << "freshid = " << freshid << "\n";
 
          logic::type tp = functype( let. var( ). tp, ctxt, pr. first );
-         std::cout << "the type is " << tp << "\n"; 
+         std::cout << "\nthe type is " << tp << "\n"; 
 
          logic::term def = abstraction( pr. second, ctxt, pr. first ); 
          std::cout << "the defined term is " << def << "\n";
@@ -93,7 +98,6 @@ calc::removelets( logic::beliefstate& blfs, namegenerator& gen,
          f = topdown( subst, let. extr_body( ), 0, change ); 
          std::cout << "now f is " << f << "\n";  
 
-         std::cout << "CONSIDER CHECKING THE BODY FOR LETS\n";
          return removelets( blfs, gen, ctxt, f );
       }
 
@@ -106,7 +110,22 @@ calc::removelets( logic::beliefstate& blfs, namegenerator& gen,
          ap. update_func( removelets( blfs, gen, ctxt, ap. extr_func( ))); 
          return f;  
       }
+
+   case logic::op_lambda:
+      {
+         auto lam = f. view_lambda( );
+         size_t ss = ctxt. size( );
+         for( size_t i = 0; i != lam. size( ); ++ i )
+            ctxt. append( lam. var(i). pref, lam. var(i). tp );
+
+         lam. update_body(
+            removelets( blfs, gen, ctxt, lam. extr_body( )));
+
+         ctxt. restore( ss );
+         return f;
+      }
    }
+
    std::cout << "removelets " << f. sel( ) << "\n";
    throw std::logic_error( "unknown selector" ); 
 }

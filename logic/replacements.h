@@ -75,6 +75,8 @@ namespace logic
       term operator( ) ( term t, size_t vardepth, bool& change ) const;
 
       void print( std::ostream& out ) const;
+
+      size_t size( ) const { return values. size( ); } 
    };
 
 
