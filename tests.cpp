@@ -146,51 +146,7 @@ void tests::add_settheory( logic::beliefstate& blfs )
 }
 
 
-void tests::add_proof( logic::beliefstate& blfs )
-{
-   using namespace logic;
-
-   type O = type( logic::type_obj );
-   type T = type( logic::type_form );
-
-   type O2O = type( type_func, O, { O } );
-   type O2T = type( type_func, T, { O } );
-
-   type Seq = type( type_unchecked, identifier( ) + "Seq" );
-
-   blfs. append( belief( bel_symbol, identifier( ) + "s1", Seq ));
-   blfs. append( belief( bel_symbol, identifier( ) + "s2", Seq ));
-
-   // We could create more Skolem constants.
-
-   auto cls = term( op_kleene_and, { } );
-   auto cl_view = cls. view_kleene( );
-
-   cl_view. push_back( 
-       term( op_apply, "gen"_unchecked, { "s1"_unchecked, 1_db } ));
-   cl_view. push_back( 
-       term( op_apply, "gen"_unchecked, { "s2"_unchecked, 0_db } ));
-
-   cl_view. push_back( term( op_apply, "minhomrel"_unchecked, 
-            { "s1"_unchecked, "s2"_unchecked, 1_db, 0_db } ));
-
-   cl_view. push_back( apply( "alpha1"_unchecked, { 1_db, 0_db } ));
-   cl_view. push_back( apply( "alpha2"_unchecked, { 1_db, 0_db } )); 
-
-   cls = term( op_kleene_exists, cls, {{ "x", O }, { "y", O }} );
-
-   std::cout << cls << "\n";
-   throw std::runtime_error( "quitting" );
-
-   blfs. append( belief( bel_axiom, identifier( ) + "initial", cls, { proof( ) } ));
-#if 0
-   cls = term( op_kleene_or, { } );
-   cl_view = cls. view_kleeneprop( );
-#endif
-}
-
-
-void tests::clausify( logic::beliefstate& blfs )
+void tests::clausify( logic::beliefstate& blfs, errorstack& err )
 {
    std::cout << "testing clausify\n";
 
@@ -253,9 +209,9 @@ void tests::clausify( logic::beliefstate& blfs )
          pretty::print( std::cout, blfs, ctxt, f );
       }
 
-      calc::namegenerator gen;
+      calc::sequent seq( blfs, err ); 
       logic::context ctxt;
-      f = removelets( blfs, gen, ctxt, std::move(f) ); 
+      f = removelets( seq, ctxt, std::move(f) ); 
       {
          context ctxt; 
          pretty::print( std::cout, blfs, ctxt, f );
@@ -578,15 +534,18 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
 
    std::cout << seq << "\n";
 
+   auto prf = calc::proofterm( calc::prf_ident, identifier( ) + "initial0001" );
+   prf = calc::proofterm( calc::prf_clausify, prf ); 
+   auto res = eval( prf, seq, err ); 
 
-   calc::proofterm prf = calc::proofterm( calc::prf_truthconst );
-   auto res = eval( seq, prf, err ); 
-   std::cout << "evaluation result in " << res << "\n";
+   std::cout << "result = " << res << "\n";
+   {
+      logic::context ctxt;
+      std::cout << "result = ";
+      logic::pretty::print( std::cout, blfs, ctxt, res );
+      std::cout << "\n";
+   }
 
-   prf = calc::proofterm( calc::prf_ident, identifier( ) + "initial0001" );
-   res = eval( seq, prf, err ); 
-
-   std::cout << res << "\n";
 #if 0
    pretty::print( std::cout, bel ); 
    check_everything( std::cout, bel );

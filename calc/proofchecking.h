@@ -11,10 +11,9 @@
 namespace calc
 {
 
-
    logic::term 
-   eval( sequent& seq, const proofterm& prf, errorstack& err );
-      // In case of error, we complain into err, and 
+   eval( const proofterm& prf, sequent& seq, errorstack& err );
+      // In case of error, we express our frustration into err, and 
       // throw a failure exception.
 
 }

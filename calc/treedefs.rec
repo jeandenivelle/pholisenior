@@ -7,7 +7,8 @@
 %prefix visible : bool
 
 %option form { seq_form } =>
-%option sym { seq_sym } =>
+%option name { seq_name } =>
+%option block { seq_block } =>
 
 %h_incl {
    #include "logic/term.h" 
@@ -19,7 +20,7 @@
    // The truth constant (in Kleene logic).
 %option exact { prf_exact } => exact : logic::exact
 %option ident { prf_ident } => ident : identifier
-%option clausify { prf_clausify } => par : proofterm
+%option clausify { prf_clausify } => parent : proofterm
 %option andelim { prf_andelim } => par : proofterm, ind : size_t 
 
 %h_incl {
@@ -45,6 +46,10 @@
 
       case prf_ident:
          out << "ident( " << view_ident( ). ident( ) << " )"; 
+         return; 
+
+      case prf_clausify:
+         out << "clausify( " << view_clausify( ). parent( ) << " )";
          return; 
       }
 

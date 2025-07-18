@@ -4,19 +4,13 @@
 
 #include "logic/context.h"
 #include "logic/beliefstate.h"
-
 #include "errorstack.h"
 
 namespace tests
 {
+   void add_settheory( logic::beliefstate& blfs );
 
-   void add_settheory( logic::beliefstate& );
-
-   void add_unique( logic::beliefstate& );
-
-   void add_proof( logic::beliefstate& blfs );
-   
-   void clausify( logic::beliefstate& blfs ); 
+   void clausify( logic::beliefstate& blfs, errorstack& err );
 
 #if 0
    void kbo( );

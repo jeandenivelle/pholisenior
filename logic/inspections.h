@@ -82,6 +82,13 @@ namespace logic
                count( counter, ap. arg(i), vardepth );
          }
          return;
+
+      case op_lambda:
+         {
+            auto lam = t. view_lambda( );
+            count( counter, lam. body( ), vardepth + lam. size( ));
+         }
+         return; 
       }
 
       std::cout << "count: " << t. sel( ) << "\n";

@@ -1,8 +1,10 @@
 
 #include "proofchecking.h"
 
+#include "removelets.h"
+
 logic::term 
-calc::eval( sequent& seq, const proofterm& prf, errorstack& err )
+calc::eval( const proofterm& prf, sequent& seq, errorstack& err )
 {
    std::cout << "evaluating " << prf << "\n";
 
@@ -27,6 +29,17 @@ calc::eval( sequent& seq, const proofterm& prf, errorstack& err )
             throw std::logic_error( "too many" ); 
 
          return seq. getformula( f. front( ));
+      }
+
+   case prf_clausify:
+      {
+         auto cl = prf. view_clausify( ); 
+         auto fm = eval( cl. parent( ), seq, err );
+         logic::context ctxt;  
+         fm = removelets( seq, ctxt, fm );
+         if( ctxt. size( ))
+            throw std::logic_error( "context not empty" ); 
+         return fm;    
       }
    }
 

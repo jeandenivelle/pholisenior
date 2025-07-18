@@ -5,7 +5,7 @@
 #include "logic/replacements.h"
 
 logic::term
-calc::removelets( logic::beliefstate& blfs, namegenerator& gen,
+calc::removelets( sequent& seq, 
                   logic::context& ctxt, logic::term f )
 {
    if constexpr( false )
@@ -29,7 +29,7 @@ calc::removelets( logic::beliefstate& blfs, namegenerator& gen,
    case logic::op_prop:
       {
          auto un = f. view_unary( );
-         un. update_sub( removelets( blfs, gen, ctxt, un. extr_sub( )));
+         un. update_sub( removelets( seq, ctxt, un. extr_sub( )));
          return f;
       }
 
@@ -43,8 +43,8 @@ calc::removelets( logic::beliefstate& blfs, namegenerator& gen,
    case logic::op_equals:
       {
          auto bin = f. view_binary( );
-         bin. update_sub1( removelets( blfs, gen, ctxt, bin. extr_sub1( )));
-         bin. update_sub2( removelets( blfs, gen, ctxt, bin. extr_sub2( )));
+         bin. update_sub1( removelets( seq, ctxt, bin. extr_sub1( )));
+         bin. update_sub2( removelets( seq, ctxt, bin. extr_sub2( )));
          return f;
       }
 
@@ -57,7 +57,7 @@ calc::removelets( logic::beliefstate& blfs, namegenerator& gen,
             ctxt. append( quant. var(i). pref, quant. var(i). tp );
 
          quant. update_body( 
-            removelets( blfs, gen, ctxt, quant. extr_body( )));
+            removelets( seq, ctxt, quant. extr_body( )));
              
          ctxt. restore( ss );
          return f;
@@ -75,17 +75,10 @@ calc::removelets( logic::beliefstate& blfs, namegenerator& gen,
          // Second element is let. val( ) with variables
          // normalized to #0,#1, etc.
 
-         auto str = gen. create( let. var( ). pref ); 
-         identifier freshid = identifier( ) + str;
-
          logic::type tp = functype( let. var( ). tp, ctxt, pr. first );
-         std::cout << "\nthe type is " << tp << "\n"; 
-
          logic::term def = abstraction( pr. second, ctxt, pr. first ); 
-         std::cout << "the defined term is " << def << "\n";
 
-         auto ex = blfs. append( 
-            logic::belief( logic::bel_def, freshid, def, tp ));
+         auto ex = seq. define( let. var( ). pref, def, tp );
 
          auto tm = application( 
             logic::term( logic::op_exact, ex ), pr. first );
@@ -96,18 +89,17 @@ calc::removelets( logic::beliefstate& blfs, namegenerator& gen,
          std::cout << subst << "\n";    
          bool change = false; 
          f = topdown( subst, let. extr_body( ), 0, change ); 
-         std::cout << "now f is " << f << "\n";  
 
-         return removelets( blfs, gen, ctxt, f );
+         return removelets( seq, ctxt, f );
       }
 
    case logic::op_apply:
       {
          auto ap = f. view_apply( );
          for( size_t i = 0; i != ap. size( ); ++ i ) 
-            ap. update_arg( i, removelets( blfs, gen, ctxt, ap. extr_arg(i)));
+            ap. update_arg( i, removelets( seq, ctxt, ap. extr_arg(i)));
          
-         ap. update_func( removelets( blfs, gen, ctxt, ap. extr_func( ))); 
+         ap. update_func( removelets( seq, ctxt, ap. extr_func( ))); 
          return f;  
       }
 
@@ -119,7 +111,7 @@ calc::removelets( logic::beliefstate& blfs, namegenerator& gen,
             ctxt. append( lam. var(i). pref, lam. var(i). tp );
 
          lam. update_body(
-            removelets( blfs, gen, ctxt, lam. extr_body( )));
+            removelets( seq, ctxt, lam. extr_body( )));
 
          ctxt. restore( ss );
          return f;

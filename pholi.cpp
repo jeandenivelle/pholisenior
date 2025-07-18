@@ -96,19 +96,12 @@ int main( int argc, char* argv[] )
    std::cout << blfs << "\n";
    std::cout << err << "\n";
 
-   tests::clausify( blfs );
-
-   // tests::proofchecking( blfs, err ); 
-   return 0;
+   // tests::clausify( blfs );
 
    // tests::truthtables( );
-   // return 0;
 
    // tests::add_function( blfs );
    // tests::add_seq( blfs );
-#if 0
-   tests::add_unique( blfs );
-#endif
    std::cout << "(before type checking)\n";
 
    // tests::structural( blfs );
@@ -116,15 +109,12 @@ int main( int argc, char* argv[] )
 
    std::cout << "(after type checking)\n";
 
-   // tests::proofchecking( blfs );
-
    std::cout << blfs << "\n";
 
-   // tests::pretty( blfs );
+   tests::proofchecking( blfs, err );
    return 0;
 
 #if 0
-   
    // tests::context( ); 
    // tests::setsimplifications( );
    // tests::kbo( );

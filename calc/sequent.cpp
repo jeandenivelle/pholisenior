@@ -3,7 +3,8 @@
 #include "logic/pretty.h"
 
 logic::exact
-calc::sequent::push( std::string_view namebase, logic::term frm )  
+calc::sequent::push( std::string_view namebase, 
+                     const logic::term& frm )  
 {
    if( namebase. empty( )) 
       namebase = "assume";
@@ -16,6 +17,19 @@ calc::sequent::push( std::string_view namebase, logic::term frm )
    return ex;
 }
 
+logic::exact
+calc::sequent::define( std::string_view namebase,
+                       const logic::term& val, 
+                       const logic::type& tp )
+{
+   auto freshid = identifier( ) + gen. create( std::string( namebase )); 
+   auto def = logic::belief( logic::bel_def, freshid, val, tp );
+   std::cout << def << "\n";
+   logic::exact ex = blfs. append( std::move( def )); 
+   steps. push_back( extension( seq_name, ex, true ));
+
+   return ex;
+}
 
 logic::term
 calc::sequent::getformula( logic::exact ex )

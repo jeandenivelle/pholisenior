@@ -17,16 +17,16 @@ namespace calc
 
    // We need explicit values, because we put them in a priority
    // queue, where the highest (most unfinished) step is 
-   // always processed first.
+   // always processed first. 
 
    enum transstep 
    {
       step_rank = 1,
       step_anf = 2,
-      step_kleening = 3,
-      step_splitequiv = 4,
-      step_rmlet = 5, 
-      step_none = 6
+      step_knf = 3,
+      step_equivnesting = 4,
+      step_nolets = 5, 
+      step_unrestricted = 6
    };
 
    const char* getcstring( transstep step );
@@ -34,16 +34,10 @@ namespace calc
    inline std::ostream& operator << ( std::ostream& out, transstep step )
       { out << getcstring( step ); return out; }
 
-   struct subformula
+   struct clause
    {
-      logic::context ctxt;  
-      logic::exact pred;
-      logic::term form;
-         // The free De Bruijn variables of form are declared in 
-         // ctxt. 
-
-      polarity pol; 
-         // Applies only to the predicate.
+      logic::context forall;  
+      logic::term body;
 
       transstep last;
          // Last step that was applied.

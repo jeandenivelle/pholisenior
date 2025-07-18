@@ -31,21 +31,25 @@ namespace calc
    {
       logic::beliefstate& blfs; 
       errorstack& err; 
+
+      namegenerator gen;
+
       std::vector< extension > steps;
          // The extensions.
 
       std::vector< size_t > blockings;
          // These are indices into steps.
 
-      namegenerator gen;
 
       sequent( logic::beliefstate& blfs, errorstack& err ) noexcept
          : blfs( blfs ),
            err( err ) 
       { } 
 
-      logic::exact push( std::string_view namebase, logic::term frm );
-         // Extend with a formula. 
+      logic::exact push( std::string_view namebase, const logic::term& frm );
+      logic::exact assume( std::string_view namebase, const logic::type& tp );
+      logic::exact define( std::string_view namebase, const logic::term& val,
+                           const logic::type& tp );
 
       void ugly( std::ostream& out ) const;      
       void pretty( std::ostream& out, bool showhidden = false ) const;
