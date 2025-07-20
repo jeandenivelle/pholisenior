@@ -1,8 +1,6 @@
 
-#ifndef CALC_CLAUSIFY_
-#define CALC_CLAUSIFY_
-
-#include <vector>
+#ifndef CALC_KLEENING_
+#define CALC_KLEENING_
 
 #include "polarity.h"
 
@@ -24,12 +22,8 @@ namespace calc
 
    logic::term kleene_top( const logic::term& f, polarity pol );
    logic::term kleene_top_prop( const logic::term& f, polarity pol ); 
-      // Make sure that f is a literal, or
-      // the top operator of f is a Kleene operator.
+      // Try to get a Kleene operator on top. 
  
-   logic::term flatten_conj( logic::term f, unsigned int level ); 
-   void flatten( logic::context& ctxt, const logic::term& f,
-                 std::vector< logic::term > & into, unsigned int level );
 }
 
 #endif

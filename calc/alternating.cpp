@@ -29,7 +29,10 @@ logic::term
 calc::alternating( const logic::term& f, logic::selector op, 
                    unsigned int rank ) 
 {
-   std::cout << "make anf " << op << " " << rank << " : " << f << "\n";
+   if constexpr( false )
+   {
+      std::cout << "alternating " << op << " " << rank << " :  " << f << "\n\n";
+   }
 
    if( rank == 0 )
       return f;
@@ -48,10 +51,10 @@ calc::flatten( logic::context& ctxt, const logic::term& frm,
                logic::selector op, unsigned int rank,
                std::vector< logic::term > & into )
 {
-   if constexpr( true )
+   if constexpr( false )
    {
       std::cout << "flatten " << op << "/" << rank << " : ";
-      std::cout << frm << "\n";
+      std::cout << frm << "\n\n";
    }
 
    auto kln = kleene_top( frm, pol_pos );
@@ -76,7 +79,7 @@ calc::flatten( logic::context& ctxt, const logic::term& frm,
    }
 
    into. push_back( quantify( quantof( op ), ctxt,
-                    alternating( kln, alternation( op ), rank - 1 )));
+                    alternating( frm, alternation( op ), rank - 1 )));
 }
 
 

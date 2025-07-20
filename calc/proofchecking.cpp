@@ -2,6 +2,9 @@
 #include "proofchecking.h"
 
 #include "removelets.h"
+#include "alternating.h"
+
+#include "logic/pretty.h"
 
 logic::term 
 calc::eval( const proofterm& prf, sequent& seq, errorstack& err )
@@ -39,6 +42,8 @@ calc::eval( const proofterm& prf, sequent& seq, errorstack& err )
          fm = removelets( seq, ctxt, fm );
          if( ctxt. size( ))
             throw std::logic_error( "context not empty" ); 
+
+         fm = alternating( fm, logic::op_kleene_and, 2 );
          return fm;    
       }
    }

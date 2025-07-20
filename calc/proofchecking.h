@@ -16,6 +16,7 @@ namespace calc
       // In case of error, we express our frustration into err, and 
       // throw a failure exception.
 
+
 }
 
 #endif

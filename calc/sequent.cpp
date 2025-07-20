@@ -13,7 +13,7 @@ calc::sequent::push( std::string_view namebase,
    std::cout << id << "\n";
 
    auto ex = blfs. append( logic::belief( logic::bel_form, id, frm ));
-   steps. push_back( extension( seq_form, ex, true ));
+   steps. push_back( extension( seq_belief, ex, true ));
    return ex;
 }
 
@@ -26,7 +26,7 @@ calc::sequent::define( std::string_view namebase,
    auto def = logic::belief( logic::bel_def, freshid, val, tp );
    std::cout << def << "\n";
    logic::exact ex = blfs. append( std::move( def )); 
-   steps. push_back( extension( seq_name, ex, true ));
+   steps. push_back( extension( seq_belief, ex, true ));
 
    return ex;
 }
@@ -99,7 +99,7 @@ void calc::sequent::pretty( std::ostream& out, bool showhidden ) const
       {
          switch( e. sel( ))
          {
-         case seq_form:
+         case seq_belief:
             {
                auto name = e. name( );
                out << blfs. at( name ). name( );

@@ -26,7 +26,7 @@ namespace calc
    // Result will be a disjunction of exists of alt_foralls( ).
 
    logic::term
-   alternating( const logic::term& frm, 
+   alternating( const logic::term& fm, 
                 logic::selector op, unsigned int rank );
       // op must be op_kleene_and, or op_kleene_or.
 

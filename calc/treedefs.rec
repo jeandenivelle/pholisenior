@@ -2,13 +2,12 @@
 %dir calc
 %namespace calc
 
-%define extension ( seq_form )
+%define extension ( seq_belief )
 %prefix name : logic::exact 
 %prefix visible : bool
 
-%option form { seq_form } =>
-%option name { seq_name } =>
-%option block { seq_block } =>
+%option belief { seq_belief } =>
+%option blocking { seq_blocking } =>
 
 %h_incl {
    #include "logic/term.h" 
@@ -18,6 +17,7 @@
 %define proofterm ( prf_truthconst )
 %option truthconst { prf_truthconst } =>
    // The truth constant (in Kleene logic).
+%option tautology { prf_tautology } => fm : logic::term
 %option exact { prf_exact } => exact : logic::exact
 %option ident { prf_ident } => ident : identifier
 %option clausify { prf_clausify } => parent : proofterm

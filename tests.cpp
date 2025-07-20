@@ -522,7 +522,7 @@ void tests::betareduction( )
 
 void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
 {
-   auto id = identifier( ) + "find2";
+   auto id = identifier( ) + "just";
 
    const auto& f = blfs. getformulas( id );
    std::cout << f. size( ) << "\n";
@@ -530,7 +530,7 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
       throw std::runtime_error( "cannot continue" );
 
    auto seq = calc::sequent( blfs, err );
-   seq. push( "initial", ! prop( blfs. at( f. front( )). view_thm( ). frm( )));
+   seq. push( "initial", ! blfs. at( f. front( )). view_thm( ). frm( ));
 
    std::cout << seq << "\n";
 
@@ -538,7 +538,7 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
    prf = calc::proofterm( calc::prf_clausify, prf ); 
    auto res = eval( prf, seq, err ); 
 
-   std::cout << "result = " << res << "\n";
+   std::cout << "result(ugly) = " << res << "\n\n";
    {
       logic::context ctxt;
       std::cout << "result = ";

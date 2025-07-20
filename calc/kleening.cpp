@@ -59,8 +59,8 @@ logic::term calc::apply_prop( const logic::term& f, polarity pol )
 
 logic::term calc::kleene_top( const logic::term& f, polarity pol )
 {
-   if constexpr( true )
-      std::cout << "kleene top  " << f << " / " << pol << "\n";
+   if constexpr( false )
+      std::cout << "kleene top : " << f << " / " << pol << "\n\n";
 
    using namespace logic;
 
@@ -156,8 +156,8 @@ logic::term calc::kleene_top( const logic::term& f, polarity pol )
 
 logic::term calc::kleene_top_prop( const logic::term& f, polarity pol )
 {
-   if constexpr( true )
-      std::cout << "kleene topprop " << f << " / " << pol << "\n";
+   if constexpr( false )
+      std::cout << "kleene topprop : " << f << " / " << pol << "\n";
 
    using namespace logic;
 
@@ -247,6 +247,6 @@ logic::term calc::kleene_top_prop( const logic::term& f, polarity pol )
 
    std::cout << "kleene top prop " << pol << " : " << f. sel( ) << "\n";
    throw std::runtime_error( "operator not implemented" );
-
 }
+
 
