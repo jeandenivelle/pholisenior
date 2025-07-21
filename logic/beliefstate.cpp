@@ -2,6 +2,23 @@
 #include "beliefstate.h"
 #include "pretty.h"
 
+
+void 
+logic::beliefstate::remove_candidates( identifier2exact& overloads,
+                const identifier& id,
+                logic::exact name ) 
+{
+   auto p = overloads. find( id );
+   if( p != overloads. end( ))
+   {
+      if( p -> second. size( ) && p -> second. back( ) == name )
+         p -> second. pop_back( );
+
+      if( p -> second. size( ) == 0 )
+         overloads. erase(p); 
+   }
+}
+
 logic::exact logic::beliefstate::append( belief&& bl )
 {
 
@@ -68,7 +85,6 @@ logic::exact logic::beliefstate::append( belief&& bl )
          vect. push_back( std::move( bl ));
          return ex;      
       }
-
    }
 
    std::cout << "dont know how to append : " << bl << "\n";
@@ -106,6 +122,20 @@ logic::beliefstate::getformulas( const identifier& id ) const
       return empty;
 }
 
+void logic::beliefstate::restore( size_t s )
+{
+   while( s < vect. size( ))
+   {
+      const auto& id = vect. back( ). name( );
+      auto ex = exact( vect. size( ) - 1 );
+
+      remove_candidates( functions, id, ex );
+      remove_candidates( structdefs, id, ex );
+      remove_candidates( formulas, id, ex );
+
+      vect. pop_back( ); 
+   }
+}
 
 namespace
 {

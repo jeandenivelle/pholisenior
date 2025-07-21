@@ -3,7 +3,7 @@
 // Made a lot of changes in December 2024.
 // The main data structure now is a vector of beliefs.
 // An exact name is an index into this vector.
-// I merged ranking into the belief state.
+// July 2025, I added 'restore_to' to support backtracking.
 
 #ifndef LOGIC_BELIEFSTATE_
 #define LOGIC_BELIEFSTATE_  
@@ -39,12 +39,15 @@ namespace logic
 
       identifier2exact formulas;
 
-      std::vector< exact > empty;
+      const std::vector< exact > empty;
          // This is an empty vector, so that we can return
          // a reference when somebody tries to look up an identifier
          // that has no overloads. Since we always return it 
          // as a const-reference, it is harmless that it will
          // be shared.
+
+      static void remove_candidates( identifier2exact& overloads,
+                                     const identifier& id, exact ex );
 
    public:  
       beliefstate( ) noexcept = default; 
@@ -85,6 +88,9 @@ namespace logic
                 !getformulas( id ). empty( );
       }
 
+      void restore( size_t s ); 
+         // Restore to size s, remove all identifier added later.
+ 
       using iterator = std::vector< belief > :: iterator;
       using const_iterator = std::vector< belief > :: const_iterator;
 

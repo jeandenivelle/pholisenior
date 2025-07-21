@@ -29,7 +29,7 @@ namespace logic
       bool operator != ( exact e ) const
          { return nr != e. nr; }
 
-      // exact must be ordered, because of KBO:
+      // exact must be an ordered type, because of KBO:
 
       bool operator > ( exact e ) const
          { return nr > e. nr; }
