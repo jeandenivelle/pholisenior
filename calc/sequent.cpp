@@ -3,11 +3,10 @@
 #include "logic/pretty.h"
 
 logic::exact
-calc::sequent::push( std::string_view namebase, 
-                     const logic::term& frm )  
+calc::sequent::assume( std::string_view namebase, const logic::term& frm )  
 {
    if( namebase. empty( )) 
-      namebase = "assume";
+      namebase = "form";
 
    auto id = get_fresh_ident( std::string( namebase ));
    std::cout << id << "\n";
@@ -16,6 +15,23 @@ calc::sequent::push( std::string_view namebase,
    steps. push_back( extension( seq_belief, ex, true ));
    return ex;
 }
+
+
+logic::exact
+calc::sequent::assume( std::string_view namebase, const logic::type& tp )
+{
+   if( namebase. empty( ))
+      namebase = "V";
+
+   auto id = get_fresh_ident( std::string( namebase ));
+   std::cout << id << "\n";
+
+   auto ex = blfs. append( logic::belief( logic::bel_symbol, id, tp ));
+   steps. push_back( extension( seq_belief, ex, true ));
+   return ex;
+}
+
+
 
 logic::exact
 calc::sequent::define( std::string_view namebase,
@@ -102,7 +118,7 @@ void calc::sequent::pretty( std::ostream& out, bool showhidden ) const
          case seq_belief:
             {
                auto name = e. name( );
-               out << blfs. at( name ). name( );
+               out << "   " << blfs. at( name ). name( );
                logic::pretty::print( out, blfs, blfs. at( name )); 
                break;
             } 

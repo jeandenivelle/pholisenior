@@ -29,6 +29,9 @@ namespace
 std::string 
 calc::namegenerator::create( std::string base )
 {
+   while( !base. empty( ) && isdigit( base. back( )) )
+      base. pop_back( );
+   
    auto p = names. find( base );
    if( p == names. end( ))
    {

@@ -530,10 +530,21 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
       throw std::runtime_error( "cannot continue" );
 
    auto seq = calc::sequent( blfs, err );
-   seq. push( "initial", ! blfs. at( f. front( )). view_thm( ). frm( ));
+   seq. assume( "initial", ! blfs. at( f. front( )). view_thm( ). frm( ));
 
    std::cout << seq << "\n";
+   auto prf = calc::proofterm( calc::prf_clausify, 
+           calc::proofterm( calc::prf_ident, identifier( ) + "initial0001" )); 
 
+   prf = calc::proofterm( calc::prf_resolve, 0, 0, prf, "main",
+                    calc::proofterm( calc::prf_unfinished, { } ),
+                    calc::proofterm( calc::prf_unfinished, { } ));
+
+   std::cout << prf << "\n";
+   
+   auto res = eval( prf, seq, err );
+
+#if 0
    auto prf = calc::proofterm( calc::prf_ident, identifier( ) + "initial0001" );
    prf = calc::proofterm( calc::prf_clausify, prf ); 
    auto res = eval( prf, seq, err ); 
@@ -546,7 +557,6 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
       std::cout << "\n";
    }
 
-#if 0
    pretty::print( std::cout, bel ); 
    check_everything( std::cout, bel );
 

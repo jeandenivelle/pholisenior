@@ -21,7 +21,11 @@
 %option exact { prf_exact } => exact : logic::exact
 %option ident { prf_ident } => ident : identifier
 %option clausify { prf_clausify } => parent : proofterm
-%option andelim { prf_andelim } => par : proofterm, ind : size_t 
+%option resolve { prf_resolve } =>
+   conj : size_t, disj : size_t, parent : proofterm, 
+      name : std::string, first : proofterm, rest : proofterm
+
+%option unfinished { prf_unfinished } => [ show : proofterm ] 
 
 %h_incl {
    #include "sequent.h"
@@ -39,7 +43,6 @@
    {
       switch( sel( ))
       {
-
       case prf_truthconst:
          out << "truthconst( )";
          return; 
@@ -51,12 +54,65 @@
       case prf_clausify:
          out << "clausify( " << view_clausify( ). parent( ) << " )";
          return; 
+
+      case prf_resolve:
+         {
+            auto res = view_resolve( ); 
+            out << "resolve( "; 
+            out << res. conj( ) << "/" << res.disj( ) << ", ";
+            out << res. name( ) << " : " << res. first( ) << ", ";
+            out << res. rest( ) << " )"; 
+            return;
+         }
+
+      case prf_unfinished:
+         {
+            out << "unfinished(";
+            auto unf = view_unfinished( );
+            for( size_t i = 0; i != unf. size( ); ++ i )
+            {
+               if(i) 
+                  out << ", ";
+               else
+                  out << " ";
+               out << unf. show(i);
+            }
+            out << " )";
+         }
+         return;
       }
 
       out << sel( ) << "\n";
       throw std::logic_error( "don't know how to print" );
    }
 
-
 }
 
+// Current expectation is that class refterm will not be used.
+// (on 20 july)
+
+%define refterm ( ref_unfinished )
+%option unfinished { ref_unfinished } =>
+
+%option assume { ref_assume } =>
+   name : std::string, body : refterm, [ exists : std::string ]
+      // Must be part of a branch.
+
+%h_incl {
+   #include "proofterm.h"
+}
+
+%h_methods {
+
+   void print( std::ostream& out ) const;
+}
+
+%cpp_back
+{
+   void calc::refterm::print( std::ostream& out ) const
+   {
+
+   }
+}
+
+ 

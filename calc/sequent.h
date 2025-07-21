@@ -9,20 +9,10 @@
 #include "extension.h"
 #include "logic/beliefstate.h"
 #include "namegenerator.h"
+#include "failure.h"
 
 namespace calc
 {
-
-   struct failure
-   {
-      failure( ) noexcept = default;
-
-      void print( std::ostream& out ) const
-      {
-         out << "(failure)";
-      }
-   };
-
 
    // It is not a complete class. It is more like a view
    // into a beliefstate.
@@ -45,7 +35,7 @@ namespace calc
            err( err ) 
       { } 
 
-      logic::exact push( std::string_view namebase, const logic::term& frm );
+      logic::exact assume( std::string_view namebase, const logic::term& frm );
       logic::exact assume( std::string_view namebase, const logic::type& tp );
       logic::exact define( std::string_view namebase, const logic::term& val,
                            const logic::type& tp );
@@ -57,6 +47,7 @@ namespace calc
 
       logic::term getformula( logic::exact ex );
          // Not const because we may create an error. 
+         // We also throw a failure. 
    };
 
    inline std::ostream& operator << ( std::ostream& out, const sequent& seq )

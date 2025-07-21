@@ -84,6 +84,8 @@ logic::fullsubst::operator( ) ( term t, size_t vardepth, bool& change ) const
          {
             ind -= vardepth; 
 
+            ind = values. size( ) - ind - 1;   // Because we look backwards.
+
             // We need to lift, but we don't lift over 0:
 
             if( vardepth == 0 )
@@ -109,8 +111,12 @@ logic::fullsubst::operator( ) ( term t, size_t vardepth, bool& change ) const
 void logic::fullsubst::print( std::ostream& out ) const
 {
    out << "Full Substitution:\n";
-   for( size_t i = 0; i != values. size( ); ++ i ) 
-      out << "   #" << i << " := " << values[i] << "\n";
+   for( auto i = 1 - (ssize_t) values. size( ); const auto& t: values )
+   {
+      out << "   #" << i << " := " << t << "\n";
+      ++ i;
+   }
+
 }
 
 #if 0

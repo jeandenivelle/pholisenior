@@ -21,6 +21,5 @@ calc/extension.h
 calc/extension.cpp
 calc/proofterm.h
 calc/proofterm.cpp
-
 Makefile
 

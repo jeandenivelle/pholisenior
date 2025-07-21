@@ -93,7 +93,7 @@ void
 logic::pretty::uniquenamestack::print( std::ostream& out ) const
 {
    out << "Uniquenamestack:\n";
-   for( ssize_t ind = 1 - size( ); const auto& n : names ) 
+   for( auto ind = 1 - (ssize_t) size( ); const auto& n : names ) 
    {
       out << "   #" << ind << " : ";
       out << n << "\n";

@@ -614,7 +614,7 @@ logic::pretty::print( std::ostream& out,
    {
    case logic::bel_symbol:
       {
-         out << " : ";
+         out << "   : ";
          auto sym = bel. view_symbol( );
          pretty::print( out, blfs, sym. tp( ), {0,0} );
          out << "\n";
@@ -623,7 +623,7 @@ logic::pretty::print( std::ostream& out,
 
    case logic::bel_def:
       {
-         out << " := ";
+         out << "   := ";
          auto def = bel. view_def( );
          context ctxt; 
          pretty::print( out, blfs, ctxt, def. val( )); 

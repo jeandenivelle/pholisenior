@@ -21,6 +21,8 @@ namespace calc
       namegenerator& operator = ( namegenerator&& ) = default;
 
       std::string create( std::string base );
+         // Trailing digits are removed from base first, after which we
+         // add our own. 
 
       void print( std::ostream& out ) const;
    };

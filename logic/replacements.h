@@ -77,6 +77,8 @@ namespace logic
       void print( std::ostream& out ) const;
 
       size_t size( ) const { return values. size( ); } 
+      void push( term&& val ) { values. push_back( std::move( val )); }
+
    };
 
 
