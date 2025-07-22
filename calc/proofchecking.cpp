@@ -7,53 +7,95 @@
 #include "logic/pretty.h"
 #include "logic/replacements.h"
 
-const logic::term&
-calc::get_conjunct( const logic::term& fm, size_t ind, errorstack& err )
+size_t calc::nrsubforms( const logic::term& fm )
 {
-   if( fm. sel( ) != logic::op_kleene_and )
-   {
-      err. push( "formula is not a Kleene-and" );
-      throw failure( );
-   }
+   if( !fm. option_is_kleene( ))
+      throw std::logic_error( "nrsubforms: Not a Kleene operator" );
 
-   if( ind >= fm. view_kleene( ). size( ))
-   {
-      errorstack::builder bld;
-      bld << "conjunction does not have " << ind << "-th conjunct";
-      err. push( std::move( bld ));
-      throw failure( );
-   }
-
-   return fm. view_kleene( ). sub( ind ); 
+   return fm. view_kleene( ). size( );
 }
 
-
 const logic::term&
-calc::get_disjunct( const logic::term& fm, size_t ind, errorstack& err )
+calc::subform( const logic::term& fm, size_t i )
 {
-   if( fm. sel( ) != logic::op_kleene_or )
+   if( !fm. option_is_kleene( ))
+      throw std::logic_error( "subform: Not a Kleene operator" ); 
+
+   if( i >= fm. view_kleene( ). size( ))
+      throw std::logic_error( "subform: index too big" ); 
+
+   return fm. view_kleene( ). sub(i); 
+}
+
+logic::term
+calc::replace( logic::term fm, size_t i, const logic::term& val )
+{
+   if( !fm. option_is_kleene( ))
+      throw std::logic_error( "replace: Not a Kleene operator" ); 
+
+   if( i >= fm. view_kleene( ). size( )) 
+      throw std::logic_error( "replace: index too big" );
+
+   fm. view_kleene( ). update_sub( i, val ); 
+   return fm; 
+}
+
+logic::term
+calc::remove( logic::term fm, size_t i )
+{
+   if( !fm. option_is_kleene( )) 
+      throw std::logic_error( "remove: Not a Kleene operator" );
+
+   auto kl = fm. view_kleene( );
+   if( i >= kl. size( ))
+      throw std::logic_error( "remove: index too big" );
+
+   while( i + 1 < kl. size( ))
    {
-      err. push( "formula is not a Kleene-or" );
-      throw failure( ); 
-   }        
-         
-   if( ind >= fm. view_kleene( ). size( ))
-   {     
-      errorstack::builder bld;
-      bld << "disjunction does not have " << ind << "-th disjunct";
-      err. push( std::move( bld ));
-      throw failure( );
-   }  
-   
-   return fm. view_kleene( ). sub( ind );
-}        
-      
+      kl. update_sub( i, kl. extr_sub( i + 1 ));
+      ++ i;
+   }
+
+   kl. pop_back( );
+   return fm;
+}
+
 
 bool
 calc::iscontradiction( const logic::term& fm )
 {
-   std::cout << "is this a contradiction " << fm << " ??\n";
+   switch( fm. sel( ))
+   {
+   case logic::op_kleene_and:
+      {
+         auto conj = fm. view_kleene( );
+         for( size_t i = 0; i != conj. size( ); ++ i )
+         {
+            if( iscontradiction( conj. sub(i)))
+               return true;
+         }
+         return false; 
+      }
+   
+   case logic::op_kleene_or:
+      {
+         auto disj = fm. view_kleene( );
+         for( size_t i = 0; i != disj. size( ); ++ i )
+         {
+            if( !iscontradiction( disj. sub(i)))
+               return false;
+         }
+         return true;
+      }
 
+   case logic::op_kleene_exists:
+      {
+         auto quant = fm. view_quant( ); 
+         return iscontradiction( quant. body( ));
+      }
+   }
+
+   return false;
 }
 
 
@@ -98,24 +140,49 @@ calc::eval( const proofterm& prf, sequent& seq, errorstack& err )
          return fm;    
       }
    
-   case prf_resolve:
+   case prf_branch:
       {
          size_t nrerrors = err. size( );
-         auto res = prf. view_resolve( ); 
-         auto par = eval( res. parent( ), seq, err );
-         std::cout << "parent = " << par << "\n";
+         size_t seqsize = seq. size( );
 
-         try
+         auto res = prf. view_branch( ); 
+         const logic::term& parent = eval( res. parent( ), seq, err );
+
+         if( parent. sel( ) != logic::op_kleene_and )
+            throw std::logic_error( "result not in ANF" );
+
+         if( res. conj( ) >= nrsubforms( parent ))
          {
-            auto conj = get_conjunct( par, res. conj( ), err );
-            std::cout << "selected conjuct = " << conj << "\n";
+            errorstack::builder bld;
+            bld << "conjunction does not have a ";
+            bld << res. conj( ) << "-th conjunct";
+            err. push( std::move( bld ));
+            throw failure( ); 
+         }        
 
-            logic::term disj = get_disjunct( conj, res. disj( ), err );
-            std::cout << "selected disjunct = " << disj << "\n";
+         logic::term disj = subform( parent, res. conj( ));
 
-            // They cannot be repeated, but a while is as easy
-            // to write as an if:
+         if( disj. sel( ) != logic::op_kleene_or )
+         {
+            err. push( "cannot branch: subformula is not a Kleene-or" );
+            throw failure( );
+         }
 
+         if( res. disj( ) >= nrsubforms( disj )) 
+         {
+            errorstack::builder bld;
+            bld << "disjunction does not have ";
+            bld << res. disj( ) << "-th disjunct";
+            err. push( std::move( bld ));
+            throw failure( );
+         }
+
+         disj = subform( std::move( disj ), res. disj( ));
+ 
+         // In ANF, quantifiers cannot be nested, but a while is as easy
+         // to write as an if:
+
+         {
             logic::fullsubst namesubst; 
                // We need to substitute global names instead
                // of De Bruijn indices.
@@ -134,38 +201,37 @@ calc::eval( const proofterm& prf, sequent& seq, errorstack& err )
                disj = ex. body( ); 
             }
 
-            std::cout << namesubst << "\n";
             bool dontcare = false;
             disj = topdown( namesubst, std::move( disj ), 0, dontcare );
+         }
 
-            seq. assume( res. name( ), disj ); 
-            std::cout << seq << "\n";
-            std::cout << disj << "\n";
-         }
-         catch( failure f )
-         {
-            std::cout << "caught the failure in first part\n"; 
-            throw std::logic_error( "take action" );
-         }
+         seq. assume( res. name( ), disj ); 
+         std::cout << seq << "\n";
+         std::cout << "disj = " << disj << "\n";
 
          auto first = eval( res. first( ), seq, err );
-         std::cout << "first = " << first << "\n";
          if( !iscontradiction( first ))
-            throw std::logic_error( "not a contradition" );
+            throw std::logic_error( "not a contradiction" );
 
-         
-      }   
-      throw std::logic_error( "not finished" );
+         seq. restore( seqsize ); 
+         std::cout << seq << "\n";
+
+         auto rest = remove( subform( parent, res. conj( )), res. disj( ));
+         return replace( parent, res. conj( ), rest );
+      }
 
    case prf_unfinished:
       {
          errorstack::builder bld;
-         bld << "Using The Unfinished Rule:\n";
+         bld << "--------------------------------------------------\n";
+         bld << "Unfinished Proof:\n";
+         bld << seq << "\n";
          auto unf = prf. view_unfinished( ); 
          for( size_t i = 0; i != unf. size( ); ++ i )
          {
+            logic::context ctxt; 
             bld << i << " : "; 
-            bld << eval( unf. show(i), seq, err ) << "\n";
+            logic::pretty::print( bld, seq. blfs, ctxt, eval( unf. show(i), seq, err ));
          }
          err. push( std::move( bld ));
       }

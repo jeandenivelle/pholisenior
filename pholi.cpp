@@ -8,19 +8,14 @@
 #include "tests.h"
 
 #include "logic/exact.h"
-#include "logic/type.h"
-#include "logic/position.h"
-#include "logic/term.h"
-#include "logic/context.h"
+#include "logic/structural.h"
 #include "logic/kbo.h"
 #include "logic/pretty.h"
 #include "logic/termoperators.h"
 
-#include "logic/structural.h"
-#include "logic/pretty.h"
-#include "logic/replacements.h"
-
 #include "parsing/parser.h"
+
+#include "calc/proofchecking.h"
 
 void
 includefile( logic::beliefstate& blfs, 
@@ -112,6 +107,7 @@ int main( int argc, char* argv[] )
    std::cout << blfs << "\n";
 
    tests::proofchecking( blfs, err );
+   std::cout << err << "\n";
    return 0;
 
 #if 0

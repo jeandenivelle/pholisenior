@@ -16,7 +16,6 @@ calc::sequent::assume( std::string_view namebase, const logic::term& frm )
    return ex;
 }
 
-
 logic::exact
 calc::sequent::assume( std::string_view namebase, const logic::type& tp )
 {
@@ -28,10 +27,9 @@ calc::sequent::assume( std::string_view namebase, const logic::type& tp )
 
    auto ex = blfs. append( logic::belief( logic::bel_symbol, id, tp ));
    steps. push_back( extension( seq_belief, ex, true ));
+   std::cout << "assuming " << id << " : " << tp << "\n";
    return ex;
 }
-
-
 
 logic::exact
 calc::sequent::define( std::string_view namebase,
@@ -106,27 +104,51 @@ calc::sequent::addformula( std::string_view namebase,
 
 #endif
 
-void calc::sequent::pretty( std::ostream& out, bool showhidden ) const
+void calc::sequent::restore( size_t ss )
+{
+   // If anything got blocked, we unblock it:
+
+   while( ss < steps. size( )) 
+   {
+      switch( steps. back( ). sel( ))
+      {
+      case seq_belief:
+         {
+            auto bl = steps. back( ). view_belief( );
+            blfs. backtrack( bl. name( ));
+         }
+         break;
+      case seq_blocking:
+         {
+            size_t nr = steps. back( ). view_blocking( ). nr( );
+            steps[ nr ]. view_belief( ). visible( ) = true;
+         }
+         break;
+      }
+      steps. pop_back( );
+   }
+}
+
+void calc::sequent::pretty( std::ostream& out, bool showblocked ) const
 {
    out << "Sequent:\n";
    for( const auto& e : steps )
    {
-      if( showhidden || e. visible( ))
+      switch( e. sel( ))
       {
-         switch( e. sel( ))
+      case seq_belief:
          {
-         case seq_belief:
-            {
-               auto name = e. name( );
-               out << "   " << blfs. at( name ). name( );
-               logic::pretty::print( out, blfs, blfs. at( name )); 
-               break;
+            auto bl = e. view_belief( ); 
+            if( showblocked || bl. visible( ))
+            { 
+               out << "   " << blfs. at( bl. name( ) ). ident( );
+               logic::pretty::print( out, blfs, blfs. at( bl. name( ) )); 
             } 
-         
-         default: 
-            std::cout << e. sel( ) << "\n";
-            throw std::runtime_error( "doesnt know how to be pretty" );
          }
+         break; 
+      default: 
+         std::cout << e. sel( ) << "\n";
+         throw std::runtime_error( "doesnt know how to be pretty" );
       }
    }
 }

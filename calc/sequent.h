@@ -40,14 +40,18 @@ namespace calc
       logic::exact define( std::string_view namebase, const logic::term& val,
                            const logic::type& tp );
 
+      size_t size( ) const { return steps. size( ); } 
+      void restore( size_t s ); 
+
       void ugly( std::ostream& out ) const;      
-      void pretty( std::ostream& out, bool showhidden = false ) const;
+      void pretty( std::ostream& out, bool showblocked = false ) const;
 
       identifier get_fresh_ident( std::string namebase );
 
       logic::term getformula( logic::exact ex );
          // Not const because we may create an error. 
          // We also throw a failure. 
+     
    };
 
    inline std::ostream& operator << ( std::ostream& out, const sequent& seq )

@@ -115,20 +115,6 @@ namespace logic
    };
 
    
-   struct definition
-   {
-      exact id;
-      term val;
-      
-      definition( exact id, const term& val )
-         : id(id), val( val )
-      { }
-
-      term operator( ) ( const term& t, size_t vardepth ) const; 
-
-      void print( std::ostream& out ) const;
-   };
-
    struct projection
    {
 

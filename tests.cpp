@@ -536,13 +536,12 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
    auto prf = calc::proofterm( calc::prf_clausify, 
            calc::proofterm( calc::prf_ident, identifier( ) + "initial0001" )); 
 
-   prf = calc::proofterm( calc::prf_resolve, 0, 0, prf, "main",
-                    calc::proofterm( calc::prf_unfinished, { } ),
-                    calc::proofterm( calc::prf_unfinished, { } ));
+   prf = calc::proofterm( calc::prf_branch, 0, 0, prf, "main",
+                    calc::proofterm( calc::prf_unfinished, { 
+              calc::proofterm( calc::prf_clausify, calc::proofterm( calc::prf_ident, identifier( ) + "main0001" )) } ));
 
-   std::cout << prf << "\n";
-   
    auto res = eval( prf, seq, err );
+   std::cout << "eval returned " << res << "\n";
 
 #if 0
    auto prf = calc::proofterm( calc::prf_ident, identifier( ) + "initial0001" );

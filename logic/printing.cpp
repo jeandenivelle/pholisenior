@@ -105,12 +105,15 @@ void logic::term::print( std::ostream& out ) const
    case op_kleene_and:
    case op_kleene_or:
       {
-         out << sel( ) << "( ";
+         out << sel( ) << "(";
          auto kl = view_kleene( );
          for( size_t i = 0; i != kl. size( ); ++ i )
          {
             if( i != 0 )
                out << ", ";
+            else
+               out << " ";
+
             out << kl. sub(i); 
          }
          out << " )";
@@ -201,37 +204,37 @@ void logic::belief::print( std::ostream& out ) const
       return;
 
    case bel_struct:
-      out << name( ) << " := " << view_struct( ). def( );
+      out << ident( ) << " := " << view_struct( ). def( );
       return;
 
    case bel_symbol:
-      out << "symbol " << name( ) << " : " << view_symbol( ). tp( );
+      out << "symbol " << ident( ) << " : " << view_symbol( ). tp( );
       return;
 
    case bel_def:
       {
          auto d = view_def( );
-         out << name( ) << " := " << d. val( );
+         out << ident( ) << " := " << d. val( );
          out << " : " << d. tp( );
       }
       return;
 
    case bel_thm:
-      out << "theorem " << name( ) << " : " << view_thm( ). frm( );
+      out << "theorem " << ident( ) << " : " << view_thm( ). frm( );
       return;
 
    case bel_axiom:
-      out << "axiom " << name( ) << " : " << view_axiom( ). frm( );
+      out << "axiom " << ident( ) << " : " << view_axiom( ). frm( );
       return;
 
    case bel_form:
-      out << "form " << name( ) << " : " << view_form( ). frm( );
+      out << "form " << ident( ) << " : " << view_form( ). frm( );
       return;
 
    case bel_fld:
       {
          auto f = view_field( );
-         out << name( ) << " : field at offset " << f. offset( );
+         out << ident( ) << " : field at offset " << f. offset( );
          out << " in " << f. sdef( );
       }
       return;
@@ -239,7 +242,7 @@ void logic::belief::print( std::ostream& out ) const
    case bel_constr:
       {
          auto c = view_constr( );
-         out << name( ) << " : " << "constructor of " << c. tp( );
+         out << ident( ) << " : " << "constructor of " << c. tp( );
       }
       return;
 

@@ -3,7 +3,7 @@
 // Made a lot of changes in December 2024.
 // The main data structure now is a vector of beliefs.
 // An exact name is an index into this vector.
-// July 2025, I added 'restore_to' to support backtracking.
+// Added a backtrack method on July 21/22 2025.
 
 #ifndef LOGIC_BELIEFSTATE_
 #define LOGIC_BELIEFSTATE_  
@@ -54,8 +54,6 @@ namespace logic
       beliefstate( beliefstate&& ) noexcept = default;
       beliefstate& operator = ( beliefstate&& ) noexcept = default;
 
-      size_t size( ) const { return vect. size(); }
-
       exact append( belief&& bel );
          // If one adds a name with a pattern that overlaps with an 
          // existing
@@ -88,8 +86,8 @@ namespace logic
                 !getformulas( id ). empty( );
       }
 
-      void restore( size_t s ); 
-         // Restore to size s, remove all identifier added later.
+      void backtrack( exact id ); 
+         // Remove everything added after id, included id itself. 
  
       using iterator = std::vector< belief > :: iterator;
       using const_iterator = std::vector< belief > :: const_iterator;

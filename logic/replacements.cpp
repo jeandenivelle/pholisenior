@@ -319,29 +319,5 @@ logic::equalitysystem::print( std::ostream& out ) const
       out << "   " << eq. first << " --> " << eq. second << "\n";
 }
 
-logic::term
-logic::definition::operator( ) ( const term& t, size_t vardepth ) const
-{
-   // std::cout << "definition in " << t << " / " << vardepth << "\n";
-
-   if( t. sel( ) == sel_ident )
-   {
-      if( t. view_id( ). ident( ) == id )
-      { 
-         lifter lift( vardepth );
-         long unsigned int changes = 0;
-         return topdown_sar( changes, lift, val );
-      }
-   }
-   return t;
-}
-
-void
-logic::definition::print( std::ostream& out ) const
-{
-   out << "definition:\n";
-   out << "   " << id << " := " << val << "\n";
-}
-
 #endif
 

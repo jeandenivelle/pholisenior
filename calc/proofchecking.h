@@ -10,18 +10,27 @@
 
 namespace calc
 {
+   size_t nrsubforms( const logic::term& fm );
+      // fm must be a Kleene operator.
 
-   const logic::term&
-   get_conjunct( const logic::term& fm, size_t ind, errorstack& err );
-      // If fm is not a conjunction, or ind is too big, we write
-      // an error, and throw failure.
+   const logic::term& subform( const logic::term& fm, size_t i );
+      // Get fm[i], fm must be a Kleene operator.
 
-   const logic::term&
-   get_disjunct( const logic::term& fm, size_t ind, errorstack& err );
+   logic::term replace( logic::term fm, size_t i, const logic::term& val );
+      // Assign fm[i] := val, fm must be a Kleene operator.
+ 
+   logic::term remove( logic::term fm, size_t i );
+      // Remove i-th subformula. fm must be a Kleene operator. 
+      // We move the subformulas after i one position back.
+      // We could also swap with the last, which would be more efficient
+      // (constant time), but we want to preserve order as much as possible.
 
    bool iscontradiction( const logic::term& fm );
       // True if fm counts as contradition.
 
+   logic::term expanddef( const identifier& id, size_t& ind,
+                          logic::term );
+      // 
    logic::term 
    eval( const proofterm& prf, sequent& seq, errorstack& err );
       // In case of error, we express our frustration into err, and 

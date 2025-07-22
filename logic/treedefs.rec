@@ -101,7 +101,7 @@
 
 
 %define belief ( bel_empty )   
-%prefix name : identifier
+%prefix ident : identifier
 
 %option empty { bel_empty } => 
 %option struct { bel_struct } => def : structdef 

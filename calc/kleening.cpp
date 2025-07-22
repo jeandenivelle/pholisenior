@@ -12,8 +12,10 @@ logic::selector calc::kleenop( logic::selector op )
    case op_true:
       return op_kleene_and;
    case op_and:
+   case op_lazy_and:
       return op_kleene_and;
    case op_or:
+   case op_lazy_or:
       return op_kleene_or;
    case op_forall:
       return op_kleene_forall;
@@ -22,7 +24,7 @@ logic::selector calc::kleenop( logic::selector op )
    }
 
    std::cout << "kleenop not implemented for " << op << "\n";
-   throw std::runtime_error( "not implemented" );
+   throw std::runtime_error( "kleenop not implemented" );
 }
 
 logic::term calc::apply( const logic::term& f, polarity pol )
@@ -94,6 +96,8 @@ logic::term calc::kleene_top( const logic::term& f, polarity pol )
 
    case op_and:
    case op_or:
+   case op_lazy_and:
+   case op_lazy_or:
       {
          auto bin = f. view_binary( );
          auto sub1 = apply( bin. sub1( ), pol );

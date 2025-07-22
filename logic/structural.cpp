@@ -45,7 +45,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
    {
       if( blf. sel( ) == bel_struct )
       {
-         const auto& id = blf. name( );
+         const auto& id = blf. ident( );
          const auto& sdef = everything. getstructdefs( id );
 
          if( sdef. size( ) > 1 && !complained. contains( id ))
@@ -78,7 +78,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
    {
       if( blf. sel( ) == bel_struct )
       {
-         const auto& id = blf. name( );
+         const auto& id = blf. ident( );
          if( id == F || id == O )
          {
             errorstack::builder bld;
@@ -119,7 +119,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             if( err. size( ) > errstart )
             {
                 errorstack::builder bld;
-                bld << "In a definition of struct " << blf. name( ) << ":";
+                bld << "In a definition of struct " << blf. ident( ) << ":";
                 err. addheader( errstart, std::move( bld ));
             }
          }
@@ -135,7 +135,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             if( err. size( ) > errstart )
             {
                errorstack::builder bld;
-               bld << "In a declaration of symbol " << blf. name( ) << ":";
+               bld << "In a declaration of symbol " << blf. ident( ) << ":";
                err. addheader( errstart, std::move( bld ));
             }
          }
@@ -155,7 +155,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             if( err. size( ) > errstart )
             {
                errorstack::builder bld;
-               bld << "In a definition of " << blf. name( ) << ":";
+               bld << "In a definition of " << blf. ident( ) << ":";
                err. addheader( errstart, std::move( bld ));
             }
          }
@@ -223,7 +223,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             if( err. size( ) > errstart )
             {
                errorstack::builder bld;
-               bld << "In a definition of " << blf. name( ) << ":";
+               bld << "In a definition of " << blf. ident( ) << ":";
                err. addheader( errstart, std::move( bld ));
             }
          }
@@ -233,7 +233,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
          {
             auto thm = blf. view_thm( ); 
             term fm = thm. extr_frm( );
-            checkformula( everything, blf. name( ), fm, "theorem", err );
+            checkformula( everything, blf. ident( ), fm, "theorem", err );
             thm. update_frm( fm );
          }
          break; 
@@ -242,7 +242,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
          {
             auto ax = blf. view_axiom( );
             term fm = ax. extr_frm( );
-            checkformula( everything, blf. name( ), fm, "axiom", err );
+            checkformula( everything, blf. ident( ), fm, "axiom", err );
             ax. update_frm( fm );
          }
          break;
@@ -251,7 +251,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
          {
             auto sp = blf. view_form( );
             auto fm = sp. extr_frm( );
-            checkformula( everything, blf. name( ), fm, "supposition", err ); 
+            checkformula( everything, blf. ident( ), fm, "supposition", err ); 
             sp. update_frm( fm );
          }
          break;
@@ -1215,7 +1215,7 @@ logic::try_apply( const beliefstate& blfs, exact name,
       return { };   // They cannot be used in usual terms. 
    }
 
-   std::cout << bel. sel( ) << " " << bel. name( ) << "\n";
+   std::cout << bel. sel( ) << " " << bel. ident( ) << "\n";
    throw std::runtime_error( "try_apply, belief is not implemented" );
 }
 

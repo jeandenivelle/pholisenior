@@ -2,12 +2,10 @@
 %dir calc
 %namespace calc
 
-%define extension ( seq_belief )
-%prefix name : logic::exact 
-%prefix visible : bool
+%define extension ( seq_blocking )
 
-%option belief { seq_belief } =>
-%option blocking { seq_blocking } =>
+%option belief { seq_belief } => # name : logic::exact, visible : bool 
+%option blocking { seq_blocking } => # nr : size_t 
 
 %h_incl {
    #include "logic/term.h" 
@@ -21,9 +19,9 @@
 %option exact { prf_exact } => exact : logic::exact
 %option ident { prf_ident } => ident : identifier
 %option clausify { prf_clausify } => parent : proofterm
-%option resolve { prf_resolve } =>
+%option branch { prf_branch } =>
    conj : size_t, disj : size_t, parent : proofterm, 
-      name : std::string, first : proofterm, rest : proofterm
+      name : std::string, first : proofterm
 
 %option unfinished { prf_unfinished } => [ show : proofterm ] 
 
@@ -55,13 +53,12 @@
          out << "clausify( " << view_clausify( ). parent( ) << " )";
          return; 
 
-      case prf_resolve:
+      case prf_branch:
          {
-            auto res = view_resolve( ); 
-            out << "resolve( "; 
+            auto res = view_branch( ); 
+            out << "branch( "; 
             out << res. conj( ) << "/" << res.disj( ) << ", ";
-            out << res. name( ) << " : " << res. first( ) << ", ";
-            out << res. rest( ) << " )"; 
+            out << res. name( ) << " : " << res. first( ) << " )";
             return;
          }
 
@@ -86,33 +83,6 @@
       throw std::logic_error( "don't know how to print" );
    }
 
-}
-
-// Current expectation is that class refterm will not be used.
-// (on 20 july)
-
-%define refterm ( ref_unfinished )
-%option unfinished { ref_unfinished } =>
-
-%option assume { ref_assume } =>
-   name : std::string, body : refterm, [ exists : std::string ]
-      // Must be part of a branch.
-
-%h_incl {
-   #include "proofterm.h"
-}
-
-%h_methods {
-
-   void print( std::ostream& out ) const;
-}
-
-%cpp_back
-{
-   void calc::refterm::print( std::ostream& out ) const
-   {
-
-   }
 }
 
  

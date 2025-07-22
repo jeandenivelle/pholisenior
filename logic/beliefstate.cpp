@@ -29,7 +29,7 @@ logic::exact logic::beliefstate::append( belief&& bl )
          auto exstruct = exact( vect. size( ));
             // The exact name that the struct will have.
 
-         structdefs[ bl. name( ) ]. push_back( exstruct );
+         structdefs[ bl. ident( ) ]. push_back( exstruct );
 
          // We temporarily insert an empty belief, because we still need
          // access to bl later when we add the field functions and
@@ -41,9 +41,9 @@ logic::exact logic::beliefstate::append( belief&& bl )
          vect. push_back( belief( bel_empty, identifier( ) ));
 
          auto exconstr = exact( vect. size( ));
-         functions[ bl. name( ) ]. push_back( exconstr );
+         functions[ bl. ident( ) ]. push_back( exconstr );
 
-         vect. push_back( belief( logic::bel_constr, bl. name( ), exstruct )); 
+         vect. push_back( belief( logic::bel_constr, bl. ident( ), exstruct )); 
 
          // We create the field functions:
 
@@ -71,7 +71,7 @@ logic::exact logic::beliefstate::append( belief&& bl )
    case bel_def: 
       {
          exact ex = exact( vect. size( ));
-         functions[ bl. name( ) ]. push_back( ex );
+         functions[ bl. ident( ) ]. push_back( ex );
          vect. push_back( std::move( bl ));
          return ex; 
       }
@@ -81,7 +81,7 @@ logic::exact logic::beliefstate::append( belief&& bl )
    case bel_form:
       {
          exact ex = exact( vect. size( ));
-         formulas[ bl. name( ) ]. push_back( ex );
+         formulas[ bl. ident( ) ]. push_back( ex );
          vect. push_back( std::move( bl ));
          return ex;      
       }
@@ -122,18 +122,18 @@ logic::beliefstate::getformulas( const identifier& id ) const
       return empty;
 }
 
-void logic::beliefstate::restore( size_t s )
+void logic::beliefstate::backtrack( exact id )
 {
-   while( s < vect. size( ))
+   while( id. nr < vect. size( ))
    {
-      const auto& id = vect. back( ). name( );
-      auto ex = exact( vect. size( ) - 1 );
-
-      remove_candidates( functions, id, ex );
-      remove_candidates( structdefs, id, ex );
-      remove_candidates( formulas, id, ex );
-
+      identifier lastident = std::move( vect. back( ). ident( ));
       vect. pop_back( ); 
+
+      auto lastexact = exact( vect. size( ));
+
+      remove_candidates( functions, lastident, lastexact );
+      remove_candidates( structdefs, lastident, lastexact );
+      remove_candidates( formulas, lastident, lastexact );
    }
 }
 
@@ -159,7 +159,7 @@ void logic::beliefstate::print( std::ostream& out ) const
    out << "Beliefstate:\n"; 
    for( size_t i = 0; i != vect. size( ); ++ i )
    {
-      out << vect[i]. name( ) << '/' << exact(i) << "   "; 
+      out << vect[i]. ident( ) << '/' << exact(i) << "   "; 
       pretty::print( out, *this, vect[i] );
    }
    out << "\n";
