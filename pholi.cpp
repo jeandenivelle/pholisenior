@@ -87,26 +87,24 @@ int main( int argc, char* argv[] )
 
    seen. print( std::cout );
 
-   checkandresolve( blfs, err );
+   std::cout << "(before type checking)\n";
    std::cout << blfs << "\n";
-   std::cout << err << "\n";
 
-   // tests::clausify( blfs );
+   checkandresolve( blfs, err );
+   std::cout << "(after type checking)\n";
+
+   std::cout << blfs << "\n";
+
+   tests::clausify( blfs, err );
 
    // tests::truthtables( );
 
    // tests::add_function( blfs );
    // tests::add_seq( blfs );
-   std::cout << "(before type checking)\n";
 
-   // tests::structural( blfs );
    // tests::add_proof( blfs );
 
-   std::cout << "(after type checking)\n";
-
-   std::cout << blfs << "\n";
-
-   tests::proofchecking( blfs, err );
+   // tests::proofchecking( blfs, err );
    std::cout << err << "\n";
    return 0;
 

@@ -12,6 +12,7 @@
 #include "calc/kleening.h"
 #include "calc/alternating.h"
 #include "calc/removelets.h"
+#include "calc/expand.h"
 
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
@@ -159,7 +160,7 @@ void tests::clausify( logic::beliefstate& blfs, errorstack& err )
    type Seq = type( type_unchecked, identifier( ) + "Seq" );
    type X = type( type_unchecked, identifier( ) + "X" );
 
-   if constexpr( true )
+   if constexpr( false )
    {
       auto all1 =
          forall( { { "y", O }}, 
@@ -192,7 +193,7 @@ void tests::clausify( logic::beliefstate& blfs, errorstack& err )
       }
    }
 
-   if constexpr( true ) 
+   if constexpr( false ) 
    {
       std::cout << "\n\n";
       std::cout << "testing removelets\n";
@@ -218,6 +219,33 @@ void tests::clausify( logic::beliefstate& blfs, errorstack& err )
       }
       return; 
    }
+
+   if constexpr( true )
+   {
+      std::cout << "\n\n";
+      std::cout << "Testing Expand\n";
+      auto f = ( 0_db == 2_db );
+      f = apply( "ppp"_unchecked, { 0_db, term( op_exact, exact(38) ), 2_db } );
+      f = term( op_let, { "zz", O }, apply( "gg"_unchecked, { 0_db } ), f );
+      f = !f;
+      f = term( op_let, { "yy", T }, apply( "ff"_unchecked, { 1_db } ), f );
+      f = term( op_forall, f, {{ "x", T }, { "y", O2O }} );
+      f = term( op_exists, f, {{ "a", O }, { "b", T }} );
+      f = term( op_lambda, f, {{ "hallo", O2T }} );
+      {
+         context ctxt;
+         pretty::print( std::cout, blfs, ctxt, f );
+         std::cout << "\n";
+      }
+      ssize_t nr = 0;
+      f = calc::expand( blfs, f, identifier( ) + "serial", nr, err );
+      {
+         context ctxt;
+         pretty::print( std::cout, blfs, ctxt, f );
+      }
+      return;
+   }
+
 }
 
 
@@ -544,25 +572,6 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
    std::cout << "eval returned " << res << "\n";
 
 #if 0
-   auto prf = calc::proofterm( calc::prf_ident, identifier( ) + "initial0001" );
-   prf = calc::proofterm( calc::prf_clausify, prf ); 
-   auto res = eval( prf, seq, err ); 
-
-   std::cout << "result(ugly) = " << res << "\n\n";
-   {
-      logic::context ctxt;
-      std::cout << "result = ";
-      logic::pretty::print( std::cout, blfs, ctxt, res );
-      std::cout << "\n";
-   }
-
-   pretty::print( std::cout, bel ); 
-   check_everything( std::cout, bel );
-
-   auto thm = bel. at( bel. find( identifier( ) + "trans" )). second. view_thm( ). form( );
-   logic::proofeditor edit( &bel, bel. size( ), !thm );
-
-   using namespace logic;
 #if 0
    std::cout << edit << "\n";
 

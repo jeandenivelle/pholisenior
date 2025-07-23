@@ -28,9 +28,8 @@ namespace calc
    bool iscontradiction( const logic::term& fm );
       // True if fm counts as contradition.
 
-   logic::term expanddef( const identifier& id, size_t& ind,
-                          logic::term );
-      // 
+   logic::term expanddef( const identifier& id, size_t& ind, logic::term );
+
    logic::term 
    eval( const proofterm& prf, sequent& seq, errorstack& err );
       // In case of error, we express our frustration into err, and 
