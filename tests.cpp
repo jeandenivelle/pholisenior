@@ -405,7 +405,7 @@ void tests::replacements( )
 
    bool change = false; 
    simp. printstate( std::cout ); 
-   auto simped = topdown( lift, std::move(simp), 0, change );
+   auto simped = outermost( lift, std::move(simp), 0, change );
 
    std::cout << "simped = " << simped << "\n";
    simped. printstate( std::cout );
@@ -421,22 +421,11 @@ void tests::replacements( )
 
       std::cout << "before: " << tm << "\n";
       tm. printstate( std::cout );
-      auto tm2 = topdown( subst, std::move(tm), 0, change );
+      auto tm2 = outermost( subst, std::move(tm), 0, change );
       std::cout << "after: " << tm2 << "\n"; 
       std::cout << "change = " << change << "\n";
       tm2. printstate( std::cout );
    }
-
-#if 0
-   logic::equalitysystem eq( { { 0_db, 1_db } } ); 
-   std::cout << eq << "\n"; 
-
-   long unsigned int changes = 0;
-   auto simp2 = topdown_sar( changes, eq, std::move(simp), 0 );
-
-   std::cout << "simp2 = " << simp2 << "\n";
-   std::cout << "changes = " << changes << "\n"; 
-#endif
 
 }
 

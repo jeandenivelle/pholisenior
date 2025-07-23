@@ -202,7 +202,7 @@ calc::eval( const proofterm& prf, sequent& seq, errorstack& err )
             }
 
             bool dontcare = false;
-            disj = topdown( namesubst, std::move( disj ), 0, dontcare );
+            disj = outermost( namesubst, std::move( disj ), 0, dontcare );
          }
 
          seq. assume( res. name( ), disj ); 

@@ -52,7 +52,7 @@ logic::sparse_subst::operator( ) ( term t, size_t vardepth,
             else
             {
                bool c = false;
-               return topdown( lifter( vardepth ), p -> second, 0, c );
+               return outermost( lifter( vardepth ), p -> second, 0, c );
             }
          }
       }
@@ -93,7 +93,7 @@ logic::fullsubst::operator( ) ( term t, size_t vardepth, bool& change ) const
             else
             {
                bool c = false;
-               return topdown( lifter( vardepth ), values[ ind ], 0, c );
+               return outermost( lifter( vardepth ), values[ ind ], 0, c );
             }
  
             throw std::logic_error( "unreachable" ); 
@@ -142,7 +142,7 @@ logic::betareduction::operator( ) ( const term& t, size_t vardepth ) const
             throw std::runtime_error( "wrong number of arguments" );
 
          long unsigned int changes = 0;
-         return topdown_sar( changes, val, std::move( body ), 0 );
+         return outermost_sar( changes, val, std::move( body ), 0 );
       }
    }
    return t;
@@ -304,7 +304,7 @@ logic::equalitysystem::operator( ) ( const term& t, size_t vardepth ) const
       {
          lifter lift( vardepth );
          long unsigned int changes = 0;
-         return topdown_sar( changes, lift, eq. second, 0 );
+         return outermost_sar( changes, lift, eq. second, 0 );
       }
    }
 

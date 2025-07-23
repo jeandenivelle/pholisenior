@@ -1,7 +1,7 @@
 
 #include "distribute.h"
 #include "logic/replacements.h"
-#include "logic/topdown.h"
+#include "logic/outermost.h"
 #include "util.h"
 
 namespace
@@ -159,7 +159,7 @@ calc::distr( logic::context& ctxt, disj_stack& disj,
          {
             logic::lifter lft( ctxt. size( ) - d. level );
             bool c = false;
-            cl. push_back( topdown( lft, d. form, 0, c ));
+            cl. push_back( outermost( lft, d. form, 0, c ));
          }
       }
    }

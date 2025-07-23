@@ -88,7 +88,7 @@ calc::removelets( sequent& seq,
          auto subst = logic::fullsubst( { tm } );
          std::cout << subst << "\n";    
          bool change = false; 
-         f = topdown( subst, let. extr_body( ), 0, change ); 
+         f = outermost( subst, let. extr_body( ), 0, change ); 
 
          return removelets( seq, ctxt, f );
       }

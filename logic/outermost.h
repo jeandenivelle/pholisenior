@@ -2,9 +2,11 @@
 // Written by Hans de Nivelle, Sept 2022 
 // Rewritten Dec. 2024. I changed the interface
 // to use only SAR, and I adapted it for PHOLI.
+// July 2025. I renamed from 'topdown' to 'outermost', to use standard
+// terminology.
 
-#ifndef LOGIC_TOPDOWN_
-#define LOGIC_TOPDOWN_    
+#ifndef LOGIC_OUTERMOST_
+#define LOGIC_OUTERMOST_    
 
 #include <iostream>
 
@@ -19,15 +21,14 @@ namespace logic
       // I would like to enforce that c is a reference, but that  
       // seems not possible.
 
-   // topdown means that we try to rewrite the top level of t, before
-   // we try to rewrite subterms of t.
-   // If we can rewrite at the top level, we don't look at the subterms 
+   // outermost means that we try to rewrite outside in.
+   // If we can rewrite somemwhere, we don't look at the subterms 
    // any more.
 
    template< replacement R > 
-   term topdown( const R& repl, term t, size_t vardepth, bool& change ) 
+   term outermost( const R& repl, term t, size_t vardepth, bool& change ) 
    {
-      // std::cout << "entering topdown " << t << "\n";
+      // std::cout << "entering outermost " << t << "\n";
 
       {
          bool c = false;
@@ -54,7 +55,7 @@ namespace logic
          {
             auto p = t. view_unary( );
             p. update_sub( 
-                    topdown( repl, p. extr_sub( ), vardepth, change ));
+                    outermost( repl, p. extr_sub( ), vardepth, change ));
          }
          return t;
 
@@ -69,9 +70,9 @@ namespace logic
          {
             auto bin = t. view_binary( );
             bin. update_sub1( 
-                      topdown( repl, bin. extr_sub1( ), vardepth, change ));
+                      outermost( repl, bin. extr_sub1( ), vardepth, change ));
             bin. update_sub2(
-                      topdown( repl, bin. extr_sub2( ), vardepth, change ));
+                      outermost( repl, bin. extr_sub2( ), vardepth, change ));
          }
          return t;
 
@@ -82,7 +83,7 @@ namespace logic
             for( size_t i = 0; i != kl. size( ); ++ i )
             {
                kl. update_sub( i,
-                      topdown( repl, kl. extr_sub(i), vardepth, change ));
+                      outermost( repl, kl. extr_sub(i), vardepth, change ));
             }
          }
          return t;
@@ -94,7 +95,7 @@ namespace logic
          {
             auto q = t. view_quant( ); 
 
-            q. update_body( topdown( repl, q. extr_body( ), 
+            q. update_body( outermost( repl, q. extr_body( ), 
                                      vardepth + q. size( ), change ));
          }
          return t; 
@@ -103,9 +104,9 @@ namespace logic
          {
             auto let = t. view_let( );
             let. update_val( 
-               topdown( repl, let. extr_val( ), vardepth, change ));
+               outermost( repl, let. extr_val( ), vardepth, change ));
             let. update_body(
-               topdown( repl, let. extr_body( ), vardepth + 1, change ));
+               outermost( repl, let. extr_body( ), vardepth + 1, change ));
          }
          return t;
 
@@ -113,12 +114,12 @@ namespace logic
          {
             auto ap = t. view_apply( );
 
-            ap. update_func( topdown( repl, ap. extr_func( ), 
+            ap. update_func( outermost( repl, ap. extr_func( ), 
                              vardepth, change ));
 
             for( size_t i = 0; i != ap. size( ); ++ i )
             {
-               ap. update_arg( i, topdown( repl, ap. extr_arg(i), 
+               ap. update_arg( i, outermost( repl, ap. extr_arg(i), 
                                vardepth, change ));
             }
          }
@@ -127,7 +128,7 @@ namespace logic
       case op_lambda:
          {
             auto lam = t. view_lambda( ); 
-            lam. update_body( topdown( repl, lam. extr_body( ), 
+            lam. update_body( outermost( repl, lam. extr_body( ), 
                               vardepth + lam. size( ), change )); 
          }
          return t;
@@ -135,7 +136,7 @@ namespace logic
       }
 
       std::cout << t. sel( ) << "\n";
-      throw std::runtime_error( "topdown: case not implemented" );  
+      throw std::runtime_error( "outermost: case not implemented" );  
    }
 
 }

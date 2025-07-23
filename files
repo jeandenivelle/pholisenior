@@ -46,6 +46,7 @@
    removelets.cpp
    kleening.cpp
    alternating.cpp
+   expand.cpp
    sequent.cpp
    proofterm.cpp
    proofchecking.cpp

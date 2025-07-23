@@ -3,7 +3,7 @@
 #define LOGIC_REPLACEMENTS_   
 
 #include "term.h"
-#include "topdown.h"
+#include "outermost.h"
 #include "util/print.h"
 
 #include <vector>
@@ -78,7 +78,6 @@ namespace logic
 
       size_t size( ) const { return values. size( ); } 
       void push( term&& val ) { values. push_back( std::move( val )); }
-
    };
 
 
