@@ -50,8 +50,7 @@ calc::norm_debruijns( logic::term ff )
 
    // std::cout << "normalizer = " << norm << "\n";
 
-   bool change = false;
-   ff = outermost( norm, std::move(ff), 0, change );
+   ff = outermost( norm, std::move(ff), 0 );
 
    return std::pair( std::move( freevars ), std::move( ff ));
 }

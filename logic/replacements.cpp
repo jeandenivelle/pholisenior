@@ -50,10 +50,7 @@ logic::sparse_subst::operator( ) ( term t, size_t vardepth,
             if( vardepth == 0 )
                return p -> second;
             else
-            {
-               bool c = false;
-               return outermost( lifter( vardepth ), p -> second, 0, c );
-            }
+               return outermost( lifter( vardepth ), p -> second, 0 );
          }
       }
    }
@@ -91,10 +88,7 @@ logic::fullsubst::operator( ) ( term t, size_t vardepth, bool& change ) const
             if( vardepth == 0 )
                return values[ ind ];
             else
-            {
-               bool c = false;
-               return outermost( lifter( vardepth ), values[ ind ], 0, c );
-            }
+               return outermost( lifter( vardepth ), values[ ind ], 0 );
  
             throw std::logic_error( "unreachable" ); 
          }

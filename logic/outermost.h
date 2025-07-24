@@ -21,26 +21,26 @@ namespace logic
       // I would like to enforce that c is a reference, but that  
       // seems not possible.
 
-   // outermost means that we try to rewrite outside in.
-   // If we can rewrite somemwhere, we don't look at the subterms 
-   // any more.
+   // outermost means that we try to rewrite outside in
+   // If we can replace somemwhere, we don't try to rewrite
+   // the result of the replacement. We still make ALL outermost 
+   // replacements. If you don't like that, you can use the non-const 
+   // version, and remember when a replacement was made. 
 
    template< replacement R > 
-   term outermost( const R& repl, term t, size_t vardepth, bool& change ) 
+   term outermost( const R& repl, term t, size_t vardepth ) 
    {
-      // std::cout << "entering outermost " << t << "\n";
+      if constexpr( false ) 
+         std::cout << "entering (const) outermost " << t << "\n";
 
       {
-         bool c = false;
-         t = repl( std::move(t), vardepth, c );
-         if(c)
-         {
-            change = true;
+         bool change = false;
+         t = repl( std::move(t), vardepth, change );
+         if( change )
             return t;
-         }
       }
 
-      switch( t. sel() )
+      switch( t. sel( ))
       {
       case op_exact:
       case op_debruijn:
@@ -54,8 +54,7 @@ namespace logic
       case op_prop:
          {
             auto p = t. view_unary( );
-            p. update_sub( 
-                    outermost( repl, p. extr_sub( ), vardepth, change ));
+            p. update_sub( outermost( repl, p. extr_sub( ), vardepth ));
          }
          return t;
 
@@ -69,10 +68,8 @@ namespace logic
       case op_equals:
          {
             auto bin = t. view_binary( );
-            bin. update_sub1( 
-                      outermost( repl, bin. extr_sub1( ), vardepth, change ));
-            bin. update_sub2(
-                      outermost( repl, bin. extr_sub2( ), vardepth, change ));
+            bin. update_sub1( outermost( repl, bin. extr_sub1( ), vardepth ));
+            bin. update_sub2( outermost( repl, bin. extr_sub2( ), vardepth ));
          }
          return t;
 
@@ -82,8 +79,8 @@ namespace logic
             auto kl = t. view_kleene( );
             for( size_t i = 0; i != kl. size( ); ++ i )
             {
-               kl. update_sub( i,
-                      outermost( repl, kl. extr_sub(i), vardepth, change ));
+               kl. update_sub( i, 
+                         outermost( repl, kl. extr_sub(i), vardepth ));
             }
          }
          return t;
@@ -94,33 +91,28 @@ namespace logic
       case op_kleene_exists: 
          {
             auto q = t. view_quant( ); 
-
-            q. update_body( outermost( repl, q. extr_body( ), 
-                                     vardepth + q. size( ), change ));
+            q. update_body( outermost( repl, q. extr_body( ),  
+                            vardepth + q. size( ) ));
          }
          return t; 
 
       case op_let:
          {
             auto let = t. view_let( );
-            let. update_val( 
-               outermost( repl, let. extr_val( ), vardepth, change ));
-            let. update_body(
-               outermost( repl, let. extr_body( ), vardepth + 1, change ));
+            let. update_val( outermost( repl, let. extr_val( ), vardepth ));
+            let. update_body( outermost( repl, let. extr_body( ), 
+                              vardepth + 1 ));
          }
          return t;
 
       case op_apply:
          {
             auto ap = t. view_apply( );
-
-            ap. update_func( outermost( repl, ap. extr_func( ), 
-                             vardepth, change ));
-
+            ap. update_func( outermost( repl, ap. extr_func( ), vardepth ));
             for( size_t i = 0; i != ap. size( ); ++ i )
             {
                ap. update_arg( i, outermost( repl, ap. extr_arg(i), 
-                               vardepth, change ));
+                               vardepth ));
             }
          }
          return t;
@@ -129,16 +121,122 @@ namespace logic
          {
             auto lam = t. view_lambda( ); 
             lam. update_body( outermost( repl, lam. extr_body( ), 
-                              vardepth + lam. size( ), change )); 
+                              vardepth + lam. size( ) )); 
+         }
+         return t;
+      }
+
+      std::cout << "for selector " << t. sel( ) << "\n";
+      throw std::runtime_error( "outermost-const: case not implemented" );  
+   }
+
+
+   template< replacement R >
+   term outermost( R& repl, term t, size_t vardepth )
+   {
+      if constexpr( false )
+      {
+         std::cout << "entering (non-const) outermost " << t;
+         std::cout << " at vardepth " << vardepth << "\n";
+      }
+
+      {
+         bool change = false;
+         t = repl( std::move(t), vardepth, change );
+         if( change )
+            return t;
+      }
+
+      switch( t. sel( ))
+      {
+      case op_exact:
+      case op_debruijn:
+      case op_unchecked:
+      case op_false: 
+      case op_error:
+      case op_true:
+         return t; 
+
+      case op_not:
+      case op_prop:
+         {
+            auto p = t. view_unary( );
+            p. update_sub( outermost( repl, p. extr_sub( ), vardepth ));
          }
          return t;
 
+      case op_and:
+      case op_or:
+      case op_implies:
+      case op_equiv:
+      case op_lazy_and:
+      case op_lazy_or:
+      case op_lazy_implies:
+      case op_equals:
+         {
+            auto bin = t. view_binary( );
+            bin. update_sub1( outermost( repl, bin. extr_sub1( ), vardepth ));
+            bin. update_sub2( outermost( repl, bin. extr_sub2( ), vardepth ));
+         }
+         return t;
+
+      case op_kleene_and:
+      case op_kleene_or:
+         {  
+            auto kl = t. view_kleene( ); 
+            for( size_t i = 0; i != kl. size( ); ++ i )
+            {
+               kl. update_sub( i,
+                         outermost( repl, kl. extr_sub(i), vardepth ));
+            }
+         } 
+         return t;
+ 
+      case op_forall:
+      case op_exists:
+      case op_kleene_forall:
+      case op_kleene_exists:
+         {
+            auto q = t. view_quant( );
+            q. update_body( outermost( repl, q. extr_body( ), 
+                            vardepth + q. size( ) ));
+         }
+         return t;
+
+      case op_let:
+         {
+            auto let = t. view_let( );
+            let. update_val( outermost( repl, let. extr_val( ), vardepth ));
+            let. update_body( outermost( repl, let. extr_body( ), 
+                              vardepth + 1 ));
+         }
+         return t;
+
+      case op_apply:
+         {
+            auto ap = t. view_apply( );
+            ap. update_func( outermost( repl, ap. extr_func( ), vardepth ));
+            for( size_t i = 0; i != ap. size( ); ++ i )
+            {
+               ap. update_arg( i, outermost( repl, ap. extr_arg(i), 
+                               vardepth ));
+            }
+         } 
+         return t;
+
+      case op_lambda:
+         {
+            auto lam = t. view_lambda( );
+            lam. update_body( outermost( repl, lam. extr_body( ), 
+                              vardepth + lam. size( ) ));
+         }
+         return t;
       }
 
-      std::cout << t. sel( ) << "\n";
-      throw std::runtime_error( "outermost: case not implemented" );  
+      std::cout << "selector = " << t. sel( ) << "\n"; 
+      throw std::runtime_error( 
+            "outermost-(not const) const: case not implemented" );
    }
-
 }
 
 

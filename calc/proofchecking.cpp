@@ -201,8 +201,7 @@ calc::eval( const proofterm& prf, sequent& seq, errorstack& err )
                disj = ex. body( ); 
             }
 
-            bool dontcare = false;
-            disj = outermost( namesubst, std::move( disj ), 0, dontcare );
+            disj = outermost( namesubst, std::move( disj ), 0 );
          }
 
          seq. assume( res. name( ), disj ); 

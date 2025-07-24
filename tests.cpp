@@ -12,7 +12,7 @@
 #include "calc/kleening.h"
 #include "calc/alternating.h"
 #include "calc/removelets.h"
-#include "calc/expand.h"
+#include "calc/expander.h"
 
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
@@ -225,7 +225,8 @@ void tests::clausify( logic::beliefstate& blfs, errorstack& err )
       std::cout << "\n\n";
       std::cout << "Testing Expand\n";
       auto f = ( 0_db == 2_db );
-      f = apply( "ppp"_unchecked, { 0_db, term( op_exact, exact(38) ), 2_db } );
+      f = apply( "ppp"_unchecked, { "serial"_unchecked, term( op_exact, exact(38)), 
+                                          term( op_exact, exact(42)) } );
       f = term( op_let, { "zz", O }, apply( "gg"_unchecked, { 0_db } ), f );
       f = !f;
       f = term( op_let, { "yy", T }, apply( "ff"_unchecked, { 1_db } ), f );
@@ -237,12 +238,14 @@ void tests::clausify( logic::beliefstate& blfs, errorstack& err )
          pretty::print( std::cout, blfs, ctxt, f );
          std::cout << "\n";
       }
-      ssize_t nr = 0;
-      f = calc::expand( blfs, f, identifier( ) + "serial", nr, err );
+      auto exp = calc::expander( identifier( ) + "serial", 2, blfs, err );
+      std::cout << exp << "\n";
+      f = outermost( exp, f, 0 );
       {
          context ctxt;
          pretty::print( std::cout, blfs, ctxt, f );
       }
+      std::cout << exp << "\n";
       return;
    }
 
@@ -403,27 +406,23 @@ void tests::replacements( )
    lifter lift(3);
    std::cout << lift << "\n";
 
-   bool change = false; 
    simp. printstate( std::cout ); 
-   auto simped = outermost( lift, std::move(simp), 0, change );
+   auto simped = outermost( lift, std::move(simp), 0 );
 
    std::cout << "simped = " << simped << "\n";
    simped. printstate( std::cout );
-   std::cout << "change = " << change << "\n";
 
    {
       fullsubst subst =
          std::vector< term > { !0_db, apply( 0_db, { 1_db } ) }; 
       std::cout << subst << "\n";
  
-      bool change = false;
       auto tm = term( op_let, { "aaa", O }, 2_db,  apply( 0_db, { 1_db } ));
 
       std::cout << "before: " << tm << "\n";
       tm. printstate( std::cout );
-      auto tm2 = outermost( subst, std::move(tm), 0, change );
+      auto tm2 = outermost( subst, std::move(tm), 0 );
       std::cout << "after: " << tm2 << "\n"; 
-      std::cout << "change = " << change << "\n";
       tm2. printstate( std::cout );
    }
 
