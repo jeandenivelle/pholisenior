@@ -80,17 +80,46 @@ namespace logic
       void push( term&& val ) { values. push_back( std::move( val )); }
    };
 
+   // Argument substitution works like fullsubst, but it uses
+   // the arguments of an application term. 
+   // If you have a beta-redux 
+   // apply( lambda ( T1, ..., Tn ) t, u1 ... um ), 
+   // there is no need to construct fullsubst( u1, ..., um ).
+   // Instead one can use the application term to get the ui.
+
+   struct argsubst
+   {
+      term argterm;    // Term from which we take the arguments.
+      size_t arity;    // In case of incomplete application, 
+                       // we don't use all arguments of argterm.
+
+      argsubst( const term& argterm, size_t arity )
+         : argterm( argterm ),
+           arity( arity )
+      { }
+
+      term operator( ) ( term t, size_t vardepth, bool& change ) const;
+
+      void print( std::ostream& out ) const;
+   };
+
+
+   // This is incomplete beta-reduction:
 
    struct betareduction 
    {
-      betareduction( ) = default;
+      size_t counter; 
 
-      term operator( ) ( term t, size_t vardepth, bool& change ) const;
+      betareduction( ) noexcept
+         : counter(0) 
+      { }
+
+      term operator( ) ( term t, size_t vardepth, bool& change );
+         // Not const, because we count the reductions.
 
       void print( std::ostream& out ) const; 
    };
 
-   
 
    struct equalitysystem
    {
@@ -113,13 +142,6 @@ namespace logic
       void print( std::ostream& out ) const;
    };
 
-   
-   struct projection
-   {
-
-
-
-   };
 }
 
 #endif 

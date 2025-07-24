@@ -28,6 +28,20 @@ logic::lifter::print( std::ostream& out ) const
 }
 
 
+namespace
+{
+   // substitutions need lifted terms, but we want to avoid 
+   // lifting over zero:
+
+   logic::term lift( logic::term tm, size_t vardepth )
+   {
+      if( vardepth == 0 )
+         return tm;
+      else
+         return outermost( logic::lifter( vardepth ), std::move( tm ), 0 );
+   }
+}
+ 
 logic::term
 logic::sparse_subst::operator( ) ( term t, size_t vardepth, 
                                    bool& change ) const
@@ -44,13 +58,7 @@ logic::sparse_subst::operator( ) ( term t, size_t vardepth,
          if( p != repl. end( ))
          {
             change = true;
-
-            // We need to lift, but we don't lift over 0:
-
-            if( vardepth == 0 )
-               return p -> second;
-            else
-               return outermost( lifter( vardepth ), p -> second, 0 );
+            return lift( p -> second, vardepth );
          }
       }
    }
@@ -66,7 +74,6 @@ void logic::sparse_subst::print( std::ostream& out ) const
       out << "   #" << r. first << " := " << r. second << "\n";
 }
 
-
 logic::term
 logic::fullsubst::operator( ) ( term t, size_t vardepth, bool& change ) const
 {
@@ -80,17 +87,9 @@ logic::fullsubst::operator( ) ( term t, size_t vardepth, bool& change ) const
          if( ind < vardepth + values. size( ))
          {
             ind -= vardepth; 
-
             ind = values. size( ) - ind - 1;   // Because we look backwards.
 
-            // We need to lift, but we don't lift over 0:
-
-            if( vardepth == 0 )
-               return values[ ind ];
-            else
-               return outermost( lifter( vardepth ), values[ ind ], 0 );
- 
-            throw std::logic_error( "unreachable" ); 
+            return lift( values[ ind ], vardepth );
          }
          else
          {
@@ -110,45 +109,93 @@ void logic::fullsubst::print( std::ostream& out ) const
       out << "   #" << i << " := " << t << "\n";
       ++ i;
    }
-
 }
 
-#if 0
+logic::term
+logic::argsubst::operator( ) ( term t, size_t vardepth, bool& change ) const
+{
+   if( t. sel( ) == op_debruijn )
+   {
+      size_t ind = t. view_debruijn( ). index( );
+      if( ind >= vardepth )
+      {
+         change = true;
+
+         if( ind < vardepth + arity )
+         {
+            ind -= vardepth;
+            ind = arity - ind - 1;   // Because we look backwards.
+
+            return lift( argterm. view_apply( ). arg( ind ), vardepth );
+         }
+         else
+         {
+            ind -= arity;
+            return term( op_debruijn, ind );
+         }
+      }
+   }
+   return t;
+}
+
+void logic::argsubst::print( std::ostream& out ) const
+{
+   out << "Argument Substitution:\n";
+   std::cout << arity << "\n";
+   for( size_t i = 0; i < arity; ++ i )
+   {
+      out << "   #" << (ssize_t)(1 + i) - (ssize_t)arity << " := ";
+      out << argterm. view_apply( ). arg(i) << "\n";
+   }
+}
 
 logic::term 
-logic::betareduction::operator( ) ( const term& t, size_t vardepth ) const
+logic::betareduction::operator( ) ( term t, size_t vardepth, bool& change ) 
 {
-   if ( t.sel( ) == sel_appl )
+   if( t. sel( ) == op_apply )
    {
-      auto appl = t. view_appl( );
+      auto appl = t. view_apply( );
       auto f = appl. func( );
 
-      if ( f.sel( ) == sel_lambda )
+      if( f. sel( ) == op_lambda )
       {
          auto lamb = f. view_lambda( );
          auto body = lamb. body( );
 
-         values val;
-         for( size_t i = 0; i != appl. size( ); ++ i )
-            val. push_back( appl. arg(i));
-        
-         if ( appl.size( ) != lamb. size( ) )
-            throw std::runtime_error( "wrong number of arguments" );
+         if( lamb. size( ) > appl. size( ))
+         {
+            throw std::logic_error( 
+                          "not enough arguments in lambda-application" );
+         }
 
-         long unsigned int changes = 0;
-         return outermost_sar( changes, val, std::move( body ), 0 );
+         argsubst subst( t, lamb. size( ));
+         auto res = outermost( subst, lamb. extr_body( ), 0 );
+
+         change = true;
+         ++ counter;
+
+         // If too many arguments were given, we construct
+         // an application term with the remaining arguments:
+
+         if( lamb. size( ) < appl. size( ))
+         {
+            res = term( op_apply, res, std::initializer_list< term > ( ));
+            for( size_t i = lamb. size( ); i != appl. size( ); ++ i )
+               res. view_apply( ). push_back( appl. arg(i)); 
+         }
+         
+         return res;
       }
    }
    return t;
 };
 
-#endif
 
-void
-logic::betareduction::print( std::ostream& out ) const
+void logic::betareduction::print( std::ostream& out ) const
 {
-  out << "(beta reduction)";
+  out << "betareduction(" << counter << ")";
 }
+
 
 #if 0
 

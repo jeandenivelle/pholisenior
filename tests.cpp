@@ -13,6 +13,7 @@
 #include "calc/alternating.h"
 #include "calc/removelets.h"
 #include "calc/expander.h"
+#include "calc/projection.h"
 
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
@@ -284,12 +285,12 @@ void tests::pretty( const logic::beliefstate& blfs )
 
 #if 0
    initial. push_back( exists( { "x", S },
-                         logic::term( logic::sel_appl, "p"_ident, { 0_db } ) ||
-                         logic::term( logic::sel_appl, "q"_ident, { 0_db } )));
+                         logic::term( logic::sel_appl, "p"_unchecked, { 0_db } ) ||
+                         logic::term( logic::sel_appl, "q"_unchecked, { 0_db } )));
    initial. push_back( ! exists( { "x", S },
-                         logic::term( logic::sel_appl, "p"_ident, { 0_db } )));
+                         logic::term( logic::sel_appl, "p"_unchecked, { 0_db } )));
    initial. push_back( ! exists( { "x", S },
-                         logic::term( logic::sel_appl, "p"_ident, { 0_db } )));   
+                         logic::term( logic::sel_appl, "p"_unchecked, { 0_db } )));   
    for( auto& init: initial )
       init = logic::simplifications::topnorm( init );
 
@@ -320,21 +321,21 @@ void tests::setsimplifications( )
    auto T = logic::type( logic::sel_truthval );
    auto B = logic::type( logic::sel_belief );
 
-   auto a = "A"_ident; 
-   auto b = "B"_ident;
-   auto c = "C"_ident; 
+   auto a = "A"_unchecked; 
+   auto b = "B"_unchecked;
+   auto c = "C"_unchecked; 
 
-   auto t = logic::term( logic::sel_appl, "T"_ident, { 0_db } );
+   auto t = logic::term( logic::sel_appl, "T"_unchecked, { 0_db } );
 
-   auto fx = logic::term( logic::sel_appl, "f"_ident, { 0_db } );
+   auto fx = logic::term( logic::sel_appl, "f"_unchecked, { 0_db } );
    auto Pfx = logic::term( logic::sel_appl, 
-                      "P"_ident, { fx } );
+                      "P"_unchecked, { fx } );
 
    logic::term func = logic::term( logic::sel_lambda, Pfx, { { "x", S }} ); 
 
    logic::term fa = forall( { "x", S }, 0_db && 1_db ); 
-   logic::term f = logic::term( logic::sel_in, "x"_ident, 
-       logic::term( logic::sel_insert, "t"_ident, "rest"_ident ));
+   logic::term f = logic::term( logic::sel_in, "x"_unchecked, 
+       logic::term( logic::sel_insert, "t"_unchecked, "rest"_unchecked ));
 
    for( unsigned int i = 0; i < 6; ++ i )
    {
@@ -358,9 +359,9 @@ void tests::kbo( )
    logic::type T = logic::type(logic::sel_truthval);
    logic::type B = logic::type(logic::sel_belief);
 
-   logic::term a = logic::term(logic::sel_ident, "a"_ident );
-   logic::term b = logic::term(logic::sel_ident, "b"_ident );
-   logic::term c = logic::term(logic::sel_ident, "c"_ident );
+   logic::term a = logic::term(logic::sel_unchecked, "a"_unchecked );
+   logic::term b = logic::term(logic::sel_ident, "b"_unchecked );
+   logic::term c = logic::term(logic::sel_unchecked, "c"_unchecked );
 
    logic::term not1 = logic::term(logic::sel_not, a);
    logic::term not2 = logic::term(logic::sel_not, b);
@@ -378,55 +379,6 @@ void tests::kbo( )
 }
 
 #endif
-
-void tests::replacements( ) 
-{
-
-   using namespace logic;
-
-   type O = type( logic::type_obj );
-   type T = type( logic::type_form );
-   
-   type O2O = type( type_func, O, { O } );
-   type O2T = type( type_func, T, { O } );
-   
-   type Seq = type( type_unchecked, identifier( ) + "Seq" );
-
-   term simp = 4_db && 7_db;
-
-   simp = term( op_implies, simp, "xxxx"_unchecked );
-
-   simp = term( op_forall, simp, {{ "x", O }} );
-   simp = term( op_exists, simp, {{ "y", T }} );
-
-   simp = term( op_lambda, simp, { { "v0", O }, { "v1", T } } );
-
-   std::cout << simp << "\n";
-
-   lifter lift(3);
-   std::cout << lift << "\n";
-
-   simp. printstate( std::cout ); 
-   auto simped = outermost( lift, std::move(simp), 0 );
-
-   std::cout << "simped = " << simped << "\n";
-   simped. printstate( std::cout );
-
-   {
-      fullsubst subst =
-         std::vector< term > { !0_db, apply( 0_db, { 1_db } ) }; 
-      std::cout << subst << "\n";
- 
-      auto tm = term( op_let, { "aaa", O }, 2_db,  apply( 0_db, { 1_db } ));
-
-      std::cout << "before: " << tm << "\n";
-      tm. printstate( std::cout );
-      auto tm2 = outermost( subst, std::move(tm), 0 );
-      std::cout << "after: " << tm2 << "\n"; 
-      tm2. printstate( std::cout );
-   }
-
-}
 
 
 #if 0
@@ -483,58 +435,51 @@ void tests::parser( logic::beliefstate& blfs ) {
 
 }
 
-#if 0
 
-void tests::betareduction( ) 
+void tests::betareduction( logic::beliefstate& blfs, errorstack& err ) 
 {
+   using namespace logic;
+
+   type O = type( type_obj );
+   type T = type( type_form );
+
+   type O2O = type( type_func, O, { O } );
+   type O2T = type( type_func, T, { O } );
+   
    logic::betareduction beta;
    std::cout << beta << "\n";
 
-   auto S = logic::type( logic::sel_set );
-   auto T = logic::type( logic::sel_truthval );
-   auto B = logic::type( logic::sel_belief );
-   auto S2S = logic::type( logic::sel_func, S, { S } );
+   term body = term( op_apply, "func"_unchecked, { 0_db, 1_db, 2_db, 3_db } );
+   body = term( op_forall, body, {{ "haha", T }} ); 
+   term lambda = term( op_lambda, body, { { "x", O }, { "y", O }, { "z", O }} );
 
-   logic::term body =
-      logic::term( logic::sel_appl, "+"_ident, { 0_db, 1_db } );
- 
-   logic::term lambda = 
-      logic::term( logic::sel_lambda, body, { { "x", S }, { "y", S }} );
+   auto first = term( op_apply, "first"_unchecked, { 1_db } ); 
+   auto second = term( op_apply, "second"_unchecked, { 2_db } );
+   auto third =  term( op_apply, "third"_unchecked, { 3_db } );
 
-   logic::term appl = 
-      logic::term( logic::sel_appl, lambda, { "first"_ident, "second"_ident } );
+   term appl = term( op_apply, lambda, { first, second, third } );
 
    std::cout << "appl = " << appl << "\n";
 
-   std::cout << beta( appl, 0 ) << "\n";
+   bool change = false;
 
-   body = 0_db;
-   body = logic::term( logic::sel_appl, 1_db, { body } );
-   body = logic::term( logic::sel_appl, 2_db, { body } );
-   auto comp = logic::term( logic::sel_lambda, body, { { "x", S } } );
-   comp = logic::term( logic::sel_lambda, comp, { { "f", S2S }, { "g", S2S } } );
+   auto res = beta( appl, 0, change );
+   std::cout << "res = " << res << "\n";
+   std::cout << "change = " << change << "\n";
+   std::cout << beta << "\n";
 
-   std::cout << comp << "\n";
+   calc::projection proj( blfs );
+   std::cout << proj << "\n";
 
-   auto succ = "succ"_ident;
-   auto succ2 = logic::term( logic::sel_lambda, 
-                   logic::term( logic::sel_appl, succ, { 0_db } ), { { "x", S }} );
-   std::cout << "succ2 " << succ2 << "\n";
-
-   auto pred = "pred"_ident;
-   auto pred2 = logic::term( logic::sel_lambda, 
-                   logic::term( logic::sel_appl, pred, { 0_db } ), { { "x", S }} );
-   std::cout << "pred2 " << pred2 << "\n";
-
-   appl = logic::term( logic::sel_appl, comp, { pred2, succ2 } );
-   appl = logic::term( logic::sel_appl, appl, { "zero"_ident } );
-
-   std::cout << appl << "\n"; 
-
-   std::cout << normalize_sar( beta, appl ) << "\n";
+   appl = term( op_apply, term( op_exact, exact(56)), std::initializer_list< term > ( ));
+   appl = term( op_apply, term( op_exact, exact(58)), { appl } );
+   change = false;
+   res = proj( appl, 0, change ); 
+   std::cout << "res = " << res << "\n";
+   std::cout << "change = " << change << "\n";
+   std::cout << proj << "\n"; 
 }
 
-#endif
 
 void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
 {
@@ -699,14 +644,14 @@ void tests::prove_pluscom( )
    std::cout << edit << "\n";
 
    edit. show( std::cout, 
-               { term( sel_ident, identifier( ) + "peano" + "induction" ) } );
+               { term( sel_unchecked, identifier( ) + "peano" + "induction" ) } );
 
    edit. apply_abbreviate( { {
       "ind_hyp", 
       term( prf_inst,  
-      term( sel_ident, identifier( ) + "peano" + "induction" ),
+      term( sel_unchecked, identifier( ) + "peano" + "induction" ),
                   term( sel_lambda, 
-                     term( sel_appl, "plus"_ident, { "zero"_ident, 0_db } ) == 0_db, 
+                     term( sel_appl, "plus"_unchecked, { "zero"_unchecked, 0_db } ) == 0_db, 
                      { { "x", type( sel_set ) }} )) }} );
 
 
@@ -716,9 +661,9 @@ void tests::prove_pluscom( )
 
 
    edit. apply_abbreviate( { 
-        { "ax_zero", term( prf_inst, term( sel_ident, identifier( ) + "plus" + "zero" ), 
-                           "zero"_ident ) },
-        { "nat_zero", term( sel_ident, identifier( ) + "peano" + "zero" ) } } );
+        { "ax_zero", term( prf_inst, term( sel_unchecked, identifier( ) + "plus" + "zero" ), 
+                           "zero"_unchecked ) },
+        { "nat_zero", term( sel_unchecked, identifier( ) + "peano" + "zero" ) } } );
 
     
    edit. apply_proof( term( prf_axiom, { 0_db, 1_db, 2_db } ));
@@ -734,13 +679,13 @@ void tests::prove_pluscom( )
 
    edit. apply_abbreviate(  
       {
-      { "type_zero", term( sel_ident, identifier( ) + "peano" + "zero" ) }, 
+      { "type_zero", term( sel_unchecked, identifier( ) + "peano" + "zero" ) }, 
 
-      { "ax_zero", term( prf_inst, term( sel_ident, identifier( ) + "plus" + "zero" ), 
-                         "zero"_ident ) },
+      { "ax_zero", term( prf_inst, term( sel_unchecked, identifier( ) + "plus" + "zero" ), 
+                         "zero"_unchecked ) },
       { "ax_succ", term( prf_inst,
-                      term( sel_ident, identifier( ) + "plus" + "succ" ),
-                      "zero"_ident ) }} ); 
+                      term( sel_unchecked, identifier( ) + "plus" + "succ" ),
+                      "zero"_unchecked ) }} ); 
 
 
    edit. apply_disj( 0_db );
@@ -779,11 +724,11 @@ void tests::prove_pluscom( )
 
    edit. apply_disj( 0_db );
    edit. apply_disj( logic::term( logic::prf_inst,
-                                  logic::term( logic::sel_ident, identifier( ) + "plus" + "zero" ),
-                                  "zero"_ident ));
+                                  logic::term( logic::sel_unchecked, identifier( ) + "plus" + "zero" ),
+                                  "zero"_unchecked ));
 
    edit. apply_proof( logic::term( logic::prf_contr,
-                        logic::term( logic::sel_ident, identifier( ) + "peano" + "zero" ),
+                        logic::term( logic::sel_unchecked, identifier( ) + "peano" + "zero" ),
                         0_db ));
    edit. setfocus(0);
    edit. apply_proof( logic::term( logic::prf_contr, 0_db, 1_db ));
@@ -793,8 +738,8 @@ void tests::prove_pluscom( )
    edit. apply_exists( 0_db );
 
    edit. apply_disj( logic::term( logic::prf_inst,
-                               logic::term( logic::sel_ident, identifier( ) + "plus" + "succ" ),
-                               "zero"_ident ));
+                               logic::term( logic::sel_unchecked, identifier( ) + "plus" + "succ" ),
+                               "zero"_unchecked ));
    edit. apply_proof( logic::term( logic::prf_contr,
                         logic::term( logic::sel_ident, identifier( ) + "peano" + "zero" ),
                         0_db ));

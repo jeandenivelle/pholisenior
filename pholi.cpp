@@ -76,6 +76,7 @@ includefile( logic::beliefstate& blfs,
 
 int main( int argc, char* argv[] )
 {
+
    errorstack err;
 
    logic::beliefstate blfs;  
@@ -106,6 +107,7 @@ int main( int argc, char* argv[] )
 
    // tests::proofchecking( blfs, err );
    std::cout << err << "\n";
+   tests::betareduction( blfs, err );
    return 0;
 
 #if 0

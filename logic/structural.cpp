@@ -1157,7 +1157,7 @@ logic::try_apply( const beliefstate& blfs, exact name,
          const belief& parentblf = blfs. at( structtype );
             // The belief in the parent.
          if( parentblf. sel( ) != bel_struct )
-            throw std::runtime_error( "parent type not a structdef" );
+            throw std::logic_error( "parent type not a structdef" );
             
          const structdef& parentdef = parentblf. view_struct( ). def( ); 
 

@@ -15,9 +15,8 @@ namespace tests
 #if 0
    void kbo( );
 #endif
-   void replacements( );
 
-   void betareduction( );
+   void betareduction( logic::beliefstate& blfs, errorstack& err );
       // Test beta reduction, using Church numerals.
       // I am also interested in performance.
 

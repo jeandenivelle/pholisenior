@@ -184,8 +184,8 @@ calc::eval( const proofterm& prf, sequent& seq, errorstack& err )
 
          {
             logic::fullsubst namesubst; 
-               // We need to substitute global names instead
-               // of De Bruijn indices.
+               // We need to substitute global names in place of 
+               // of the DeBruijn indices.
 
             while( disj. sel( ) == logic::op_kleene_exists )
             {
