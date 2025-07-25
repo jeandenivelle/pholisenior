@@ -10,16 +10,16 @@ namespace calc
 
    struct expander
    {
-      const identifier id;
+      const identifier ident;
       size_t i;
       size_t repl;   // Will be replaced.
  
       const logic::beliefstate& blfs; 
       errorstack& err; 
 
-      expander( identifier id, size_t repl, 
+      expander( identifier ident, size_t repl, 
                 const logic::beliefstate& blfs, errorstack& err ) noexcept
-         : id( id ), i(0), repl( repl ),
+         : ident( ident ), i(0), repl( repl ),
            blfs( blfs ),
            err( err )
       { } 

@@ -28,7 +28,7 @@ namespace calc
    bool iscontradiction( const logic::term& fm );
       // True if fm counts as contradition.
 
-   logic::term expanddef( const identifier& id, size_t& ind, logic::term );
+   logic::term normalize( const logic::beliefstate& blfs, logic::term tm );
 
    logic::term 
    eval( const proofterm& prf, sequent& seq, errorstack& err );

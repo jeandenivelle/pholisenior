@@ -3,6 +3,8 @@
 
 #include "removelets.h"
 #include "alternating.h"
+#include "expander.h"
+#include "projection.h"
 
 #include "logic/pretty.h"
 #include "logic/replacements.h"
@@ -61,6 +63,21 @@ calc::remove( logic::term fm, size_t i )
 }
 
 
+logic::term
+calc::normalize( const logic::beliefstate& blfs, logic::term tm )
+{
+   logic::betareduction beta;
+   projection proj( blfs ); 
+
+   do 
+   {
+      beta. counter = 0;
+      tm = outermost( beta, std::move( tm ), 0 );
+   }
+   while( beta. counter );
+   return tm;
+}
+
 bool
 calc::iscontradiction( const logic::term& fm )
 {
@@ -112,7 +129,7 @@ calc::eval( const proofterm& prf, sequent& seq, errorstack& err )
    case prf_exact:
       {
          auto ex = prf. view_exact( ). exact( );
-         return seq. getformula( ex ); 
+         return seq. getformula( ex, err ); 
       }
 
    case prf_ident:
@@ -124,7 +141,7 @@ calc::eval( const proofterm& prf, sequent& seq, errorstack& err )
          if( f. size( ) > 1 )
             throw std::logic_error( "too many" ); 
 
-         return seq. getformula( f. front( ));
+         return seq. getformula( f. front( ), err );
       }
 
    case prf_clausify:
@@ -146,7 +163,7 @@ calc::eval( const proofterm& prf, sequent& seq, errorstack& err )
          size_t seqsize = seq. size( );
 
          auto res = prf. view_branch( ); 
-         const logic::term& parent = eval( res. parent( ), seq, err );
+         const logic::term parent = eval( res. parent( ), seq, err );
 
          if( parent. sel( ) != logic::op_kleene_and )
             throw std::logic_error( "result not in ANF" );
@@ -217,6 +234,19 @@ calc::eval( const proofterm& prf, sequent& seq, errorstack& err )
 
          auto rest = remove( subform( parent, res. conj( )), res. disj( ));
          return replace( parent, res. conj( ), rest );
+      }
+
+   case prf_expand:
+      {
+         auto exp = prf. view_expand( ); 
+         logic::term parent = eval( exp. parent( ), seq, err ); 
+         expander def( exp. ident( ), exp. occ( ), seq. blfs, err );
+         std::cout << def << "\n"; 
+         parent = outermost( def, std::move( parent ), 0 );
+         std::cout << parent << "\n";
+         parent = normalize( seq. blfs, parent );
+         std::cout << "expander becomes " << def << "\n";
+         return parent; 
       }
 
    case prf_unfinished:

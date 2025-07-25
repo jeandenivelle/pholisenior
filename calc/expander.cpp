@@ -11,11 +11,11 @@ calc::expander::operator( ) ( logic::term tm, size_t vardepth, bool& change )
          // We get the belief of t, and check if it an overload
          // of id:
 
-      if( bl. ident( ) == id )
+      if( bl. ident( ) == ident )
       {
          std::cout << "found overload " << i << "/" << repl << "\n";
 
-         if( i == repl )
+         if( i++ == repl )
          {
             if( bl. sel( ) == logic::bel_def )
             {
@@ -25,13 +25,11 @@ calc::expander::operator( ) ( logic::term tm, size_t vardepth, bool& change )
             else
             {
                errorstack::builder bld;
-               bld << "cannot expand identifer " << id;
+               bld << "cannot expand identifer " << ident;
                bld << ", it is not a definition"; 
                err. push( std::move( bld ));                     
             }
          }
-
-         ++ i;
       }
 
       return tm;
@@ -40,12 +38,12 @@ calc::expander::operator( ) ( logic::term tm, size_t vardepth, bool& change )
    if( tm. sel( ) == logic::op_unchecked )
    {
       auto un = tm. view_unchecked( );
-      if( un. id( ) == id )
+      if( un. id( ) == ident )
       {
          if( i == repl )
          {
             errorstack::builder bld;
-            bld << "cannot expand unchecked identifier " << id;
+            bld << "cannot expand unchecked identifier " << ident;
             err. push( std::move( bld ));  
          }
 
@@ -60,8 +58,7 @@ calc::expander::operator( ) ( logic::term tm, size_t vardepth, bool& change )
 
 void calc::expander::print( std::ostream& out ) const
 {
-   out << "Expander ";
-   out << i << "/" << repl;
+   out << "Expander " << i << "/" << repl << ": " << ident;
 }
 
 

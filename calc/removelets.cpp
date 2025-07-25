@@ -85,7 +85,7 @@ calc::removelets( sequent& seq,
 
          std::cout << tm << "\n";
 
-         auto subst = logic::fullsubst( { tm } );
+         auto subst = logic::singlesubst( tm );
          std::cout << subst << "\n";    
          f = outermost( subst, let. extr_body( ), 0 ); 
 

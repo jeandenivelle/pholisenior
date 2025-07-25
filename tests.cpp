@@ -463,19 +463,11 @@ void tests::betareduction( logic::beliefstate& blfs, errorstack& err )
 
    bool change = false;
 
-   // auto res = beta( appl, 0, change );
-   // std::cout << "res = " << res << "\n";
+   auto res = beta( appl, 0, change );
+   std::cout << "res = " << res << "\n";
    std::cout << "change = " << change << "\n";
    std::cout << beta << "\n";
 
-   std::cout << "-------------------------------\n";
-
-   auto single = singlesubst( apply( "xxx"_unchecked, { 0_db, 1_db } ));
-   std::cout << single << "\n";
-   std::cout << "appl = " << appl << "\n";
-   appl = outermost( single, appl, 0 );
-   std::cout << "appl = " << appl << "\n";
-   std::cout << "change = " << change << "\n"; 
 }
 
 
@@ -492,12 +484,14 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
    seq. assume( "initial", ! blfs. at( f. front( )). view_thm( ). frm( ));
 
    std::cout << seq << "\n";
-   auto prf = calc::proofterm( calc::prf_clausify, 
+   auto prf1 = calc::proofterm( calc::prf_clausify, 
            calc::proofterm( calc::prf_ident, identifier( ) + "initial0001" )); 
-
-   prf = calc::proofterm( calc::prf_branch, 0, 0, prf, "main",
-                    calc::proofterm( calc::prf_unfinished, { 
-              calc::proofterm( calc::prf_clausify, calc::proofterm( calc::prf_ident, identifier( ) + "main0001" )) } ));
+   auto prf2 = calc::proofterm( calc::prf_expand, identifier( ) + "minhomrel", 0, 
+           calc::proofterm( calc::prf_ident, identifier( ) + "main0001" ));
+   prf2 = calc::proofterm( calc::prf_expand, identifier( ) + "inductive", 0, prf2 );
+   prf2 = calc::proofterm( calc::prf_clausify, prf2 );
+   auto prf = calc::proofterm( calc::prf_branch, 0, 0, prf1, "main",
+                    calc::proofterm( calc::prf_unfinished, { prf2 } ));
 
    auto res = eval( prf, seq, err );
    std::cout << "eval returned " << res << "\n";

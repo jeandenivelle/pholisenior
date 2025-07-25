@@ -22,6 +22,8 @@
 %option branch { prf_branch } =>
    conj : size_t, disj : size_t, parent : proofterm, 
       name : std::string, first : proofterm
+%option expand { prf_expand } => 
+   ident : identifier, occ : size_t, parent : proofterm 
 
 %option unfinished { prf_unfinished } => [ show : proofterm ] 
 
@@ -58,8 +60,17 @@
             auto res = view_branch( ); 
             out << "branch( "; 
             out << res. conj( ) << "/" << res.disj( ) << ", ";
-            out << res. name( ) << " : " << res. first( ) << " )";
+            out << "assume " << res. name( ) << " in " << res. first( ) << " )";
             return;
+         }
+
+      case prf_expand:
+         {
+            auto exp = view_expand( );
+            out << "expand( ";
+            out << exp. ident( ) << ", " << exp. occ( ) << ", ";
+            out << exp. parent( ) << " )";
+            return;  
          }
 
       case prf_unfinished:

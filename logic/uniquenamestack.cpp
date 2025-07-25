@@ -70,14 +70,18 @@ logic::pretty::uniquenamestack::extend( std::string name )
 
 void logic::pretty::uniquenamestack::restore( size_t s )
 {
-
    while( names. size( ) > s )
    {
       const auto& base = names. back( ). base;
-      indices. at( base ). pop_back( ); 
+
+      auto it = indices. find( base );
+      it -> second. pop_back( ); 
+      if( it -> second. empty( ))
+         indices. erase( it ); 
+            // Otherwise, base will be considered unsafe forever.
+
       names. pop_back( );
    }
-
 }
 
 

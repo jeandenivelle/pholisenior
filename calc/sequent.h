@@ -20,8 +20,6 @@ namespace calc
    struct sequent
    {
       logic::beliefstate& blfs; 
-      errorstack& err; 
-
       namegenerator gen;
 
       std::vector< extension > steps;
@@ -31,8 +29,7 @@ namespace calc
          // These are indices into steps.
 
       sequent( logic::beliefstate& blfs, errorstack& err ) noexcept
-         : blfs( blfs ),
-           err( err ) 
+         : blfs( blfs )
       { } 
 
       logic::exact assume( std::string_view namebase, const logic::term& frm );
@@ -48,9 +45,9 @@ namespace calc
 
       identifier get_fresh_ident( std::string namebase );
 
-      logic::term getformula( logic::exact ex );
-         // Not const because we may create an error. 
+      logic::term getformula( logic::exact ex, errorstack& err ) const;
          // We also throw a failure. 
+         // We should separate this function into isformula( ) and getformula.
      
    };
 
