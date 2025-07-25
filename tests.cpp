@@ -451,7 +451,7 @@ void tests::betareduction( logic::beliefstate& blfs, errorstack& err )
 
    term body = term( op_apply, "func"_unchecked, { 0_db, 1_db, 2_db, 3_db } );
    body = term( op_forall, body, {{ "haha", T }} ); 
-   term lambda = term( op_lambda, body, { { "x", O }, { "y", O }, { "z", O }} );
+   term lambda = term( op_lambda, body, { { "x", O }, { "y", O } } );
 
    auto first = term( op_apply, "first"_unchecked, { 1_db } ); 
    auto second = term( op_apply, "second"_unchecked, { 2_db } );
@@ -463,21 +463,19 @@ void tests::betareduction( logic::beliefstate& blfs, errorstack& err )
 
    bool change = false;
 
-   auto res = beta( appl, 0, change );
-   std::cout << "res = " << res << "\n";
+   // auto res = beta( appl, 0, change );
+   // std::cout << "res = " << res << "\n";
    std::cout << "change = " << change << "\n";
    std::cout << beta << "\n";
 
-   calc::projection proj( blfs );
-   std::cout << proj << "\n";
+   std::cout << "-------------------------------\n";
 
-   appl = term( op_apply, term( op_exact, exact(56)), std::initializer_list< term > ( ));
-   appl = term( op_apply, term( op_exact, exact(58)), { appl } );
-   change = false;
-   res = proj( appl, 0, change ); 
-   std::cout << "res = " << res << "\n";
-   std::cout << "change = " << change << "\n";
-   std::cout << proj << "\n"; 
+   auto single = singlesubst( apply( "xxx"_unchecked, { 0_db, 1_db } ));
+   std::cout << single << "\n";
+   std::cout << "appl = " << appl << "\n";
+   appl = outermost( single, appl, 0 );
+   std::cout << "appl = " << appl << "\n";
+   std::cout << "change = " << change << "\n"; 
 }
 
 

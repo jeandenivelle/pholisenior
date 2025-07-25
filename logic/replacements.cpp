@@ -75,6 +75,32 @@ void logic::sparse_subst::print( std::ostream& out ) const
 }
 
 logic::term
+logic::singlesubst::operator( ) ( term t, size_t vardepth, 
+                                  bool& change ) const
+{
+   if( t. sel( ) == op_debruijn )
+   {
+      size_t ind = t. view_debruijn( ). index( );
+      if( ind >= vardepth )
+      {
+         change = true;
+
+         if( ind == vardepth )
+            return lift( value, vardepth );
+         else
+            return term( op_debruijn, ind - 1 );
+      }
+   }
+   return t;
+}
+
+void logic::singlesubst::print( std::ostream& out ) const
+{
+   out << "singlesubst( #0 := " << value << " )";
+}
+
+
+logic::term
 logic::fullsubst::operator( ) ( term t, size_t vardepth, bool& change ) const
 {
    if( t. sel( ) == op_debruijn ) 

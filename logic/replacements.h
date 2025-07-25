@@ -34,7 +34,8 @@ namespace logic
 
    // A sparse subst assigns values to some, but not
    // necessarily all, De Bruijn indices. 
-   // Variables that do not occur, are not changed.
+   // Variables that are not in the domain of the substitution,
+   // are not changed.
 
    class sparse_subst
    {
@@ -56,6 +57,20 @@ namespace logic
    };
 
 
+   // A single subst replaces #0 by value. 
+
+   struct singlesubst
+   {
+      term value; 
+
+      singlesubst( const term& value ) 
+         : value( value ) 
+      { }
+
+      term operator( ) ( term t, size_t vardepth, bool& change ) const;
+      void print( std::ostream& out ) const;
+   };
+    
    // A fullsubst completely removes the nearest DeBruijn indices 
    // #0,#1,#2, ... 
    // DeBruijn that are not in the fullsubst are shifted down. 
