@@ -53,7 +53,8 @@ namespace logic
                     context& ctxt, term& t );
       // Check and resolve overloads. 
       // We won't look at dependencies. Dependencies are checked by a separate
-      // function. 
+      // function. In case of error, we return empty optional,
+      // we don't throw exceptions.
 
    std::optional<type >
    checkandresolve( const beliefstate& blfs, errorstack& errors, term& t );

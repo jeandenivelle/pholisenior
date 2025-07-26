@@ -8,6 +8,7 @@
 
 #include "logic/pretty.h"
 #include "logic/replacements.h"
+#include "logic/structural.h"
 
 size_t calc::nrsubforms( const logic::term& fm )
 {
@@ -247,6 +248,35 @@ calc::eval( const proofterm& prf, sequent& seq, errorstack& err )
          parent = normalize( seq. blfs, parent );
          std::cout << "expander becomes " << def << "\n";
          return parent; 
+      }
+
+   case prf_define: 
+      {
+         auto def = prf. view_define( );
+         size_t seqsize = seq. size( );
+         
+         // We need to type check the value:
+
+         auto val = def. val( );
+         size_t errsize = err. size( );
+         logic::context ctxt;
+         auto tp = checkandresolve( seq. blfs, err, ctxt, val );
+
+         if( err. size( ) > errsize )
+         {
+            err. addheader( errsize, "during type checking of inproof definition" );
+            throw failure( ); 
+         } 
+
+         if( !tp. has_value( ))
+            throw std::logic_error( "should be unreachable" );
+
+         seq. define( def. name( ), val, tp. value( ));
+         auto res = eval( def. parent( ), seq, err );
+         std::cout << "YOU NEED TO CHECK THAT IDENTIFIER DOES NOT OCCUR IN FORMULA";
+         std::cout << "(just substitute it away)\n";
+         seq. restore( errsize );
+         return res;
       }
 
    case prf_unfinished:

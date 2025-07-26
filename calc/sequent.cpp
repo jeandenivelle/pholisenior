@@ -27,7 +27,6 @@ calc::sequent::assume( std::string_view namebase, const logic::type& tp )
 
    auto ex = blfs. append( logic::belief( logic::bel_symbol, id, tp ));
    steps. push_back( extension( seq_belief, ex, true ));
-   std::cout << "assuming " << id << " : " << tp << "\n";
    return ex;
 }
 
@@ -38,10 +37,8 @@ calc::sequent::define( std::string_view namebase,
 {
    auto freshid = identifier( ) + gen. create( std::string( namebase )); 
    auto def = logic::belief( logic::bel_def, freshid, val, tp );
-   std::cout << def << "\n";
    logic::exact ex = blfs. append( std::move( def )); 
    steps. push_back( extension( seq_belief, ex, true ));
-
    return ex;
 }
 
