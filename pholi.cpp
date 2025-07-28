@@ -17,6 +17,8 @@
 
 #include "calc/proofchecking.h"
 
+#include "calc/apartvar.h"
+
 void
 includefile( logic::beliefstate& blfs, 
              filehasher& seen, const std::filesystem::path& file,
@@ -76,6 +78,12 @@ includefile( logic::beliefstate& blfs,
 
 int main( int argc, char* argv[] )
 {
+   calc::apartvar v1(3,2);
+   std::cout << v1 << "\n";
+
+   calc::apartvar::hash hh;
+   std::cout << hh( v1 ) << "\n";
+   return 0;
 
    errorstack err;
 

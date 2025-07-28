@@ -473,6 +473,12 @@ void tests::betareduction( logic::beliefstate& blfs, errorstack& err )
 
 void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
 {
+   auto O = logic::type( logic::type_obj );
+   auto T = logic::type( logic::type_form );
+   auto Nat = logic::type( logic::type_unchecked, identifier( ) + "Nat" );
+
+   using namespace calc;
+
    auto id = identifier( ) + "just";
 
    const auto& f = blfs. getformulas( id );
@@ -480,18 +486,44 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
    if( f. size( ) != 1 )
       throw std::runtime_error( "cannot continue" );
 
-   auto seq = calc::sequent( blfs, err );
+   auto seq = sequent( blfs, err );
    seq. assume( "initial", ! blfs. at( f. front( )). view_thm( ). frm( ));
 
+   logic::term indhyp = logic::term( logic::op_false );  // Q in the paper. 
+   {
+      using namespace logic;
+      auto disj1 = 
+         1_db == apply( "0"_unchecked, { 3_db } ) &&
+         0_db == apply( "0"_unchecked, { 2_db } );
+
+      // Left and right of the lazy-and inside the exists:
+
+      auto la1 =
+         apply( "gen"_unchecked, { 5_db, 1_db } ) && 
+         apply( "gen"_unchecked, { 4_db, 0_db } );
+
+      auto la2 = 
+         apply( "minhomrel"_unchecked, { 5_db, 4_db, 1_db, 0_db } ) &&
+         3_db == apply( "succ"_unchecked, { 5_db, 1_db } ) &&
+         2_db == apply( "succ"_unchecked, { 4_db, 0_db } );
+
+      auto disj2 = exists( { { "y1", O }, { "y2", O }}, lazy_and( la1, la2 ));
+
+      indhyp = disj1 || disj2; 
+      indhyp = lambda( {{ "x1", O }, { "x2", O }}, indhyp );
+      indhyp = lambda( {{ "n1", Nat }, { "n2", Nat }}, indhyp );
+   }
+
    std::cout << seq << "\n";
-   auto prf1 = calc::proofterm( calc::prf_clausify, 
-           calc::proofterm( calc::prf_ident, identifier( ) + "initial0001" )); 
-   auto prf2 = calc::proofterm( calc::prf_expand, identifier( ) + "minhomrel", 0, 
-           calc::proofterm( calc::prf_ident, identifier( ) + "main0001" ));
-   prf2 = calc::proofterm( calc::prf_expand, identifier( ) + "inductive", 0, prf2 );
-   prf2 = calc::proofterm( calc::prf_clausify, prf2 );
-   auto prf = calc::proofterm( calc::prf_branch, 0, 0, prf1, "main",
-                    calc::proofterm( calc::prf_unfinished, { prf2 } ));
+   auto prf1 = proofterm( prf_clausify, 
+           proofterm( prf_ident, identifier( ) + "initial0001" )); 
+   auto prf2 = proofterm( prf_expand, identifier( ) + "minhomrel", 0, 
+           proofterm( prf_ident, identifier( ) + "main0001" ));
+   prf2 = proofterm( prf_expand, identifier( ) + "inductive", 0, prf2 );
+   prf2 = proofterm( prf_clausify, prf2 );
+   prf2 = proofterm( prf_define, "Q", indhyp, proofterm( prf_unfinished, { prf2 } ));
+
+   auto prf = proofterm( prf_branch, 0, 0, prf1, "main", prf2 );
 
    auto res = eval( prf, seq, err );
    std::cout << "eval returned " << res << "\n";
@@ -985,126 +1017,6 @@ void tests::prove_pluscom( )
 #endif
 }
 
-void tests::prove_kuratowski( )
-{
-   using namespace logic;
-
-#if 0
-   beliefstate bel;
-   add_kuratowski( bel );
-
-   pretty::print( std::cout, bel );
-   check_everything( std::cout, bel );
-
-   size_t ind = bel. find( identifier( ) + "kuratowski" + "single" );
-   if( ind >= bel. size( ))
-   {
-      std::cout << "did not find the theorem\n";
-      return;
-   }
-
-   auto thm = bel. at( ind ). second. view_thm_file( ). form( );
-   proofeditor edit( &bel, ind, !thm );
-
-   edit. apply_exists( 0_db, "x" );
-   edit. apply_exists( 0_db, "y" );
-
-   edit. apply_disj( term( prf_inst, 
-                       term( prf_ext1, term( prf_and1, 0_db )), 3_db ) ); 
-
-   edit. apply_proof( term( prf_false, term( prf_and1, 0_db )));
-   edit. setfocus(0);
-
-   edit. apply_disj( 0_db );
-
-   edit. apply_proof( term( prf_contr, term( prf_and2, 2_db ), 0_db ));
-
-   edit. setfocus(0);
-
-   edit. apply_proof( term( prf_false, 0_db ));
-   edit. setfocus(0);
-
-   edit. show( std::cout, { } );
-
-   ///////////////////////////////////////////////
-
-   std::cout << "-----------------------------\n";
-
-   ind = bel. find( identifier( ) + "kuratowski" + "merge" );
-   if( ind >= bel. size( ))
-   {
-      std::cout << "did not find the theorem\n";
-      return;
-   }
-
-   thm = bel. at( ind ). second. view_thm_file( ). form( );
-   edit = proofeditor( &bel, ind, !thm );
-
-   edit. apply_exists( 0_db, "x" );
-   edit. apply_exists( 0_db, "y" );
-   edit. apply_exists( 0_db, "z" );
-
-   
-   edit. apply_abbreviate( term( prf_ext1, term( prf_and1, 0_db )), "forall" );
-
-   edit. apply_disj( term( prf_and2, 1_db ));
-
-
-   edit. apply_disj( term( prf_inst, 1_db, 5_db ) );
-   edit. apply_proof( term( prf_false, term( prf_and1, 0_db )));
-   edit. setfocus(0);
-
-   edit. apply_disj( 0_db );
-
-   edit. show( std::cout, {  } );
-   
-   edit. apply_proof( term( prf_false, term( prf_repl, 0_db, 2_db )));
-   edit. setfocus(0);
-
-   edit. apply_proof( term( prf_false, 0_db ));
-   edit. setfocus(0);
-
-   edit. apply_abbreviate( term( prf_inst, 1_db, 3_db ));
-
-   edit. apply_disj( 0_db );
-
-   edit. apply_proof( term( prf_false, term( prf_and1, term( prf_and2, 0_db ))) );
-
-   edit. setfocus(0);
-
-   edit. apply_disj( 0_db );
-
-   edit. apply_proof( term( prf_false, term( prf_repl, 0_db, 3_db )) );
-
-   edit. setfocus(0);
-
-   edit. apply_proof( term( prf_false, 0_db ));
-
-   edit. show( std::cout, {} );
-
-   edit. setfocus(0);
-
-   ///////////////////////////////////////////////
-
-   std::cout << "-----------------------------\n";
-
-   ind = bel. find( identifier( ) + "kuratowski" + "insert" );
-   if( ind >= bel. size( ))
-   {
-      std::cout << "did not find the theorem\n";
-      return;
-   }
-
-   thm = bel. at( ind ). second. view_thm_file( ). form( );
-   edit = proofeditor( &bel, ind, !thm );
-
-   edit. apply_exists( 0_db, "x" );
-   edit. apply_exists( 0_db, "y" );
-   edit. apply_exists( 0_db, "y" );
-
-   edit. show( std::cout, {} );
-#endif 
-}
 
 void tests::prove_von_neumann( )
 {

@@ -286,10 +286,11 @@ calc::eval( const proofterm& prf, sequent& seq, errorstack& err )
          bld << "Unfinished Proof:\n";
          bld << seq << "\n";
          auto unf = prf. view_unfinished( ); 
+         bld << "Formulas:\n";
          for( size_t i = 0; i != unf. size( ); ++ i )
          {
             logic::context ctxt; 
-            bld << i << " : "; 
+            bld << "   " << i << " : "; 
             logic::pretty::print( bld, seq. blfs, ctxt, eval( unf. show(i), seq, err ));
          }
          err. push( std::move( bld ));

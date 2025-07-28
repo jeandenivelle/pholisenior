@@ -1,27 +1,7 @@
 
-def atleastone( R : Form( Obj )) := < y : Obj > R(y) : Form;
-def atmostone( R : Form( Obj )) := 
-   [ y1, y2 : Obj ] R(y1) & R(y2) -> y1 == y2 : Form;
-
-symbol the : Obj( Form( Obj ));
-
-axiom the :
-   [ P : Form( Obj ) ]  
-   { strict(P) } -> atleastone(P) -> atmostone(P) ->
-   P( the(P));
-
 
 // Can be overloaded for different arities:
 
-def total( P : Form( Obj ), Q : Form( Obj, Obj )) :=
-   [ x : Obj ] { P(x) } -> < y : Obj > Q(x,y) : Form ;
-
-def unique( P : Form( Obj ), Q : Form( Obj, Obj )) :=
-   [ x : Obj ] { P(x) } -> 
-      < y1, y2 : Obj > Q(x,y1) & Q(x,y2) -> y1 == y2 : Form ;
-
-def functional( P : Form( Obj ), Q : Form( Obj, Obj )) :=
-   total(P,Q) & unique(P,Q) : Form ; 
 
 def func( P : Form( Obj ), Q : Form( Obj, Obj )) :=
    ??( x : Obj ) the( ??( y : Obj ) Q(x,y) ) : Obj( Obj ); 

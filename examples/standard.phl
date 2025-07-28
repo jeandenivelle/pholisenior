@@ -8,7 +8,6 @@ def strict( P : Form( Obj, Obj )) :=
 def strict( P : Form( Obj, Obj, Obj )) := 
    [ x1, x2, x3 : Obj ] # P(x1,x2,x3) : Form;
 
-
 def stricton( P, Q : Form( Obj )) := 
    [ x1 : Obj ] P(x1) -> # Q(x1) : Form;
 def stricton( P, Q : Form( Obj, Obj )) := 
@@ -35,13 +34,13 @@ def and( P1,P2 : Form( Obj, Obj ))( x1, x2 : Obj ) :=
 def and( P1,P2 : Form( Obj, Obj, Obj ))( x1, x2, x3 : Obj ) :=
    P1(x1,x2,x3) & P2(x1,x2,x3) : Form ;
  
-def inside( P1,P2 : Form ) :=
+def with( P1,P2 : Form ) :=
    { P1 } & P2 : Form;
-def inside( P1,P2 : Form( Obj ))( x1 : Obj ) :=
+def with( P1,P2 : Form( Obj ))( x1 : Obj ) :=
    { P1(x1) } & P2(x1) : Form;
-def inside( P1,P2 : Form( Obj, Obj ))( x1, x2 : Obj ) :=
+def with( P1,P2 : Form( Obj, Obj ))( x1, x2 : Obj ) :=
    { P1(x1,x2) } & P2(x1,x2) : Form;
-def inside( P1,P2 : Form( Obj, Obj, Obj ))( x1, x2, x3 : Obj ) :=
+def with( P1,P2 : Form( Obj, Obj, Obj ))( x1, x2, x3 : Obj ) :=
    { P1(x1,x2,x3) } & P2(x1,x2,x3) : Form ;
 
 
@@ -109,6 +108,9 @@ def linear( P : Form( Obj, Obj, Obj ), Q : Form( Obj, Obj, Obj, Obj )) :=
    [ x1, x2, x3 : Obj ] P(x1,x2,x3) -> 
       [ y1, y2 : Obj ] Q(x1,x2,x3,y1) & Q(x1,x2,x3,y2) -> y1 == y2 : Form;
 
+def linear( P : Form( Obj ), Q : Form( Obj ), R : Form( Obj, Obj )) :=
+   linear( P, ?? ( x1, y : Obj ) { Q(y) } & R(x1,y) ) : Form ;
+
 def functional( Q : Form( Obj )) :=
    serial(Q) & linear(Q) : Form ;
 def functional( P : Form( Obj ), Q : Form( Obj, Obj )) :=
@@ -121,7 +123,7 @@ axiom find :
    [ Q : Form( Obj ) ] 
       { strict(Q) } -> functional(Q) -> Q( find(Q)); 
 
-thm find :
+thm find2 :
    [ P : Form( Obj ), Q : Form( Obj, Obj ) ] 
       strict(P) -> { stricton( extend(P), Q ) } ->
    functional( P, Q ) -> [ x1 : Obj ] { P(x1) } -> 
