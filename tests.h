@@ -22,9 +22,7 @@ namespace tests
 
    void proofchecking( logic::beliefstate& blfs, errorstack& err );
 
-#if 0
-   void unification( );
-#endif
+   void unification( const logic::beliefstate& blfs, errorstack& err );
 
    void pretty( const logic::beliefstate& blfs );
 

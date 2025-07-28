@@ -50,6 +50,7 @@
    projection.cpp
    sequent.cpp
    proofterm.cpp
+   unification.cpp
    proofchecking.cpp
  
 %dir Source/semantics
@@ -76,7 +77,7 @@
    Wno-invalid-offsetof
    Wno-unused-function
    pedantic-errors
-   std=c++20
+   std=c++23
 
 %includedirs
    Lexing
