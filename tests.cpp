@@ -641,13 +641,12 @@ void tests::unification( const logic::beliefstate& blfs, errorstack& err )
 {
    using namespace logic;
 
-   term t1 = apply( term( op_exact, exact(11)), { 2_db, 5_db } );
-   term t2 = apply( term( op_exact, exact(11)), { 2_db, 3_db } );
+   term t1 = apply( term( op_exact, exact(11)), { 5_db, 5_db } );
+   term t2 = apply( term( op_exact, exact(11)), { 4_db, 3_db } );
 
    calc::unifsubst unif;
 
-   calc::universals univ = { { 0, 2 }, { 1, 1 }};
-
+   calc::forallstarts univ = { { 0, 2 }, { 1, 1 }};
    auto b = calc::unify( unif, univ, 
                          calc::termorig( t1, 0 ), 3, 
                          calc::termorig( t2, 1 ), 4 );
