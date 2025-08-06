@@ -9,7 +9,8 @@
 
 namespace logic
 {
-   // The counter does not need to count. It can also
+
+   // A counter does not need to count. It can also
    // check presence. 
 
    template< typename F >
@@ -131,8 +132,33 @@ namespace logic
 
    exact::unordered_map< size_t > count_beliefs( const term& t );
 
-}
 
+   // Can be used for finding the nearest De Bruijn index. 
+
+   struct debruijn_cmp 
+   {
+      size_t nearest; 
+
+      void operator( ) ( const term& t, size_t vardepth );
+
+      debruijn_cmp( ) = delete;
+
+      debruijn_cmp( size_t upperbound ) noexcept
+         : nearest( upperbound ) 
+      { } 
+
+      void print( std::ostream& out ) const;
+   };
+
+   inline size_t 
+   nearest_debruijn( const term& t, size_t upperbound )
+   {
+      auto near = debruijn_cmp( upperbound );
+      count( near, t, 0 );
+      return near. nearest;
+   }
+
+}
 
 #endif
 

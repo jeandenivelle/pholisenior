@@ -642,16 +642,22 @@ void tests::unification( const logic::beliefstate& blfs, errorstack& err )
    using namespace logic;
 
    term t1 = apply( term( op_exact, exact(11)), { 5_db, 5_db } );
-   term t2 = apply( term( op_exact, exact(11)), { 4_db, 3_db } );
+   term t2 = apply( term( op_exact, exact(11)), { 4_db, "aa"_unchecked } );
 
-   calc::unifsubst unif;
+   calc::unifsubst subst;
 
    calc::forallstarts univ = { { 0, 2 }, { 1, 1 }};
-   auto b = calc::unify( unif, univ, 
+   auto b = calc::unify( subst, univ, 
                          calc::termorig( t1, 0 ), 3, 
-                         calc::termorig( t2, 1 ), 4 );
+                         calc::termorig( t2, 1 ), 2 );
 
-   std::cout << "unify returned " << b << "\n";
+   if(b) 
+   {
+      std::cout << "succeeded with\n";
+      std::cout << subst << "\n";
+   }
+   else
+      std::cout << "failed\n";
 }
 
 #if 0

@@ -28,19 +28,49 @@ logic::lifter::print( std::ostream& out ) const
 }
 
 
-namespace
+logic::term
+logic::sinker::operator( ) ( term t, size_t vardepth, bool& change ) const
 {
-   // substitutions need lifted terms, but we want to avoid 
-   // lifting over zero:
-
-   logic::term lift( logic::term tm, size_t vardepth )
+   if( t. sel( ) == op_debruijn )
    {
-      if( vardepth == 0 )
-         return tm;
-      else
-         return outermost( logic::lifter( vardepth ), std::move( tm ), 0 );
-   }
+      auto db = t. view_debruijn( );
+      size_t ind = db. index( );
+      if( ind >= vardepth )
+      {
+         ind -= vardepth; 
+         if( ind < dist )
+            throw std::logic_error( "sinker. DeBruijn index too small" );
+
+         change = true;
+         return term( op_debruijn, ind - dist );
+      }  
+   }     
+   return t; 
 }
+   
+void
+logic::sinker::print( std::ostream& out ) const
+{
+   out << "sinker(" << dist << ")";
+}
+
+
+logic::term logic::lift( term tm, size_t dist )
+{
+   if( dist == 0 )
+      return tm;
+   else
+      return outermost( lifter( dist ), std::move( tm ), 0 );
+}
+
+logic::term logic::sink( term tm, size_t dist )
+{
+   if( dist == 0 )
+      return tm;
+   else
+      return outermost( sinker( dist ), std::move( tm ), 0 );
+}
+
  
 logic::term
 logic::sparse_subst::operator( ) ( term t, size_t vardepth, 

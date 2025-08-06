@@ -23,8 +23,35 @@ logic::debruijn_counter::operator( ) ( const term& t, size_t vardepth )
 
 void logic::debruijn_counter::print( std::ostream& out ) const
 {
-   out << "De Bruijn Counter:\n";
+   out << "DeBruijn Counter:\n";
    for( const auto& p : occ )
       out << "   #" << p. first << " : " << p. second << "\n";
 }
+
+
+void
+logic::debruijn_cmp::operator( ) (  const term& t, size_t vardepth )
+{
+   if( t. sel( ) == op_debruijn )
+   {
+      auto ind = t. view_debruijn( ). index( );
+
+      // If we don't enter this if, the index is local,
+      // and we ignore it:
+
+      if( ind >= vardepth )
+      {
+         ind -= vardepth;
+         if( ind < nearest )
+            nearest = ind;
+      }
+   }
+}
+
+void logic::debruijn_cmp::print( std::ostream& out ) const
+{
+   out << "Nearest DeBruijn:\n";
+   out << "   #" << nearest;
+}
+
 

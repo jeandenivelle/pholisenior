@@ -1,5 +1,7 @@
 
 #include "unification.h"
+#include "logic/inspections.h"
+#include "logic/replacements.h"
 
 std::ostream& calc::operator << ( std::ostream& out, const forallstarts& univ )
 {
@@ -9,28 +11,6 @@ std::ostream& calc::operator << ( std::ostream& out, const forallstarts& univ )
    return out;
 }
 
-calc::unifsubst::const_iterator
-calc::lookup( const unifsubst& subst, const forallstarts& univ,
-              varorig var, size_t vardepth )
-{
-   std::cout << "lookup " << var << " [" << vardepth << "]\n";
-
-   // Locally bound variables are not looked up:
-
-   if( var.ind < vardepth )
-      return subst. end( ); 
-
-   var.ind -= vardepth;
-
-   // Existential variable? 
-
-   if( var. ind < univ.at( var.orig ))
-      return subst. end( );
-
-   var.ind -= univ.at( var.orig );
-
-   return subst. find( var );
-}
 
 std::optional< calc::varorig >
 calc::assignable( const unifsubst& subst, const forallstarts& univ,
@@ -40,7 +20,6 @@ calc::assignable( const unifsubst& subst, const forallstarts& univ,
       return { };
 
    size_t ind = t.tm.view_debruijn( ). index( );
-
 
    // Local variable -> not assignable!
 
@@ -67,40 +46,68 @@ calc::unify( unifsubst& subst, const forallstarts& univ,
 {
    std::cout << "Unifying\n";
    std::cout << subst << "\n";
-   std::cout << "   " << t1 << " [" << vardepth1 << "/";
-   std::cout << univ. at( t1. orig ) << "]\n";
-   std::cout << "   " << t2 << " [" << vardepth2 << "/";
-   std::cout << univ. at( t2. orig ) << "]\n";
+   std::cout << "   " << t1 << " [" << vardepth1 << " / ";
+   std::cout << "univ:" << univ. at( t1. orig ) << "]\n";
+   std::cout << "   " << t2 << " [" << vardepth2 << " / ";
+   std::cout << "univ:" << univ. at( t2. orig ) << "]\n";
    std::cout << "\n";
 
-   // If one side is a DeBruijn index, we look up in subst and restart:
+   // If one side is a DeBruijn index, we look it up in subst.
 
-   if( t1.tm.sel( ) == logic::op_debruijn )
+   auto asn1 = assignable( subst, univ, t1, vardepth1 );
+   if( asn1 )
    {
-      auto ind1 = t1.tm.view_debruijn( ). index( ); 
-      auto p = lookup( subst, univ, varorig( ind1, t1.orig ), vardepth1 );
+      auto p = subst. find( asn1. value( )); 
       if( p != subst. end( )) 
          return unify( subst, univ, p -> second, 0, t2, vardepth2 );
    }
 
-   if( t2.tm.sel( ) == logic::op_debruijn )
+   auto asn2 = assignable( subst, univ, t2, vardepth2 );
+   if( asn2 )
    {
-      auto ind2 = t2.tm.view_debruijn( ). index( );
-      auto p = lookup( subst, univ, varorig( ind2, t2.orig ), vardepth2 );
+      auto p = subst. find( asn2. value( ));
       if( p != subst. end( )) 
          return unify( subst, univ, t1, vardepth1, p -> second, 0 );
    }
 
-   // If either side is an assignable variable, we do the assignment: 
+   // If both sides are assignable variables, and equal,
+   // we return true:
 
-   if( auto asn1 = assignable( subst, univ, t1, vardepth1 ); asn1 )
+   if( asn1 && asn2 )
    {
-      std::cout << "assignable " << asn1. value( ) << "\n";
-
-      
+      varorig::equal_to eq;
+      if( eq( asn1. value( ), asn2. value( )) )
+         return true;
    }
 
-   // In the remaining case, the terms must be structurally equal:
+   // If the left is assignable, we try to do the assignment:
+
+   if( asn1 )
+   {
+      // If right term contains a local variable, we cannot assign:
+
+      if( logic::nearest_debruijn( t2.tm, vardepth2 ) < vardepth2 )
+         return false;
+
+      // If left variable occurs in right term, we cannot assign:
+
+      if( occurs( subst, univ, asn1. value( ), t2, vardepth2 ))
+         return false;
+ 
+      subst. push( asn1. value( ), 
+                   termorig( sink( t2.tm, vardepth2 ), t2. orig ));
+
+      return true;
+   }
+
+   if( auto asn2 = assignable( subst, univ, t2, vardepth2 ); asn2 )
+   {
+      std::cout << "right assignable " << asn2. value( ) << "\n";
+      
+      throw std::logic_error( "finish it" );
+   }
+
+   // In the remaining case, t1 and t2 must be structurally equal:
 
    if( t1.tm.sel( ) != t2.tm.sel( ))
       return false;
@@ -109,8 +116,12 @@ calc::unify( unifsubst& subst, const forallstarts& univ,
    {
    case logic::op_debruijn:
       {
+         // Assignable cases have been checked before.
+         // We check only existential and local.
+
          auto ind1 = t1.tm.view_debruijn( ). index( );
          auto ind2 = t2.tm.view_debruijn( ). index( );
+
          if( ind1 < vardepth1 || ind2 < vardepth2 )
          {
             // Either of them is local.
@@ -119,7 +130,7 @@ calc::unify( unifsubst& subst, const forallstarts& univ,
             if( ind1 >= vardepth1 || ind2 >= vardepth2 )
                return false;
 
-            // Origin does not matter, they are local.
+            // Origin does not matter for local variables.
 
             return ind1 == ind2;  
          }
@@ -133,6 +144,10 @@ calc::unify( unifsubst& subst, const forallstarts& univ,
          if( ind1 < univ. at( t1. orig ) || 
              ind2 < univ. at( t2. orig ))
          {
+            std::cout << "existential\n";
+            std::cout << "   " << ind1 << " " << t1. orig << "\n";
+            std::cout << "   " << ind2 << " " << t2. orig << "\n";
+
             return ind1 == ind2 && t1.orig == t2.orig; 
          } 
 
@@ -179,119 +194,38 @@ calc::unify( unifsubst& subst, const forallstarts& univ,
    
 }
 
-#if 0
-bool  
-calc::unify( unifsubst& subst, const universals& univ, 
-             varorig var1, size_t vardepth1,
-             termorig t2, size_t vardepth2 )
-{
-   std::cout << "var-unify\n";
-   std::cout << "   " << var1 << " [ " << vardepth1 << " ]\n";
-   std::cout << "   " << t2 << " [ " << vardepth2 << " ]\n";
-
-   if( var1.var < vardepth1 )
-   {
-      // Local variables are not assignable. Unification succeeds
-      // only if the other side is the same local variable.
-
-      if( t2.tm.sel( ) != logic::op_debruijn )
-         return false;
-
-      auto index2 = t2.tm.view_debruijn( ). index( );
-      return index2 < vardepth2 && var1.var == index2; 
-   }
-   
-   var1.var -= vardepth1;
-   if( var1. var < univ. at( var1. orig ))
-   {
-      std::cout << "variable is existential\n";
-
-      // Existential variables cannot be assigned to. 
-      // We accept only if the other side is the same existential 
-      // variable from the same origine.
-
-      if( t2.tm.sel( ) != logic::op_debruijn )
-         return false;
-
-      auto index2 = t2.tm.view_debruijn( ). index( );
-      if( index2 < vardepth2 ) 
-         return false;
-      index2 -= vardepth2;
-      return var1.var == index2 && var1.orig == t2.orig; 
-   }
-
-   std::cout << "variable can be assigned\n";
-
-   // It is an assignable variable.
-   // Check if it already has an assignment: 
-  
-   auto p = subst. find( var1 );
-   if( p != subst. end( ))
-   {
-      std::cout << "variable already has value!\n";
-      throw std::logic_error( "stopping" );
-   }
-   
-   std::cout << "we need to check if right side contains local\n";
-
-   if( occurs( subst, var1, t2 ))
-   {
-      if( t2.tm.sel( ) == logic::op_debruijn )
-      { 
-         // This means that var1 occurs, and t2 is a variable.
-         // Hence, they are equal.
-
-         return true;
-      }
-      else
-         return false;   // Proper occurrence. We reject.
-
-   }
-
-   std::cout << "we do the assignment\n";
-}
-#endif
-
 
 bool 
-calc::occurs( const unifsubst& subst, 
-              varorigset& checked,
-              varorig wanted, const termorig& tt, size_t vardepth )
+calc::occurs( const unifsubst& subst, const forallstarts& univ, 
+              varorig var, const termorig& tt, size_t vardepth )
 {
-   std::cout << "occurs check " << wanted << " in " << tt << "\n";
+   std::cout << "checking occurrence of " << var << " in " << tt; 
+   std::cout << " [" << vardepth << "]\n";
+
+   // SUBSTITUTIONS ARE NOT LOOKED UP
+
+   if( auto asn = assignable( subst, univ, tt, vardepth ); asn )
+   {
+      // If equal, then occurs:
+
+      varorig::equal_to eq;
+      return eq( var, asn. value( ));
+   }
+
    switch( tt.tm.sel( ))
    {
-
    case logic::op_debruijn:
-      {
-         size_t ind = tt.tm.view_debruijn( ). index( );
-         std::cout << ind << "\n";
-         if( ind < vardepth ) return false;
-         ind -= vardepth;
-         if( checked. insert( varorig( ind, tt.orig )). second )
-         {
-            // This means { ind, tt.orig } was inserted, which implies
-            // that we didn't check it yet. 
+      return false;  // Left is assignable, we checked for right. 
+   case logic::op_unchecked:
+   case logic::op_false:
+   case logic::op_error:
+   case logic::op_true:
+      return false;
 
-            auto p = subst. find( varorig( ind, tt.orig ));
-            if( p != subst. end( ))
-               return occurs( subst, checked, wanted, p -> second, vardepth );
-            else 
-               return ind == wanted.ind && tt.orig == wanted.orig;
-         }
-         else
-            return false; 
-      }   
    }
 
    std::cout << tt.tm.sel( ) << "\n";
    throw std::logic_error( "occurs check: not implemented" ); 
 }
 
-
-bool calc::occurs( const unifsubst& subst, varorig var, const termorig& tt )
-{
-   std::unordered_set< varorig, varorig::hash, varorig::equal_to > checked;
-   return occurs( subst, checked, var, tt, 0 );
-}
 

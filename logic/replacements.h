@@ -11,10 +11,10 @@
 
 namespace logic
 {
-   // Either return a very_equal term (in simple cases 'the same term'), 
-   // or a replacement.
-   // The boolean should be assignend true when a replacement happened, 
-   // and not changed when there was no replacement. 
+
+   // The boolean should be assignend true when a 
+   // replacement happened, and not changed when there was 
+   // no replacement. 
 
    struct lifter
    {
@@ -31,6 +31,27 @@ namespace logic
       void print( std::ostream& out ) const; 
    };
 
+
+   // Sinker is the opposite of lifter. If term contains a 
+   // DeBruijn index less than dist, we crash. 
+
+   struct sinker
+   {
+      size_t dist;
+
+      sinker( ) = delete;
+
+      explicit sinker( size_t dist )
+         : dist( dist )
+      { }
+
+      term operator( ) ( term t, size_t vardepth, bool& change ) const;
+
+      void print( std::ostream& out ) const;
+   };
+
+   term lift( logic::term tm, size_t dist );
+   term sink( logic::term tm, size_t dist );
 
    // A sparse subst assigns values to some, but not
    // necessarily all, De Bruijn indices. 
@@ -135,6 +156,7 @@ namespace logic
       void print( std::ostream& out ) const; 
    };
 
+ 
 
    struct equalitysystem
    {
