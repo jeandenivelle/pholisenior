@@ -14,7 +14,6 @@
 #include "calc/removelets.h"
 #include "calc/expander.h"
 #include "calc/projection.h"
-#include "calc/unification.h"
 
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
@@ -637,6 +636,8 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
 }
 
 
+#if 0
+
 void tests::unification( const logic::beliefstate& blfs, errorstack& err ) 
 {
    using namespace logic;
@@ -659,6 +660,7 @@ void tests::unification( const logic::beliefstate& blfs, errorstack& err )
    else
       std::cout << "failed\n";
 }
+#endif
 
 #if 0
 void tests::prove_pluscom( )

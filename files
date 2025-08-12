@@ -50,7 +50,6 @@
    projection.cpp
    sequent.cpp
    proofterm.cpp
-   unification.cpp
    proofchecking.cpp
  
 %dir Source/semantics

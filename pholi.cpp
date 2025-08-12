@@ -108,7 +108,6 @@ int main( int argc, char* argv[] )
    tests::proofchecking( blfs, err );
    std::cout << err << "\n";
 
-   tests::unification( blfs, err ); 
    return 0;
 
 #if 0
