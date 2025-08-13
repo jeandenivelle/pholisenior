@@ -514,19 +514,25 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
       indhyp = lambda( {{ "n1", Nat }, { "n2", Nat }}, indhyp );
    }
 
-   std::cout << seq << "\n";
-   auto prf1 = proofterm( prf_clausify, 
+   auto exists = proofterm( prf_clausify, 
            proofterm( prf_ident, identifier( ) + "initial0001" )); 
+   auto prf1 = proofterm( prf_unfinished, "XX", { } );
+
    auto prf2 = proofterm( prf_expand, identifier( ) + "minhomrel", 0, 
            proofterm( prf_ident, identifier( ) + "main0001" ));
    prf2 = proofterm( prf_expand, identifier( ) + "inductive", 0, prf2 );
    prf2 = proofterm( prf_clausify, prf2 );
-   prf2 = proofterm( prf_define, "Q", indhyp, proofterm( prf_unfinished, { prf2 } ));
+   auto inst = apply( "Q"_unchecked, { "s0001"_unchecked, "s0002"_unchecked } );
+   prf2 = proofterm( prf_forallelim, prf2, 3, { inst } );
+   prf2 = proofterm( prf_define, "Q", indhyp, proofterm( prf_unfinished, "AA", { prf2 } ));
 
-   auto prf = proofterm( prf_branch, 0, 0, prf1, "main", prf2 );
+   auto res = deduce( proofterm( prf_existselim, 0, exists, "main",
+              { "aa", "bb", "cc" } ), seq, err );
 
-   auto res = eval( prf, seq, err );
-   std::cout << "eval returned " << res << "\n";
+   if( res. has_value( ))
+      std::cout << "eval returned " << res. value( ) << "\n";
+   else
+      std::cout << "eval returned no value\n";
 
 #if 0
 #if 0

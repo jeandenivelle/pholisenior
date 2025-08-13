@@ -42,7 +42,7 @@ calc::sequent::define( std::string_view namebase,
    return ex;
 }
 
-logic::term
+std::optional< logic::term >
 calc::sequent::getformula( logic::exact ex, errorstack& err ) const
 {
    if( blfs. contains( ex ))
@@ -62,7 +62,7 @@ calc::sequent::getformula( logic::exact ex, errorstack& err ) const
    bld << "proof checking: name does not refer to formula " << ex << "\n";
    err. push( std::move( bld ));
 
-   throw failure( );
+   return { };
 }
 
 identifier

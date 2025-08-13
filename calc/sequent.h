@@ -3,13 +3,13 @@
 #define CALC_SEQUENT_
 
 #include <string_view>
+#include <optional>
 
 #include "errorstack.h"
 
 #include "extension.h"
 #include "logic/beliefstate.h"
 #include "namegenerator.h"
-#include "failure.h"
 
 namespace calc
 {
@@ -45,7 +45,9 @@ namespace calc
 
       identifier get_fresh_ident( std::string namebase );
 
-      logic::term getformula( logic::exact ex, errorstack& err ) const;
+      
+      std::optional< logic::term >
+      getformula( logic::exact ex, errorstack& err ) const;
          // We also throw a failure. 
          // We should separate this function into isformula( ) and getformula.
      

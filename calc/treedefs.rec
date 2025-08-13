@@ -8,6 +8,7 @@
 %option blocking { seq_blocking } => # nr : size_t 
 
 %h_incl {
+   #include "util/indentation.h"
    #include "logic/term.h" 
    #include "logic/exact.h"
 }
@@ -19,85 +20,120 @@
 %option exact { prf_exact } => exact : logic::exact
 %option ident { prf_ident } => ident : identifier
 %option clausify { prf_clausify } => parent : proofterm
-%option branch { prf_branch } =>
-   conj : size_t, disj : size_t, parent : proofterm, 
-      name : std::string, first : proofterm
+%option disjelim { prf_disjelim } =>
+   nrdisj : size_t, parent : proofterm, [ name : std::string, opt : proofterm ] 
+%option existselim { prf_existselim } => 
+               nrexists : size_t, parent : proofterm, 
+               mainname : std::string, [ eigenname : std::string ] 
 %option expand { prf_expand } => 
    ident : identifier, occ : size_t, parent : proofterm 
+%option forallelim { prf_forallelim } =>
+   parent : proofterm, nrconj : size_t, [ value : logic::term ] 
 %option define { prf_define } =>
    name : std::string, val : logic::term, parent : proofterm
 
-%option unfinished { prf_unfinished } => [ show : proofterm ] 
+%option unfinished { prf_unfinished } => 
+   tag : std::string, [ show : proofterm ] 
 
 %h_incl {
    #include "sequent.h"
 }
 
+%h_before {
+   bool very_equal( const std::vector< logic::term > & v1, const std::vector< logic::term > & v2 );
+}
+
 %h_methods {
 
-   void print( std::ostream& out ) const;
+   void print( indentation ind, std::ostream& out ) const;
 }
 
 
 %cpp_back
 {
-   void calc::proofterm::print( std::ostream& out ) const
+   void calc::proofterm::print( indentation ind, std::ostream& out ) const
    {
       switch( sel( ))
       {
       case prf_truthconst:
-         out << "truthconst( )";
+         out << ind << "truthconst\n";
          return; 
 
       case prf_ident:
-         out << "ident( " << view_ident( ). ident( ) << " )"; 
+         out << ind << "ident " << view_ident( ). ident( ) << "\n"; 
          return; 
 
       case prf_clausify:
-         out << "clausify( " << view_clausify( ). parent( ) << " )";
+         out << ind << "clausify\n";
+         view_clausify( ). parent( ). print( ind + 3, out );
          return; 
 
-      case prf_branch:
+      case prf_disjelim:
          {
-            auto res = view_branch( ); 
-            out << "branch( "; 
-            out << res. conj( ) << "/" << res.disj( ) << ", ";
-            out << "assume " << res. name( ) << " in " << res. first( ) << " )";
+            auto elim = view_disjelim( ); 
+            out << ind << "disjelim using subform " << elim. nrdisj( ) << "\n";
+            elim. parent( ). print( ind + 3, out );  
+            for( size_t i = 0; i != elim. size( ); ++ i )
+            {
+               out << ind << elim. name(i) << "\n";
+               elim. opt(i). print( ind + 3, out );
+            }
             return;
+         }
+
+      case prf_existselim:
+         {
+            auto elim = view_existselim( );
+            out << ind << "existselim using subform ";
+            out << elim. nrexists( ) << "\n";
+            elim. parent( ). print( ind + 3, out );
+            out << ind << "eigenvariables: ";
+            for( size_t i = 0; i != elim. size( ); ++ i )
+            {
+               if(i) out << ", ";
+               out << elim. eigenname(i);
+            }
+            if( elim. size( )) out << "; ";
+            out << elim. mainname( ) << "\n";
+            return; 
          }
 
       case prf_expand:
          {
             auto exp = view_expand( );
-            out << "expand( ";
-            out << exp. ident( ) << ", " << exp. occ( ) << ", ";
-            out << exp. parent( ) << " )";
+            out << ind << "expand ";
+            out << exp. ident( ) << ", " << exp. occ( ) << "\n";
+            exp. parent( ). print( ind + 3, out ); 
             return;  
          }
 
       case prf_define:
          {
             auto def = view_define( );
-            out << "define( ";
-            out << def. name( ) << ", "; 
-            out << def. val( ) << ", "; 
-            out << def. parent( ) << " )";
+            out << ind << "define ";
+            out << def. name( ) << " := " << def. val( ) << "\n";
+            out << ind << "in\n";
+            def. parent( ). print( ind + 3, out );
+            return;
+         }
+ 
+      case prf_forallelim:
+         {
+            auto elim = view_forallelim( );
+            out << ind << "forallelim using subform " << elim. nrconj( ) << "\n";
+            for( size_t i = 0; i != elim. size( ); ++ i )
+               out << ( ind + 3 ) << elim. value(i) << "\n";
+            out << ind << "on\n";
+            elim. parent( ). print( ind + 3, out );
             return;
          }
 
       case prf_unfinished:
          {
-            out << "unfinished(";
+            out << ind << "unfinished\n";
             auto unf = view_unfinished( );
             for( size_t i = 0; i != unf. size( ); ++ i )
-            {
-               if(i) 
-                  out << ", ";
-               else
-                  out << " ";
-               out << unf. show(i);
-            }
-            out << " )";
+               unf. show(i). print( ind + 3, out );
          }
          return;
       }
