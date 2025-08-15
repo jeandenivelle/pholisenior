@@ -87,7 +87,7 @@ namespace logic
       }
 
       void backtrack( exact id ); 
-         // Remove everything added after id, included id itself. 
+         // Remove everything added after id, id itself included. 
  
       using iterator = std::vector< belief > :: iterator;
       using const_iterator = std::vector< belief > :: const_iterator;

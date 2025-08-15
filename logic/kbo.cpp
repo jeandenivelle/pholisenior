@@ -1,15 +1,18 @@
 
 #include "kbo.h"
+#include "inspections.h"
 
 logic::kbo::weight_t logic::kbo::weight( const type& tp )
 {
-#if 0
+
    switch( tp. sel( )) 
    {
    case type_form:
    case type_obj:
       return 1;
-   case type_ident:
+   case type_struct:
+      return 1;
+   case type_unchecked:
       return 1; 
    case type_func:
       {
@@ -17,99 +20,42 @@ logic::kbo::weight_t logic::kbo::weight( const type& tp )
          size_t w = weight( f. result( ));
          for( size_t i = 0; i != f. size( ); ++ i )
             w += weight( f. arg(i));
-         return w; 
+         return w + 1; 
       }
-   default:
-      std::cerr << "the selector is " << tp. sel( ) << "\n";
-      throw std::runtime_error( "wrong selector in type" );  
    }
-#endif
+
+   std::cout << "the selector is " << tp. sel( ) << "\n";
+   throw std::logic_error( "wrong selector in type" );  
 }
 
-#if 0
-logic::weight_t logic::kbo::weight( const term& t ) 
+namespace logic::kbo 
 {
-   switch( t.sel()) 
+   namespace 
    {
-   case logic::sel_ident: 
-   case logic:: sel_debruijn:
-   case logic::sel_infset:
-   case logic::sel_emptyset:
-   case logic::sel_false:
-   case logic::sel_true:
-      return 1;
-   
-   case logic::prf_and2:
-   case logic::prf_ext1:
-   case logic::prf_taut:
-   case logic::prf_and1:
-   case logic::sel_unique:
-   case logic::sel_pow:
-   case logic::sel_union:
-   case logic::prf_ext2:
-   case logic::sel_not:
+      struct counter
       {
-         auto unary_t = t.view_unary();
-         return 1 + weight( unary_t.sub() );
-      }
-   case logic::sel_and:
-   case logic::sel_or:
-   case logic::sel_implies:
-   case logic::sel_equiv:
-   case logic::sel_sep:
-   case logic::sel_in:
-   case logic::sel_subset:
-   case logic::sel_equals:
-   case logic::sel_insert:
-   case logic::sel_repl:
-   case logic::prf_abbr:
-   case logic::prf_inst:
-      {
-         auto binary_t = t.view_binary();
-         return 1 + weight(binary_t.sub1()) + weight(binary_t.sub2());
-      }
+         weight_t val;
 
-   case logic::prf_disj:
-      {
-         auto ternary_t = t. view_ternary( );
-         return 1 + weight( ternary_t. sub1( )) + weight( ternary_t. sub2( )) 
-                  + weight( ternary_t. sub3( )); 
-      }
-   case logic::sel_appl: 
-      {
-         weight_t w = 0;
-         auto appl_t = t.view_appl();
-         for(size_t i=0; i<appl_t.size(); ++i)
-            w += weight(appl_t.arg(i));
-         w += weight(appl_t.func());
-         return w;
-      }
-   case logic::sel_lambda:
-      {
-         auto lambda_t = t.view_lambda();
-         return 1 + lambda_t.size() + weight(lambda_t.body());
-      }
-   case logic::sel_forall:
-   case logic::sel_exists: 
-      {
-         auto quant_t = t.view_quant();
-         return 1 + weight(quant_t.body());
-      }
-   case logic::prf_exp:
-      {
-         throw std::runtime_error( "incomplete, compare the positions" );
-         auto exp_t = t.view_exp( );
-         return 1 + weight( exp_t. body( ));
-      }
+         counter( ) noexcept : val(0) 
+            { }
 
-   default:
-      throw std::logic_error("no maching selector in weight()");  
+         void operator( ) ( const term& tm, size_t vardepth ) 
+            { ++ val; }
+      };
    }
 }
-#endif
+
+logic::kbo::weight_t logic::kbo::weight( const term& t ) 
+{
+   counter cnt;
+
+   count( cnt, t, 0 );
+   return cnt. val; 
+}
 
 std::strong_ordering
-logic::kbo::topleftright( const type& tp1, const type& tp2 ) 
+logic::kbo::topleftright( const beliefstate& blfs,
+                          const type& tp1, const type& tp2 ) 
 {
    if( tp1. sel( ) < tp2. sel( ))
       return std::strong_ordering::less;
@@ -170,9 +116,9 @@ logic::kbo::topleftright( const type& tp1, const type& tp2 )
    }
 }
 
-#if 0
 std::strong_ordering
-logic::kbo::topleftright( const term& t1, const term& t2 ) 
+logic::kbo::topleftright( const beliefstate& blfs, 
+                          const term& t1, const term& t2 ) 
 {
    if( t1. sel( ) < t2. sel( ))
       return std::strong_ordering::less;
@@ -180,8 +126,11 @@ logic::kbo::topleftright( const term& t1, const term& t2 )
    if( t1. sel( ) > t2. sel( ))
       return std::strong_ordering::greater;
  
-   switch(t1.sel()) {
-      case logic::prf_disj:
+#if 0
+   switch( t1.sel( )) 
+   {
+
+   case logic::prf_disj:
          {
             auto ternary_t1 = t1. view_ternary();
             auto ternary_t2 = t2. view_ternary();
@@ -319,8 +268,8 @@ logic::kbo::topleftright( const term& t1, const term& t2 )
       default:
          throw std::logic_error("no matching selector in topleftright()");
    }
-}
 #endif
+}
 
 void logic::kbo::print( std::strong_ordering ord, std::ostream& out )
 {
@@ -348,6 +297,6 @@ void logic::kbo::print( std::strong_ordering ord, std::ostream& out )
       return;
    }
 
-   throw std::logic_error( "unknown order type" ); 
+   throw std::logic_error( "trying to print unknown order type" ); 
 }
 

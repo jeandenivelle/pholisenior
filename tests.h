@@ -2,9 +2,9 @@
 #ifndef TESTS_
 #define TESTS_   
 
+#include "errorstack.h"
 #include "logic/context.h"
 #include "logic/beliefstate.h"
-#include "errorstack.h"
 
 namespace tests
 {
@@ -12,9 +12,7 @@ namespace tests
 
    void clausify( logic::beliefstate& blfs, errorstack& err );
 
-#if 0
-   void kbo( );
-#endif
+   void kbo( const logic::beliefstate& blfs );
 
    void betareduction( logic::beliefstate& blfs, errorstack& err );
       // Test beta reduction, using Church numerals.

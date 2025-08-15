@@ -6,7 +6,10 @@
 #define LOGIC_KBO_ 
 
 #include <compare>
+#include <iostream>
+
 #include "term.h"
+#include "beliefstate.h"
 
 namespace logic
 {
@@ -17,14 +20,21 @@ namespace logic
 
       weight_t weight( const type& tp );
       weight_t weight( const term& t );
-   
-      std::strong_ordering topleftright( const type& tp1, const type& tp2 );
+  
+      std::strong_ordering  
+      topleftright( const beliefstate& blfs, 
+                    const type& tp1, const type& tp2 );
 
-      std::strong_ordering topleftright( const term& t1, const term& t2 );
+      std::strong_ordering 
+      topleftright( const beliefstate& blfs, const term& t1, const term& t2 );
          // Simple comparison, first comparing top, after that subtrees
-         // from left to right.
+         // from left to right. We use a beliefstate to look up 
+         // exact names, so that we can compare them by their names,
+         // not by their values. 
 
       // This is the KBO that should be used for directing equalities:
+      // It is not exactly equal to the standard KBO, because it
+      // first compares weights.
  
       inline std::strong_ordering compare( const term& t1, const term& t2 )
       {
@@ -40,8 +50,8 @@ namespace logic
       void print( std::strong_ordering ord, std::ostream& out ); 
    }
 
-   inline bool equal( const logic::type& tp1, const logic::type& tp2 )
-      { return is_eq( logic::kbo::topleftright( tp1, tp2 )); }
+   inline bool equal( const type& tp1, const type& tp2 )
+      { return is_eq( kbo::topleftright( tp1, tp2 )); }
 
 }
 

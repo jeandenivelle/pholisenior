@@ -9,13 +9,10 @@
 
 #include "logic/exact.h"
 #include "logic/structural.h"
-#include "logic/kbo.h"
 #include "logic/pretty.h"
 #include "logic/termoperators.h"
 
 #include "parsing/parser.h"
-
-#include "calc/proofchecking.h"
 
 void
 includefile( logic::beliefstate& blfs, 
@@ -76,7 +73,6 @@ includefile( logic::beliefstate& blfs,
 
 int main( int argc, char* argv[] )
 {
-    
    errorstack err;
 
    logic::beliefstate blfs;  
@@ -105,16 +101,15 @@ int main( int argc, char* argv[] )
 
    // tests::add_proof( blfs );
 
-   tests::proofchecking( blfs, err );
+   // tests::proofchecking( blfs, err );
    std::cout << err << "\n";
 
+   tests::kbo( blfs );
    return 0;
 
 #if 0
    // tests::context( ); 
    // tests::setsimplifications( );
-   // tests::kbo( );
-   // tests::tokenizer( );
    // tests::betareduction( ); 
    // tests::proofpluscom( );
    // tests::replacements( );

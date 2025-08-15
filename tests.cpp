@@ -3,9 +3,10 @@
 
 #include "errorstack.h"
 
+#include "logic/replacements.h" 
+#include "logic/pretty.h"
 #include "logic/termoperators.h"
 #include "logic/kbo.h"
-#include "logic/structural.h"
 
 #include "calc/proofterm.h"
 #include "calc/proofchecking.h"
@@ -14,9 +15,6 @@
 #include "calc/removelets.h"
 #include "calc/expander.h"
 #include "calc/projection.h"
-
-#include "logic/replacements.h" 
-#include "logic/pretty.h"
 
 #include "semantics/interpretation.h"
 
@@ -350,35 +348,31 @@ void tests::setsimplifications( )
    }
 }
 
-void tests::kbo( )
-{
+#endif
 
+void tests::kbo( const logic::beliefstate& blfs )
+{
    std::cout << "testing KBO\n";
 
-   logic::type S = logic::type(logic::sel_set);
-   logic::type T = logic::type(logic::sel_truthval);
-   logic::type B = logic::type(logic::sel_belief);
+   using namespace logic;
 
-   logic::term a = logic::term(logic::sel_unchecked, "a"_unchecked );
-   logic::term b = logic::term(logic::sel_ident, "b"_unchecked );
-   logic::term c = logic::term(logic::sel_unchecked, "c"_unchecked );
+   type O = type( logic::type_obj );
+   type T = type( logic::type_form );
+   type O2T = type( type_func, T, { O } );
+   type O2O = type( type_func, O, { O } );
+   type OT2O = type( type_func, O, { O, T } );
 
-   logic::term not1 = logic::term(logic::sel_not, a);
-   logic::term not2 = logic::term(logic::sel_not, b);
-   logic::term not3 = logic::term(logic::sel_not, not1);
+   type Seq = type( type_unchecked, identifier( ) + "Seq" );
+   type X = type( type_unchecked, identifier( ) + "X" );
 
-   logic::term and1 = logic::term(logic::op_and, a, b);
-   logic::term and2 = logic::term(logic::op_and, b, c);
-   logic::term and3 = logic::term(logic::op_and, and1, c);
+   std::cout << kbo::weight( OT2O ) << "\n";
 
-   logic::term appl1 = logic::term(logic::sel_appl, logic::term(logic::op_and, 0_db, 1_db ), {a, b});
-   logic::term appl2 = logic::term(logic::sel_appl, logic::term(logic::op_and, 0_db, 1_db ), {b, c});
-   logic::term appl3 = logic::term(logic::sel_appl, logic::term(logic::op_and, logic::term(logic::sel_not, 1_db )), {a, b} );
-   logic::term appl4 = logic::term(logic::sel_appl, logic::term(logic::op_and, 0_db, logic::term(logic::sel_or, 1_db, 1_db )), {a, b, c});
-   
+   auto tm = "aaa"_unchecked || 4_db;
+   tm = forall( { { "x", O }, { "y", O }}, tm );
+
+   std::cout << kbo::weight( tm || 4_db ) << "\n";
 }
 
-#endif
 
 
 #if 0
