@@ -6,7 +6,7 @@
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
 #include "logic/termoperators.h"
-#include "logic/kbo.h"
+#include "logic/cmp.h"
 
 #include "calc/proofterm.h"
 #include "calc/proofchecking.h"
@@ -350,9 +350,9 @@ void tests::setsimplifications( )
 
 #endif
 
-void tests::kbo( const logic::beliefstate& blfs )
+void tests::cmp( )
 {
-   std::cout << "testing KBO\n";
+   std::cout << "testing compare\n";
 
    using namespace logic;
 
@@ -365,12 +365,19 @@ void tests::kbo( const logic::beliefstate& blfs )
    type Seq = type( type_unchecked, identifier( ) + "Seq" );
    type X = type( type_unchecked, identifier( ) + "X" );
 
-   std::cout << kbo::weight( OT2O ) << "\n";
+   std::cout << cmp::weight( OT2O ) << "\n";
 
-   auto tm = "aaa"_unchecked || 4_db;
-   tm = forall( { { "x", O }, { "y", O }}, tm );
+   auto tm1 = "aba"_unchecked || 3_db;
+   tm1 = term( op_lambda, tm1, { { "x", T }, { "y", Seq }, { "z", O }} );
 
-   std::cout << kbo::weight( tm || 4_db ) << "\n";
+   auto tm2 = "aba"_unchecked || 3_db;
+   tm2 = term( op_lambda, tm2, { { "x", T }, { "y", Seq }, { "t", O }} );
+ 
+   tm1 = apply( tm1, { 2_db, "bbb"_unchecked, 3_db } );
+   tm2 = apply( tm2, { 2_db, "bbb"_unchecked, 3_db } );
+ 
+   bool b = cmp::equal( tm1, tm2 );
+   std::cout << "result = " << b << "\n"; 
 }
 
 
@@ -412,7 +419,6 @@ void tests::add_simple( logic::beliefstate& bs )
    bs. add( identifier( ) + "contrapos", logic::belief( logic::bel_thm, thm, unf ));
 
 }
-
 
 #endif
 

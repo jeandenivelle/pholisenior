@@ -12,7 +12,7 @@ namespace tests
 
    void clausify( logic::beliefstate& blfs, errorstack& err );
 
-   void kbo( const logic::beliefstate& blfs );
+   void cmp( );
 
    void betareduction( logic::beliefstate& blfs, errorstack& err );
       // Test beta reduction, using Church numerals.

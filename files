@@ -28,7 +28,7 @@
    beliefstate.cpp
    replacements.cpp
    inspections.cpp
-   kbo.cpp
+   cmp.cpp
    context.cpp
    position.cpp
    structural.cpp

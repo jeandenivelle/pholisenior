@@ -3,7 +3,6 @@
 // Made additions in April 2023.
 
 #include "replacements.h"
-#include "kbo.h"
 
 
 logic::term 

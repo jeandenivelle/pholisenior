@@ -2,7 +2,6 @@
 #include <compare>
 
 #include "projection.h"
-#include "logic/kbo.h"
 
 
 logic::term
