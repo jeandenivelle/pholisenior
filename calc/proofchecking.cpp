@@ -193,7 +193,7 @@ calc::iscontradiction( const logic::term& fm )
 std::optional< logic::term >
 calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 {
-   std::cout << "deducing result of term\n";
+   std::cout << "deducing result of proof term\n";
    prf. print( indentation( ), std::cout ); 
    std::cout << "\n";
 
@@ -349,13 +349,14 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          std::cout << "expander becomes " << def << "\n";
          return parent; 
       }
+#endif 
 
    case prf_define: 
       {
          auto def = prf. view_define( );
          size_t seqsize = seq. size( );
          
-         // We need to type check the value:
+         // We first need to type check the value:
 
          auto val = def. val( );
          size_t errsize = err. size( );
@@ -365,20 +366,24 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          if( err. size( ) > errsize )
          {
             err. addheader( errsize, "during type checking of inproof definition" );
-            throw failure( ); 
+            throw std::logic_error( "do something" );
          } 
 
          if( !tp. has_value( ))
             throw std::logic_error( "should be unreachable" );
 
          seq. define( def. name( ), val, tp. value( ));
+
          auto res = deduce( def. parent( ), seq, err );
+
+#if 0 
          std::cout << "YOU NEED TO CHECK THAT IDENTIFIER DOES NOT OCCUR IN FORMULA";
          std::cout << "(just substitute it away)\n";
          seq. restore( errsize );
          return res;
+#endif 
+         throw std::logic_error( "definition rule is unfinished" );
       }
-#endif
 
    case prf_existselim:
       {
@@ -426,13 +431,18 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          }
 
+         exists. value( ) = 
+               alternating( exists. value( ), logic::op_kleene_and, 2 );
+
          seq. assume( elim. name( ), exists. value( ));
 
          std::cout << seq << "\n";
          std::cout << "exists = " << exists << "\n";
 
+         auto res = deduce( elim. intro( ), seq, err );
+         if( res. has_value( ))
+            std::cout << "got " << res. value( ) << "\n";     
 #if 0
-         auto first = deduce( res. first( ), seq, err );
          if( !iscontradiction( first ))
             throw std::logic_error( "not a contradiction" );
 
@@ -446,36 +456,36 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
       }
 
-#if 0
    case prf_forallelim:
       {
-         size_t nrerrors = err. size( );
          size_t seqsize = seq. size( );
 
          auto elim = prf. view_forallelim( );
+         auto forall = deduce( elim. parent( ), seq, err );
 
-
+         if( forall. has_value( ))
+            std::cout << forall. value( ) << "\n";
       }
 
-   case prf_unfinished:
+   case prf_magic:
       {
          errorstack::builder bld;
          bld << "--------------------------------------------------\n";
-         bld << "Unfinished Proof:\n";
+         bld << "Magic Derivation:\n";
          bld << seq << "\n";
-         auto unf = prf. view_unfinished( ); 
+         auto mag = prf. view_magic( ); 
          bld << "Formulas:\n";
-         for( size_t i = 0; i != unf. size( ); ++ i )
+         for( size_t i = 0; i != mag. size( ); ++ i )
          {
-            logic::context ctxt; 
+            optform opt = optform( deduce( mag. show(i), seq, err ),
+                                   "magic", seq, err ); 
             bld << "   " << i << " : "; 
-            logic::pretty::print( bld, seq. blfs, ctxt, deduce( unf. show(i), seq, err ));
+            opt. pretty( bld );
          }
          err. push( std::move( bld ));
       }
       return logic::term( logic::op_kleene_and, {
                 logic::term( logic::op_kleene_or, { } ) } );
-#endif
 
    }
 

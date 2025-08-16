@@ -108,6 +108,8 @@
    selector.cpp
    extension.h
    extension.cpp
+   proofterm.h
+   proofterm.cpp
 
 %preproc $(Maph)/maphoon $(Source)/parsing/grammar.m $(Source)/parsing $(Maph) 
 %dir Source/parsing

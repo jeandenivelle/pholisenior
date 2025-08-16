@@ -43,8 +43,10 @@ namespace calc
       // We could also swap with the last, which would be more efficient
       // (constant time), but we want to preserve order as much as possible.
 
+
    bool iscontradiction( const logic::term& fm );
       // True if fm counts as contradition.
+      // It must be in KNF_2 and contain an empty disjunction.
 
    logic::term normalize( const logic::beliefstate& blfs, logic::term tm );
 

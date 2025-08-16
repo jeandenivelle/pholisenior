@@ -21,9 +21,11 @@
 %option ident { prf_ident } => ident : identifier
 %option clausify { prf_clausify } => parent : proofterm
 %option disjelim { prf_disjelim } =>
-   nrdisj : size_t, parent : proofterm, [ name : std::string, prf : proofterm ] 
+   nrdisj : size_t, parent : proofterm, 
+      [ name : std::string, intro : proofterm ] 
 %option existselim { prf_existselim } => 
-               nrexists : size_t, parent : proofterm, name : std::string 
+               nrexists : size_t, parent : proofterm, 
+               name : std::string, intro : proofterm 
 %option expand { prf_expand } => 
    ident : identifier, occ : size_t, parent : proofterm 
 %option forallelim { prf_forallelim } =>
@@ -31,8 +33,8 @@
 %option define { prf_define } =>
    name : std::string, val : logic::term, parent : proofterm
 
-%option unfinished { prf_unfinished } => 
-   tag : std::string, [ show : proofterm ] 
+%option magic { prf_magic } => 
+   tag : std::string, goal : logic::term, [ show : proofterm ] 
 
 %h_incl {
    #include "sequent.h"
@@ -75,7 +77,7 @@
             for( size_t i = 0; i != elim. size( ); ++ i )
             {
                out << ind << elim. name(i) << "\n";
-               elim. prf(i). print( ind + 3, out );
+               elim. intro(i). print( ind + 3, out );
             }
             return;
          }
@@ -84,8 +86,10 @@
          {
             auto elim = view_existselim( );
             out << ind << "existselim using subform ";
-            out << elim. nrexists( ) << " as " << elim. name( ) << "\n";
+            out << elim. nrexists( ) << "\n";
             elim. parent( ). print( ind + 3, out );
+            out << ind << "as " << elim. name( ) << "\n";
+            elim. intro( ). print( ind + 3, out );
             return; 
          }
 
@@ -119,12 +123,12 @@
             return;
          }
 
-      case prf_unfinished:
+      case prf_magic:
          {
-            out << ind << "unfinished\n";
-            auto unf = view_unfinished( );
-            for( size_t i = 0; i != unf. size( ); ++ i )
-               unf. show(i). print( ind + 3, out );
+            out << ind << "magic\n";
+            auto mag = view_magic( );
+            for( size_t i = 0; i != mag. size( ); ++ i )
+               mag. show(i). print( ind + 3, out );
          }
          return;
       }

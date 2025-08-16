@@ -515,7 +515,7 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
 
    auto exists = proofterm( prf_clausify, 
            proofterm( prf_ident, identifier( ) + "initial0001" )); 
-   auto prf1 = proofterm( prf_unfinished, "XX", { } );
+   auto prf1 = proofterm( prf_magic, "XX", logic::term( logic::op_false ), { } );
 
    auto prf2 = proofterm( prf_expand, identifier( ) + "minhomrel", 0, 
            proofterm( prf_ident, identifier( ) + "main0001" ));
@@ -523,10 +523,11 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
    prf2 = proofterm( prf_clausify, prf2 );
    auto inst = apply( "Q"_unchecked, { "s0001"_unchecked, "s0002"_unchecked } );
    prf2 = proofterm( prf_forallelim, prf2, 3, { inst } );
-   prf2 = proofterm( prf_define, "Q", indhyp, proofterm( prf_unfinished, "AA", { prf2 } ));
+   prf2 = proofterm( prf_define, "Q", indhyp, proofterm( prf_magic, "AA", 
+             logic::op_false, { prf2 } ));
 
    auto res = 
-      deduce( proofterm( prf_existselim, 0, exists, "main" ), seq, err );
+      deduce( proofterm( prf_existselim, 0, exists, "main", prf2 ), seq, err );
 
    if( res. has_value( ))
       std::cout << "eval returned " << res. value( ) << "\n";
