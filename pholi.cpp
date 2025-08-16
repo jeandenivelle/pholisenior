@@ -101,10 +101,9 @@ int main( int argc, char* argv[] )
 
    // tests::add_proof( blfs );
 
-   // tests::proofchecking( blfs, err );
+   tests::proofchecking( blfs, err );
    std::cout << err << "\n";
 
-   tests::cmp( );
    return 0;
 
 #if 0

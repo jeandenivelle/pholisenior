@@ -1107,7 +1107,7 @@ logic::try_apply( type ftype,
 
       for( size_t i = 0; i != fun. size( ); ++ i )
       {
-         if( cmp::equal( fun. arg(i), argtypes[ pos ] ))
+         if( !cmp::equal( fun. arg(i), argtypes[ pos ] ))
             return { };
 
          ++ pos; 

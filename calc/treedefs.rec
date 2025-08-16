@@ -21,10 +21,9 @@
 %option ident { prf_ident } => ident : identifier
 %option clausify { prf_clausify } => parent : proofterm
 %option disjelim { prf_disjelim } =>
-   nrdisj : size_t, parent : proofterm, [ name : std::string, opt : proofterm ] 
+   nrdisj : size_t, parent : proofterm, [ name : std::string, prf : proofterm ] 
 %option existselim { prf_existselim } => 
-               nrexists : size_t, parent : proofterm, 
-               mainname : std::string, [ eigenname : std::string ] 
+               nrexists : size_t, parent : proofterm, name : std::string 
 %option expand { prf_expand } => 
    ident : identifier, occ : size_t, parent : proofterm 
 %option forallelim { prf_forallelim } =>
@@ -76,7 +75,7 @@
             for( size_t i = 0; i != elim. size( ); ++ i )
             {
                out << ind << elim. name(i) << "\n";
-               elim. opt(i). print( ind + 3, out );
+               elim. prf(i). print( ind + 3, out );
             }
             return;
          }
@@ -85,16 +84,8 @@
          {
             auto elim = view_existselim( );
             out << ind << "existselim using subform ";
-            out << elim. nrexists( ) << "\n";
+            out << elim. nrexists( ) << " as " << elim. name( ) << "\n";
             elim. parent( ). print( ind + 3, out );
-            out << ind << "eigenvariables: ";
-            for( size_t i = 0; i != elim. size( ); ++ i )
-            {
-               if(i) out << ", ";
-               out << elim. eigenname(i);
-            }
-            if( elim. size( )) out << "; ";
-            out << elim. mainname( ) << "\n";
             return; 
          }
 

@@ -50,6 +50,7 @@
    projection.cpp
    sequent.cpp
    proofterm.cpp
+   optform.cpp
    proofchecking.cpp
  
 %dir Source/semantics

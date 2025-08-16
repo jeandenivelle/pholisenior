@@ -57,7 +57,7 @@ bool calc::operatorcorrect( logic::selector op,
    bld << "wrong operator for " << rule << " : ";
    bld << "operator must be ";
    print( bld, op ); 
-   bld << ", but the term is: ";
+   bld << ", but the formula is: ";
    print( bld, seq, fm );
    err. push( std::move( bld ));
 
@@ -390,35 +390,26 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          if( !conj. has_value( ))
             return conj;
 
-         if( !operatorcorrect( logic::op_kleene_and, conj. value( ),
-                               seq, "exists-elim", err ))
-         {
+         auto exists = optform( conj, "exists-elim", seq, err );
+         exists. musthave( logic::op_kleene_and ); 
+         exists. getsub( elim. nrexists( ));
+         exists. musthave( logic::op_kleene_or );
+         exists. getuniquesub( );
+         exists. musthave( logic::op_kleene_exists );
+
+         if( !exists. has_value( ))
             return { };
-         }
 
-         auto exists = subform( conj. value( ), elim. nrexists( ),
-                                seq, "exists-elim", err );
-
-         if( !exists. has_value( ))
-            return exists;
-
-         exists = uniquesubform( exists. value( ), seq, "exists-elim", err );
-         if( !exists. has_value( ))
-            return exists;
-
-         std::cout << exists. value( ) << "\n\n"; 
-#if 0
-        // In ANF, quantifiers cannot be nested, but a while is as easy
-         // to write as an if:
+         // At this point, we are sure that existselim can be applied:
 
          {
             logic::fullsubst namesubst;
                // We need to substitute global names in place of
                // of the DeBruijn indices.
 
-            while( disj. sel( ) == logic::op_kleene_exists )
+            while( exists. value( ). sel( ) == logic::op_kleene_exists )
             {
-               auto ex = disj. view_quant( );
+               auto ex = exists. value( ). view_quant( );
                for( size_t i = 0; i != ex. size( ); ++ i )
                {
                   logic::exact name =
@@ -427,16 +418,20 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
                   namesubst. push( logic::term( logic::op_exact, name ));
                }
 
-               disj = ex. body( );
+               exists. value( ) = ex. body( );
             }
 
-            disj = outermost( namesubst, std::move( disj ), 0 );
+            exists. value( ) = 
+               outermost( namesubst, std::move( exists. value( )), 0 );
+
          }
 
-       seq. assume( res. name( ), disj );
-         std::cout << seq << "\n";
-         std::cout << "disj = " << disj << "\n";
+         seq. assume( elim. name( ), exists. value( ));
 
+         std::cout << seq << "\n";
+         std::cout << "exists = " << exists << "\n";
+
+#if 0
          auto first = deduce( res. first( ), seq, err );
          if( !iscontradiction( first ))
             throw std::logic_error( "not a contradiction" );

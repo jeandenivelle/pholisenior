@@ -9,6 +9,7 @@
 #include "errorstack.h"
 #include "sequent.h"
 #include "proofterm.h"
+#include "optform.h"
 
 namespace calc
 {

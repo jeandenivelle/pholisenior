@@ -40,7 +40,21 @@ namespace logic::cmp
             { }
 
          void operator( ) ( const term& tm, size_t vardepth ) 
-            { ++ val; }
+         { 
+            if( tm. option_is_lambda( ))
+            {
+               val += tm. view_lambda( ). size( ); 
+               return;  
+            }
+
+            if( tm. option_is_quant( ))
+            {
+               val += tm. view_quant( ). size( );
+               return;
+            }
+
+            val += 1;
+         }
       };
    }
 }

@@ -28,7 +28,7 @@ namespace calc
       std::vector< size_t > blockings;
          // These are indices into steps.
 
-      sequent( logic::beliefstate& blfs, errorstack& err ) noexcept
+      sequent( logic::beliefstate& blfs ) noexcept
          : blfs( blfs )
       { } 
 

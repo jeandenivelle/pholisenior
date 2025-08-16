@@ -209,7 +209,7 @@ void tests::clausify( logic::beliefstate& blfs, errorstack& err )
          pretty::print( std::cout, blfs, ctxt, f );
       }
 
-      calc::sequent seq( blfs, err ); 
+      calc::sequent seq( blfs ); 
       logic::context ctxt;
       f = removelets( seq, ctxt, std::move(f) ); 
       {
@@ -365,17 +365,16 @@ void tests::cmp( )
    type Seq = type( type_unchecked, identifier( ) + "Seq" );
    type X = type( type_unchecked, identifier( ) + "X" );
 
-   std::cout << cmp::weight( OT2O ) << "\n";
-
    auto tm1 = "aba"_unchecked || 3_db;
-   tm1 = term( op_lambda, tm1, { { "x", T }, { "y", Seq }, { "z", O }} );
+   tm1 = term( op_forall, tm1, { { "x", T }, { "y", Seq }, { "z", O }} );
 
    auto tm2 = "aba"_unchecked || 3_db;
-   tm2 = term( op_lambda, tm2, { { "x", T }, { "y", Seq }, { "t", O }} );
+   tm2 = term( op_exists, tm2, { { "x", T }, { "y", Seq }, { "t", O }} );
  
    tm1 = apply( tm1, { 2_db, "bbb"_unchecked, 3_db } );
    tm2 = apply( tm2, { 2_db, "bbb"_unchecked, 3_db } );
- 
+   std::cout << tm1 << "\n" << cmp::weight( tm1 ) << "\n";
+  
    bool b = cmp::equal( tm1, tm2 );
    std::cout << "result = " << b << "\n"; 
 }
@@ -486,7 +485,7 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
    if( f. size( ) != 1 )
       throw std::runtime_error( "cannot continue" );
 
-   auto seq = sequent( blfs, err );
+   auto seq = sequent( blfs );
    seq. assume( "initial", ! blfs. at( f. front( )). view_thm( ). frm( ));
 
    logic::term indhyp = logic::term( logic::op_false );  // Q in the paper. 
@@ -526,8 +525,8 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
    prf2 = proofterm( prf_forallelim, prf2, 3, { inst } );
    prf2 = proofterm( prf_define, "Q", indhyp, proofterm( prf_unfinished, "AA", { prf2 } ));
 
-   auto res = deduce( proofterm( prf_existselim, 0, exists, "main",
-              { "aa", "bb", "cc" } ), seq, err );
+   auto res = 
+      deduce( proofterm( prf_existselim, 0, exists, "main" ), seq, err );
 
    if( res. has_value( ))
       std::cout << "eval returned " << res. value( ) << "\n";
