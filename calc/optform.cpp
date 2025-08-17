@@ -2,6 +2,12 @@
 #include "optform.h"
 #include "logic/pretty.h"
 
+#include "removelets.h"
+#include "alternating.h"
+#include "projection.h"
+
+#include "logic/replacements.h"
+
 errorstack::builder
 calc::optform::errorheader( )
 {
@@ -83,6 +89,43 @@ void calc::optform::getuniquesub( )
    fm = kl. extr_sub(0);
 }
 
+
+void calc::optform::make_anf2( )
+{
+   if( !fm. has_value( ))
+      return;
+
+   logic::context ctxt;
+   fm. value( ) = removelets( seq, ctxt, fm. value( ));
+   if( ctxt. size( ))
+      throw std::logic_error( "context not empty" );
+
+   fm. value( ) = alternating( fm. value( ), logic::op_kleene_and, 2 );
+}
+
+void calc::optform::normalize( )
+{
+   if( !fm. has_value( ))
+      return;
+
+   logic::betareduction beta;
+   projection proj( seq.blfs );
+
+   do
+   {
+      beta. counter = 0;
+      fm. value( ) = outermost( beta, std::move( fm. value( )), 0 );
+   }
+   while( beta. counter );
+}
+
+void calc::optform::expand( expander& def )
+{
+   if( !fm. has_value( ))
+      return;
+   
+   fm. value( ) = outermost( def, std::move( fm. value( )), 0 );
+}
 
 void calc::optform::print( std::ostream& out ) const
 {

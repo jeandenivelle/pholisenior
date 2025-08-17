@@ -1,11 +1,6 @@
 
 #include "proofchecking.h"
 
-#include "removelets.h"
-#include "alternating.h"
-#include "expander.h"
-#include "projection.h"
-
 #include "logic/pretty.h"
 #include "logic/replacements.h"
 #include "logic/structural.h"
@@ -137,21 +132,6 @@ calc::remove( logic::term fm, size_t i )
 }
 
 
-logic::term
-calc::normalize( const logic::beliefstate& blfs, logic::term tm )
-{
-   logic::betareduction beta;
-   projection proj( blfs ); 
-
-   do 
-   {
-      beta. counter = 0;
-      tm = outermost( beta, std::move( tm ), 0 );
-   }
-   while( beta. counter );
-   return tm;
-}
-
 bool
 calc::iscontradiction( const logic::term& fm )
 {
@@ -238,47 +218,30 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          if( !fm. has_value( ))
             return { };
 
-         logic::context ctxt;  
-         fm. value( ) = removelets( seq, ctxt, fm. value( ));
-         if( ctxt. size( ))
-            throw std::logic_error( "context not empty" ); 
-
-         fm. value( ) = alternating( fm. value( ), logic::op_kleene_and, 2 );
-         return fm;    
+         auto res = optform( std::move( fm ), "clausify", seq, err );
+         res. make_anf2( );
+         return res. value( );
       }
 
-   case prf_disjelim:
+   case prf_orelim:
       {
          size_t nrerrors = err. size( );
          size_t seqsize = seq. size( );
 
-         auto elim = prf. view_disjelim( ); 
+         auto elim = prf. view_orelim( ); 
          auto conj = deduce( elim. parent( ), seq, err );
 
          if( !conj. has_value( ))
             return conj;
+
+         auto disj = optform( std::move( conj ), "orelim", seq, err );
+         disj. musthave( logic::op_kleene_and );
+         disj. getsub( elim. nror( ));
+         disj. musthave( logic::op_kleene_or );
+
+         std::cout << disj << "\n";
  
-         std::cout << conj. value( ) << "\n";
-         if( !operatorcorrect( logic::op_kleene_and, conj. value( ), 
-                               seq, "disj-elim", err ))
-         {
-            return {};
-         }
-
-         auto disj = subform( conj. value( ), elim. nrdisj( ), 
-                     seq, "disj-elim", err );
-
-         if( !disj. has_value( ))
-            return disj;
-
-         std::cout << disj. value( ) << "\n";
-
-         if( !operatorcorrect( logic::op_kleene_or, disj. value( ),
-                               seq, "disj-elim", err ))
-         {
-            return { };
-         }
-
+#if 0
          auto kl = disj. value( ). view_kleene( );
 
          if( kl. size( ) != elim. size( ))
@@ -295,7 +258,6 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          {
             seq. assume( elim. name(i), kl. sub(i));
  
-#if 0 
          {
             logic::fullsubst namesubst; 
                // We need to substitute global names in place of 
@@ -331,9 +293,9 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          auto rest = remove( subform( parent, res. conj( )), res. disj( ));
          return replace( parent, res. conj( ), rest );
+         }
 #endif
          throw std::logic_error( "disj-elim is unfinished" );
-         }
       }
 
    case prf_expand:
@@ -341,9 +303,9 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          auto exp = prf. view_expand( ); 
          auto parent = deduce( exp. parent( ), seq, err ); 
          if( !parent. has_value( ))
-         return { };
+            return { };
 
-         std::cout << parent. value( ) << "\n";
+         auto nm = optform( std::move( parent ), "expand", seq, err );
 
          expander def( exp. ident( ), exp. occ( ), seq. blfs, err );
             // We are using unchecked identifier exp. ident( ).
@@ -352,11 +314,11 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          std::cout << def << "\n"; 
 
-         parent. value( ) = 
-            outermost( def, std::move( parent. value( )), 0 );
-         parent. value( ) = normalize( seq. blfs, parent. value( ));
-         std::cout << "expander becomes " << def << "\n";
-         return parent; 
+         nm. expand( def ); 
+         nm. normalize( );
+         nm. make_anf2( );
+         std::cout << "expand returns " << nm << "\n";
+         return nm. value( );
       }
 
    case prf_define: 
@@ -436,11 +398,9 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
             exists. value( ) = 
                outermost( namesubst, std::move( exists. value( )), 0 );
-
          }
 
-         exists. value( ) = 
-               alternating( exists. value( ), logic::op_kleene_and, 2 );
+         exists. make_anf2( );
 
          seq. assume( elim. name( ), exists. value( ));
 
@@ -469,11 +429,18 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          size_t seqsize = seq. size( );
 
          auto elim = prf. view_forallelim( );
-         auto forall = deduce( elim. parent( ), seq, err );
+         auto anf = deduce( elim. parent( ), seq, err );
+         if( !anf. has_value( ))
+            return anf;
 
-         if( forall. has_value( ))
-            std::cout << forall. value( ) << "\n";
-
+         std::cout << anf. value( ) << "\n";
+         auto forall = optform( anf, "forall-elim", seq, err );
+         forall. pretty( std::cout );
+         forall. musthave( logic::op_kleene_and );
+         forall. getsub( elim. nrforall( ));
+         forall. musthave( logic::op_kleene_or );
+         forall. getuniquesub( );
+         forall. pretty( std::cout );
          throw std::logic_error( "crashing in forall elim" );
       }
 

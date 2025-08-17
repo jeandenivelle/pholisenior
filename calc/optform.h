@@ -8,6 +8,8 @@
 
 #include "sequent.h"
 #include "errorstack.h"
+#include "expander.h"
+
 
 // An optional formula. 
 
@@ -18,22 +20,31 @@ namespace calc
       std::optional< logic::term > fm;
 
       std::string_view rule; 
-      const sequent& seq;
+      sequent& seq;
       errorstack& err; 
 
       optform( const std::optional< logic::term > & fm,
                std::string_view rule,
-               const sequent& seq, 
-               errorstack& err )
+               sequent& seq, errorstack& err )
          : fm( fm ),
            rule( rule ),
-           seq( seq ),
-           err( err ) 
+           seq( seq ), err( err ) 
       { }
 
+      optform( std::optional< logic::term > && fm,
+               std::string_view rule,
+               sequent& seq, errorstack& err )
+         : fm( std::move( fm )),
+           rule( rule ),
+           seq( seq ), err( err )
+      { } 
+           
       void musthave( logic::selector op ); 
       void getsub( size_t ind );
       void getuniquesub( );
+      void make_anf2( );
+      void normalize( );
+      void expand( expander& def ); 
 
       bool has_value( ) const { return fm. has_value( ); }
       const logic::term& value( ) const { return fm. value( ); }

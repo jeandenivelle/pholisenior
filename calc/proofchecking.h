@@ -48,8 +48,6 @@ namespace calc
       // True if fm counts as contradition.
       // It must be in KNF_2 and contain an empty disjunction.
 
-   logic::term normalize( const logic::beliefstate& blfs, logic::term tm );
-
    std::optional< logic::term >
    deduce( const proofterm& prf, sequent& seq, errorstack& err );
       // In case of error, we express our frustration into err, and 

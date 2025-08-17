@@ -63,7 +63,7 @@ logic::term calc::apply_prop( const logic::term& f, polarity pol )
 
 logic::term calc::kleene_top( const logic::term& f, polarity pol )
 {
-   if constexpr( true )
+   if constexpr( false )
       std::cout << "kleene top : " << f << " / " << pol << "\n\n";
 
    using namespace logic;

@@ -20,8 +20,7 @@
 %option exact { prf_exact } => exact : logic::exact
 %option ident { prf_ident } => ident : identifier
 %option clausify { prf_clausify } => parent : proofterm
-%option disjelim { prf_disjelim } =>
-   nrdisj : size_t, parent : proofterm, 
+%option orelim { prf_orelim } => nror : size_t, parent : proofterm, 
       [ name : std::string, intro : proofterm ] 
 %option existselim { prf_existselim } => 
                nrexists : size_t, parent : proofterm, 
@@ -29,7 +28,7 @@
 %option expand { prf_expand } => 
    ident : identifier, occ : size_t, parent : proofterm 
 %option forallelim { prf_forallelim } =>
-   parent : proofterm, nrconj : size_t, [ value : logic::term ] 
+   parent : proofterm, nrforall : size_t, [ value : logic::term ] 
 %option define { prf_define } =>
    name : std::string, val : logic::term, parent : proofterm
 
@@ -69,10 +68,10 @@
          view_clausify( ). parent( ). print( ind + 3, out );
          return; 
 
-      case prf_disjelim:
+      case prf_orelim:
          {
-            auto elim = view_disjelim( ); 
-            out << ind << "disjelim using subform " << elim. nrdisj( ) << "\n";
+            auto elim = view_orelim( ); 
+            out << ind << "orelim using subform " << elim. nror( ) << "\n";
             elim. parent( ). print( ind + 3, out );  
             for( size_t i = 0; i != elim. size( ); ++ i )
             {
@@ -115,9 +114,14 @@
       case prf_forallelim:
          {
             auto elim = view_forallelim( );
-            out << ind << "forallelim using subform " << elim. nrconj( ) << "\n";
+            out << ind << "forallelim using subform ";
+            out << elim. nrforall( ) << "\n";
+            out << ( ind + 3 ); 
             for( size_t i = 0; i != elim. size( ); ++ i )
-               out << ( ind + 3 ) << elim. value(i) << "\n";
+            {
+               if(i) out << ",  ";
+               out << elim. value(i) << "\n";
+            }
             out << ind << "on\n";
             elim. parent( ). print( ind + 3, out );
             return;
