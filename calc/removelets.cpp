@@ -48,8 +48,22 @@ calc::removelets( sequent& seq,
          return f;
       }
 
+   case logic::op_kleene_and:
+   case logic::op_kleene_or:
+      {
+         auto kl = f. view_kleene( );
+         for( size_t i = 0; i != kl. size( ); ++ i )
+         {
+            kl. update_sub( i, removelets( seq, ctxt, kl. extr_sub(i) ));
+         }
+
+         return f;
+      }
+
    case logic::op_forall:
    case logic::op_exists:
+   case logic::op_kleene_forall:
+   case logic::op_kleene_exists:
       {
          auto quant = f. view_quant( );
          size_t ss = ctxt. size( );
@@ -117,7 +131,7 @@ calc::removelets( sequent& seq,
       }
    }
 
-   std::cout << "removelets " << f. sel( ) << "\n";
+   std::cout << "removelets: " << f. sel( ) << "\n";
    throw std::logic_error( "unknown selector" ); 
 }
 

@@ -336,20 +336,28 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          }
       }
 
-#if 0
    case prf_expand:
       {
          auto exp = prf. view_expand( ); 
-         logic::term parent = deduce( exp. parent( ), seq, err ); 
+         auto parent = deduce( exp. parent( ), seq, err ); 
+         if( !parent. has_value( ))
+         return { };
+
+         std::cout << parent. value( ) << "\n";
+
          expander def( exp. ident( ), exp. occ( ), seq. blfs, err );
+            // We are using unchecked identifier exp. ident( ).
+            // The expander will look only at exact overloads. 
+            // This guarantees type safety.
+
          std::cout << def << "\n"; 
-         parent = outermost( def, std::move( parent ), 0 );
-         std::cout << parent << "\n";
-         parent = normalize( seq. blfs, parent );
+
+         parent. value( ) = 
+            outermost( def, std::move( parent. value( )), 0 );
+         parent. value( ) = normalize( seq. blfs, parent. value( ));
          std::cout << "expander becomes " << def << "\n";
          return parent; 
       }
-#endif 
 
    case prf_define: 
       {
@@ -465,6 +473,8 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          if( forall. has_value( ))
             std::cout << forall. value( ) << "\n";
+
+         throw std::logic_error( "crashing in forall elim" );
       }
 
    case prf_magic:

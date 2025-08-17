@@ -73,6 +73,7 @@ includefile( logic::beliefstate& blfs,
 
 int main( int argc, char* argv[] )
 {
+
    errorstack err;
 
    logic::beliefstate blfs;  

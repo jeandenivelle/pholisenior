@@ -18,8 +18,10 @@ logic::selector calc::kleenop( logic::selector op )
    case op_lazy_or:
       return op_kleene_or;
    case op_forall:
+   case op_kleene_forall:
       return op_kleene_forall;
    case op_exists:
+   case op_kleene_exists:
       return op_kleene_exists;
    }
 
@@ -61,7 +63,7 @@ logic::term calc::apply_prop( const logic::term& f, polarity pol )
 
 logic::term calc::kleene_top( const logic::term& f, polarity pol )
 {
-   if constexpr( false )
+   if constexpr( true )
       std::cout << "kleene top : " << f << " / " << pol << "\n\n";
 
    using namespace logic;
@@ -107,8 +109,32 @@ logic::term calc::kleene_top( const logic::term& f, polarity pol )
          return term( demorgan( pol, op ), { sub1, sub2 } );
       }
 
+   case op_kleene_and:
+   case op_kleene_or: 
+      {
+         if( pol == pol_pos )
+            return f; 
+         else
+         {
+            // I think this cannot happen, but who knows?
+
+            auto res = term( demorgan( pol, f. sel( )),
+                             std::initializer_list< term > ( ));
+
+            auto fkl = f. view_kleene( );
+            auto reskl = res. view_kleene( );
+
+            for( size_t i = 0; i != fkl. size( ); ++ i )
+               reskl. push_back( apply( fkl. sub(i), pol ));  
+
+            return res;
+         }
+      }
+
    case op_forall:
+   case op_kleene_forall:
    case op_exists:
+   case op_kleene_exists:
       {
          auto q = f. view_quant( );
          auto body = apply( q. body( ), pol );
