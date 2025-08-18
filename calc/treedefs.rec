@@ -20,7 +20,7 @@
 %option exact { prf_exact } => exact : logic::exact
 %option ident { prf_ident } => ident : identifier
 %option clausify { prf_clausify } => parent : proofterm
-%option orelim { prf_orelim } => nror : size_t, parent : proofterm, 
+%option orelim { prf_orelim } => parent : proofterm, nror : size_t,
       [ name : std::string, branch : proofterm ] 
 %option existselim { prf_existselim } => 
                nrexists : size_t, parent : proofterm, 
@@ -32,8 +32,9 @@
 %option define { prf_define } =>
    name : std::string, val : logic::term, parent : proofterm
 
-%option magic { prf_magic } => 
-   tag : std::string, goal : logic::term, [ show : proofterm ] 
+%option magic { prf_magic } => goal : logic::term
+%option show { prf_show } => comment : std::string, prf : proofterm
+
 
 %h_incl {
    #include "sequent.h"
@@ -71,11 +72,12 @@
       case prf_orelim:
          {
             auto elim = view_orelim( ); 
-            out << ind << "orelim using subform " << elim. nror( ) << "\n";
+            out << ind << "orelim using subform " << elim. nror( ) << " in\n";
             elim. parent( ). print( ind + 3, out );  
             for( size_t i = 0; i != elim. size( ); ++ i )
             {
-               out << ind << elim. name(i) << "\n";
+               out << ind << "branch " << i << ", call it ";
+               out << elim. name(i) << " in\n";
                elim. branch(i). print( ind + 3, out );
             }
             return;
@@ -85,9 +87,9 @@
          {
             auto elim = view_existselim( );
             out << ind << "existselim using subform ";
-            out << elim. nrexists( ) << "\n";
+            out << elim. nrexists( ) << " in\n";
             elim. parent( ). print( ind + 3, out );
-            out << ind << "as " << elim. name( ) << "\n";
+            out << ind << "as " << elim. name( ) << " in\n";
             elim. intro( ). print( ind + 3, out );
             return; 
          }
@@ -96,7 +98,7 @@
          {
             auto exp = view_expand( );
             out << ind << "expand ";
-            out << exp. ident( ) << ", " << exp. occ( ) << "\n";
+            out << exp. ident( ) << ", occurrence " << exp. occ( ) << " in\n";
             exp. parent( ). print( ind + 3, out ); 
             return;  
          }
@@ -129,12 +131,21 @@
 
       case prf_magic:
          {
-            out << ind << "magic\n";
+            out << ind << "magic ";
             auto mag = view_magic( );
-            for( size_t i = 0; i != mag. size( ); ++ i )
-               mag. show(i). print( ind + 3, out );
+            out << mag. goal( ) << "\n";
+            return;
          }
-         return;
+
+      case prf_show:
+         {
+            auto show = view_show( );
+            out << ind << "show as ";
+            out << show. comment( ) << "\n";
+            show. prf( ). print( ind + 3, out );
+            return;
+         }
+
       }
 
       out << sel( ) << "\n";

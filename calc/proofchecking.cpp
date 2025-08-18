@@ -4,6 +4,8 @@
 #include "logic/pretty.h"
 #include "logic/replacements.h"
 #include "logic/structural.h"
+#include "logic/cmp.h"
+
 
 errorstack::builder
 calc::errorheader( const sequent& seq, std::string_view rule )
@@ -248,7 +250,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          for( size_t i = 0; i != kl. size( ); ++ i )
          {
             {
-               auto sub = optform( kl. sub(i), "exists-elim", seq, err );
+               auto sub = optform( kl. sub(i), "or-elim", seq, err );
                sub. make_anf2( );
                seq. assume( elim. name(i), sub. value( ));
             }
@@ -256,7 +258,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
             auto sub = optform( deduce( elim. branch(i), seq, err ),
                                 "exists-elim", seq, err );
                             
-            std::cout << "we got back:\n";
+            std::cout << "or-elim got back:\n";
             std::cout << sub << "\n"; 
 #if 0
          {
@@ -327,7 +329,6 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
    case prf_define: 
       {
          auto def = prf. view_define( );
-         size_t seqsize = seq. size( );
          
          // We first need to typecheck the value:
 
@@ -345,13 +346,14 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          if( !tp. has_value( ))
             throw std::logic_error( "should be unreachable" );
 
+         size_t seqsize = seq. size( );
          seq. define( def. name( ), val, tp. value( ));
 
          auto res = deduce( def. parent( ), seq, err );
 
          std::cout << "YOU NEED TO CHECK THAT IDENTIFIER DOES NOT OCCUR IN FORMULA";
          std::cout << "(just substitute it away)\n\n";
-         seq. restore( errsize );
+         seq. restore( seqsize );
          return res;
       }
 
@@ -423,49 +425,73 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          std::cout << "crashing with "; 
          exists. print( std::cout );  
          throw std::logic_error( "exists-elim is not implemented" );
-
       }
 
    case prf_forallelim:
       {
-         size_t seqsize = seq. size( );
-
          auto elim = prf. view_forallelim( );
          auto anf = deduce( elim. parent( ), seq, err );
          if( !anf. has_value( ))
             return anf;
 
-         std::cout << anf. value( ) << "\n";
-         auto forall = optform( anf, "forall-elim", seq, err );
-         forall. pretty( std::cout );
+         auto forall = optform( std::move( anf ), "forall-elim", seq, err );
          forall. musthave( logic::op_kleene_and );
          forall. getsub( elim. nrforall( ));
-         forall. musthave( logic::op_kleene_or );
-         forall. getuniquesub( );
+         forall. musthave( logic::op_kleene_forall );
+         forall. nrvarsmustbe( elim. size( )); 
          forall. pretty( std::cout );
+         if( !forall. has_value( )) 
+            return { };
+
+         auto q = forall. value( ). view_quant( ); 
+         size_t errsize = err. size( );
+         for( size_t i = 0; i != elim. size( ); ++ i )
+         {
+            logic::context ctxt;
+            auto tm = elim. value(i);
+            std::cout << tm << "\n";
+            auto tp = checkandresolve( seq. blfs, err, ctxt, tm );
+            std::cout << tp. value( ) << "\n";
+            if( !tp. has_value( )) 
+            {
+               throw std::logic_error( "no value" );
+            }
+            else
+            {
+               if( !logic::cmp::equal( tp. value( ), q. var(i). tp ))
+               {
+                  
+                  std::cout << "types differ\n";
+               }
+            }
+         }
          throw std::logic_error( "crashing in forall elim" );
       }
 
    case prf_magic:
       {
-         errorstack::builder bld;
-         bld << "--------------------------------------------------\n";
-         bld << "Magic Derivation:\n";
-         bld << seq << "\n";
-         auto mag = prf. view_magic( ); 
-         bld << "Formulas:\n";
-         for( size_t i = 0; i != mag. size( ); ++ i )
-         {
-            optform opt = optform( deduce( mag. show(i), seq, err ),
-                                   "magic", seq, err ); 
-            bld << "   " << i << " : "; 
-            opt. pretty( bld );
-         }
-         err. push( std::move( bld ));
+         auto res = optform( prf. view_magic( ). goal( ), "magic", seq, err );
+         res. make_anf2( );
+         res. magic( ); 
+         return res. value( ); 
       }
-      return logic::term( logic::op_kleene_and, {
-                logic::term( logic::op_kleene_or, { } ) } );
 
+   case prf_show:
+      {
+         auto show = prf. view_show( ); 
+         auto res = deduce( show. prf( ), seq, err );
+         std::cout << "------------------------------------------------\n";
+         std::cout << "showing " << show. comment( ) << ":\n";
+         std::cout << seq << "\n";
+         if( res. has_value( ))
+         {
+            std::cout << "deduced : " << res. value( ) << "\n";
+         }
+         else
+            std::cout << "(proof failed)\n";
+         std::cout << "\n";
+         return res;
+      } 
    }
 
    std::cout << prf. sel( ) << "\n";

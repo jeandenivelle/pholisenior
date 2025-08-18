@@ -43,9 +43,13 @@ namespace calc
       void getsub( size_t ind );
       void getuniquesub( );
       void aritymustbe( size_t i );  // Works for Kleene operators only.
+      void nrvarsmustbe( size_t i ); // Works for quantifiers only.
       void make_anf2( );
       void normalize( );
       void expand( expander& def ); 
+
+      void magic( );  // Generate message that fm was magically assumed.
+                      // Don't reset, so that we can return it.
 
       bool has_value( ) const { return fm. has_value( ); }
       const logic::term& value( ) const { return fm. value( ); }

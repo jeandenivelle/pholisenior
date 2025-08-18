@@ -514,22 +514,20 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
 
    auto exists = proofterm( prf_clausify, 
            proofterm( prf_ident, identifier( ) + "initial0001" )); 
-   auto prf1 = proofterm( prf_magic, "XX", logic::term( logic::op_false ), { } );
 
-   auto prf2 = proofterm( prf_expand, identifier( ) + "minhomrel", 0, 
-           proofterm( prf_ident, identifier( ) + "main0001" ));
-   prf2 = proofterm( prf_expand, identifier( ) + "inductive", 0, prf2 );
+   auto prf3 = proofterm( prf_ident, identifier( ) + "forall0001" );
    auto inst = apply( "Q"_unchecked, { "s0001"_unchecked, "s0002"_unchecked } );
+   prf3 = proofterm( prf_show, "must be instantiated", prf3 );
+   prf3 = proofterm( prf_forallelim, prf3, 0, { inst } );
+   prf3 = proofterm( prf_define, "Q", indhyp, prf3 );
 
-   auto prf3 = proofterm( prf_magic, "xx", logic::op_false, { prf2 } );
-   prf3 = proofterm( prf_define, "Q", indhyp, proofterm( prf_magic, "AA",
-                     logic::op_false, { prf2 } ));
+   auto disj = proofterm( prf_ident, identifier( ) + "main0001" );
+   disj = proofterm( prf_expand, identifier( ) + "minhomrel", 0, disj );
+   disj = proofterm( prf_expand, identifier( ) + "inductive", 0, disj );
+   disj = proofterm( prf_show, "expanded disj", disj );
 
-   prf2 = proofterm( prf_orelim, 2, prf2, {{ "forall", prf3 }} );
+   auto prf2 = proofterm( prf_orelim, disj, 2, {{ "forall", prf3 }} );
  
-   // prf2 = proofterm( prf_forallelim, prf2, 2, { inst } );
-   // prf2 = proofterm( prf_define, "Q", indhyp, proofterm( prf_magic, "AA", 
-   //           logic::op_false, { prf2 } ));
 
    auto res = 
       deduce( proofterm( prf_existselim, 0, exists, "main", prf2 ), seq, err );

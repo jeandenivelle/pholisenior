@@ -110,6 +110,26 @@ void calc::optform::aritymustbe( size_t i )
    }
 }
 
+void calc::optform::nrvarsmustbe( size_t i )
+{ 
+   if( !fm. has_value( ))
+      return;
+
+   if( !fm. value( ). option_is_quant( ))
+      throw std::logic_error( "nrvarsmustbe: Not a quantifier" );
+
+   auto kl = fm. value( ). view_quant( );
+
+   if( kl. size( ) != i )
+   {
+      auto bld = errorheader( );
+      bld << "quantifier must have " << i << " variables, but it is : ";
+      pretty( bld );
+      err. push( std::move( bld ));
+  
+      fm. reset( );
+   }
+}
 
 void calc::optform::make_anf2( )
 {
@@ -146,6 +166,17 @@ void calc::optform::expand( expander& def )
       return;
    
    fm. value( ) = outermost( def, std::move( fm. value( )), 0 );
+}
+
+void calc::optform::magic( )
+{
+   if( !fm. has_value( ))
+      return; 
+
+   auto bld = errorheader( );
+   bld << "magically assuming :";
+   pretty( bld );
+   err. push( std::move( bld ));
 }
 
 void calc::optform::print( std::ostream& out ) const

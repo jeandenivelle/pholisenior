@@ -24,7 +24,6 @@ namespace logic
   
       bool equal( const type& tp1, const type& tp2 );
       bool equal( const term& tm1, const term& tm2 );
-
    }
 
 }
