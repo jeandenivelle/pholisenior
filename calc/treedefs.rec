@@ -21,7 +21,7 @@
 %option ident { prf_ident } => ident : identifier
 %option clausify { prf_clausify } => parent : proofterm
 %option orelim { prf_orelim } => nror : size_t, parent : proofterm, 
-      [ name : std::string, intro : proofterm ] 
+      [ name : std::string, branch : proofterm ] 
 %option existselim { prf_existselim } => 
                nrexists : size_t, parent : proofterm, 
                name : std::string, intro : proofterm 
@@ -76,7 +76,7 @@
             for( size_t i = 0; i != elim. size( ); ++ i )
             {
                out << ind << elim. name(i) << "\n";
-               elim. intro(i). print( ind + 3, out );
+               elim. branch(i). print( ind + 3, out );
             }
             return;
          }

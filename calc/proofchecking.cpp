@@ -225,8 +225,6 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
    case prf_orelim:
       {
-         size_t nrerrors = err. size( );
-         size_t seqsize = seq. size( );
 
          auto elim = prf. view_orelim( ); 
          auto conj = deduce( elim. parent( ), seq, err );
@@ -234,30 +232,33 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          if( !conj. has_value( ))
             return conj;
 
-         auto disj = optform( std::move( conj ), "orelim", seq, err );
+         auto disj = optform( std::move( conj ), "or-elim", seq, err );
          disj. musthave( logic::op_kleene_and );
          disj. getsub( elim. nror( ));
          disj. musthave( logic::op_kleene_or );
-
+         disj. aritymustbe( elim. size( ));
+         if( !disj. has_value( ))
+            return { };
+         std::cout << "we are not here\n";
          std::cout << disj << "\n";
  
-#if 0
          auto kl = disj. value( ). view_kleene( );
-
-         if( kl. size( ) != elim. size( ))
-         {
-            auto bld = errorheader( seq, "disj-elim" );
-            bld << "disjunction has wrong arity: It is " << kl. size( );
-            bld << ", but it must be " << elim. size( ) << "\n";
-            print( bld, seq, disj. value( ));
-            err. push( std::move( bld ));
-            return { }; 
-         }
+         size_t seqsize = seq. size( );
 
          for( size_t i = 0; i != kl. size( ); ++ i )
          {
-            seq. assume( elim. name(i), kl. sub(i));
- 
+            {
+               auto sub = optform( kl. sub(i), "exists-elim", seq, err );
+               sub. make_anf2( );
+               seq. assume( elim. name(i), sub. value( ));
+            }
+
+            auto sub = optform( deduce( elim. branch(i), seq, err ),
+                                "exists-elim", seq, err );
+                            
+            std::cout << "we got back:\n";
+            std::cout << sub << "\n"; 
+#if 0
          {
             logic::fullsubst namesubst; 
                // We need to substitute global names in place of 
@@ -293,9 +294,11 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          auto rest = remove( subform( parent, res. conj( )), res. disj( ));
          return replace( parent, res. conj( ), rest );
-         }
 #endif
-         throw std::logic_error( "disj-elim is unfinished" );
+            std::cout << seq << "\n";
+            seq. restore( seqsize );
+         }
+         throw std::logic_error( "or-elim is unfinished" );
       }
 
    case prf_expand:
@@ -316,7 +319,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          nm. expand( def ); 
          nm. normalize( );
-         nm. make_anf2( );
+         // nm. make_anf2( );
          std::cout << "expand returns " << nm << "\n";
          return nm. value( );
       }
@@ -420,6 +423,8 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          auto rest = remove( subform( parent, res. conj( )), res. disj( ));
          return replace( parent, res. conj( ), rest );
 #endif
+         std::cout << "crashing with "; 
+         exists. print( std::cout );  
          throw std::logic_error( "exists-elim is not implemented" );
 
       }

@@ -42,6 +42,7 @@ namespace calc
       void musthave( logic::selector op ); 
       void getsub( size_t ind );
       void getuniquesub( );
+      void aritymustbe( size_t i );  // Works for Kleene operators only.
       void make_anf2( );
       void normalize( );
       void expand( expander& def ); 

@@ -89,6 +89,27 @@ void calc::optform::getuniquesub( )
    fm = kl. extr_sub(0);
 }
 
+void calc::optform::aritymustbe( size_t i )
+{  
+   if( !fm. has_value( ))
+      return;
+
+   if( !fm. value( ). option_is_kleene( ))
+      throw std::logic_error( "aritymustbe: Not a Kleene operator" );
+
+   auto kl = fm. value( ). view_kleene( );
+
+   if( kl. size( ) != i )
+   {
+      auto bld = errorheader( );
+      bld << "formula must have arity " << i << ", but it is :";
+      pretty( bld );
+      err. push( std::move( bld ));
+   
+      fm. reset( );
+   }
+}
+
 
 void calc::optform::make_anf2( )
 {
