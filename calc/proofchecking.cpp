@@ -329,7 +329,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          auto def = prf. view_define( );
          size_t seqsize = seq. size( );
          
-         // We first need to type check the value:
+         // We first need to typecheck the value:
 
          auto val = def. val( );
          size_t errsize = err. size( );
@@ -349,13 +349,10 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          auto res = deduce( def. parent( ), seq, err );
 
-#if 0 
          std::cout << "YOU NEED TO CHECK THAT IDENTIFIER DOES NOT OCCUR IN FORMULA";
-         std::cout << "(just substitute it away)\n";
+         std::cout << "(just substitute it away)\n\n";
          seq. restore( errsize );
          return res;
-#endif 
-         throw std::logic_error( "definition rule is unfinished" );
       }
 
    case prf_existselim:

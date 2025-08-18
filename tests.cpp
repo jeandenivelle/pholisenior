@@ -1,6 +1,5 @@
 
 #include "tests.h"
-
 #include "errorstack.h"
 
 #include "logic/replacements.h" 
@@ -523,8 +522,10 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
    auto inst = apply( "Q"_unchecked, { "s0001"_unchecked, "s0002"_unchecked } );
 
    auto prf3 = proofterm( prf_magic, "xx", logic::op_false, { prf2 } );
+   prf3 = proofterm( prf_define, "Q", indhyp, proofterm( prf_magic, "AA",
+                     logic::op_false, { prf2 } ));
 
-   prf2 = proofterm( prf_orelim, 2, prf2, { { "forall", prf3 } } );
+   prf2 = proofterm( prf_orelim, 2, prf2, {{ "forall", prf3 }} );
  
    // prf2 = proofterm( prf_forallelim, prf2, 2, { inst } );
    // prf2 = proofterm( prf_define, "Q", indhyp, proofterm( prf_magic, "AA", 

@@ -112,6 +112,9 @@ logic::term calc::kleene_top( const logic::term& f, polarity pol )
    case op_kleene_and:
    case op_kleene_or: 
       {
+         throw 
+         std::logic_error( "kleene top: Kleene operators not implemented" );
+
          if( pol == pol_pos )
             return f; 
          else
