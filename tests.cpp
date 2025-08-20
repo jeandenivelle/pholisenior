@@ -516,9 +516,9 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
            proofterm( prf_ident, identifier( ) + "initial0001" )); 
 
    auto prf3 = proofterm( prf_ident, identifier( ) + "forall0001" );
-   auto inst = apply( "Q"_unchecked, { "s0001"_unchecked, "s0002"_unchecked } );
-   prf3 = proofterm( prf_show, "must be instantiated", prf3 );
+   auto inst = apply( "Q0001"_unchecked, { "s0001"_unchecked, "s0002"_unchecked } );
    prf3 = proofterm( prf_forallelim, prf3, 0, { inst } );
+   prf3 = proofterm( prf_show, "instantiated", prf3 );
    prf3 = proofterm( prf_define, "Q", indhyp, prf3 );
 
    auto disj = proofterm( prf_ident, identifier( ) + "main0001" );

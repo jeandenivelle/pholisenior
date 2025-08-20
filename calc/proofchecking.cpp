@@ -256,7 +256,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
             }
 
             auto sub = optform( deduce( elim. branch(i), seq, err ),
-                                "exists-elim", seq, err );
+                                "result of or-elim", seq, err );
                             
             std::cout << "or-elim got back:\n";
             std::cout << sub << "\n"; 
@@ -297,8 +297,9 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          auto rest = remove( subform( parent, res. conj( )), res. disj( ));
          return replace( parent, res. conj( ), rest );
 #endif
-            std::cout << seq << "\n";
             seq. restore( seqsize );
+
+            std::cout << seq << "\n";
          }
          throw std::logic_error( "or-elim is unfinished" );
       }
@@ -443,29 +444,47 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          if( !forall. has_value( )) 
             return { };
 
+         size_t errstart = err. size( );
+         logic::fullsubst subst;
+
          auto q = forall. value( ). view_quant( ); 
-         size_t errsize = err. size( );
          for( size_t i = 0; i != elim. size( ); ++ i )
          {
             logic::context ctxt;
             auto tm = elim. value(i);
-            std::cout << tm << "\n";
             auto tp = checkandresolve( seq. blfs, err, ctxt, tm );
-            std::cout << tp. value( ) << "\n";
-            if( !tp. has_value( )) 
+
+            if( tp. has_value( )) 
             {
-               throw std::logic_error( "no value" );
-            }
-            else
-            {
-               if( !logic::cmp::equal( tp. value( ), q. var(i). tp ))
+               if( logic::cmp::equal( tp. value( ), q. var(i). tp ))
                {
-                  
-                  std::cout << "types differ\n";
+                  subst. push( std::move( tm ));
+               }
+               else
+               {
+                  auto bld = errorstack::builder( ); 
+                  bld << "true type of instance ";
+                  logic::context ctxt;
+                  logic::pretty::print( bld, seq. blfs, ctxt, tm );
+                  bld << " is wrong\n"; 
+                  bld << "It is "; 
+                  logic::pretty::print( bld, seq. blfs, tp. value( ), {0,0} );
+                  bld << ", but must be ";
+                  logic::pretty::print( bld, seq. blfs, q. var(i). tp, {0,0} ); 
+                  err. push( std::move( bld ));
                }
             }
          }
-         throw std::logic_error( "crashing in forall elim" );
+        
+         if( subst. size( ) < elim. size( ))
+         {
+            auto header = forall. errorheader( );
+            err. addheader( errstart, std::move( header )); 
+            return { };
+         } 
+         auto res = outermost( subst, std::move( q. body( )), 0 ); 
+         res = logic::term( logic::op_kleene_and, { res } );
+         return res; 
       }
 
    case prf_magic:
@@ -485,7 +504,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          std::cout << seq << "\n";
          if( res. has_value( ))
          {
-            std::cout << "deduced : " << res. value( ) << "\n";
+            std::cout << "deduced formula: " << res. value( ) << "\n";
          }
          else
             std::cout << "(proof failed)\n";
