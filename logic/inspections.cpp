@@ -54,4 +54,36 @@ void logic::debruijn_cmp::print( std::ostream& out ) const
    out << "   #" << nearest;
 }
 
+void logic::exactcounter::operator( ) ( const term& t, size_t vardepth )
+{
+
+   if( t. sel( ) == op_debruijn )
+   {
+      auto v = t. view_debruijn( ). index( );
+
+      // If we don't enter this if, the index is local,
+      // and we don't count it:
+
+      if( v >= vardepth )
+      {
+         v -= vardepth;
+         // ++ occ[v];
+      }
+   }
+
+}
+
+
+void logic::exactcounter::print( std::ostream& out ) const
+{
+   out << "ExactCounter( ";
+   if( extending )
+      out << "extending";
+   else
+      out << "not extending";
+   out << " )\n";
+
+   for( const auto & p : occ )
+      out << "   " << p. first << " : " << p. second << "\n";
+}
 

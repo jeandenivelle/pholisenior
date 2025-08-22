@@ -70,10 +70,15 @@ includefile( logic::beliefstate& blfs,
 
 }
 
-#include "calc/formulaset.h"
+#include "logic/inspections.h"
 
 int main( int argc, char* argv[] )
 {
+   logic::exactcounter cnt( false );
+   cnt. domain( logic::exact(44) );
+   std::cout << cnt << "\n";
+   return 0;
+
    errorstack err;
  
    logic::beliefstate blfs;  

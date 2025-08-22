@@ -14,7 +14,7 @@
 namespace calc
 {
 
-   // It is not a complete class. It is more like a view
+   // Sequent is not a complete class. It is more like a view
    // into a beliefstate.
 
    struct sequent
@@ -45,7 +45,6 @@ namespace calc
 
       identifier get_fresh_ident( std::string namebase );
 
-      
       std::optional< logic::term >
       getformula( logic::exact ex, errorstack& err ) const;
          // We also throw a failure. 

@@ -6,6 +6,7 @@
 #include "logic/structural.h"
 #include "logic/cmp.h"
 
+#include "formulaset.h"
 
 errorstack::builder
 calc::errorheader( const sequent& seq, std::string_view rule )
@@ -227,7 +228,6 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
    case prf_orelim:
       {
-
          auto elim = prf. view_orelim( ); 
          auto conj = deduce( elim. parent( ), seq, err );
 
@@ -241,11 +241,11 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          disj. aritymustbe( elim. size( ));
          if( !disj. has_value( ))
             return { };
-         std::cout << "we are not here\n";
-         std::cout << disj << "\n";
  
          auto kl = disj. value( ). view_kleene( );
          size_t seqsize = seq. size( );
+         bool success = true;
+         formulaset intro;
 
          for( size_t i = 0; i != kl. size( ); ++ i )
          {
@@ -255,53 +255,30 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
                seq. assume( elim. name(i), sub. value( ));
             }
 
-            auto sub = optform( deduce( elim. branch(i), seq, err ),
-                                "result of or-elim", seq, err );
+            auto res = optform( deduce( elim. branch(i), seq, err ),
+                                "option in or-elim", seq, err );
                             
-            std::cout << "or-elim got back:\n";
-            std::cout << sub << "\n"; 
-#if 0
-         {
-            logic::fullsubst namesubst; 
-               // We need to substitute global names in place of 
-               // of the DeBruijn indices.
-
-            while( disj. sel( ) == logic::op_kleene_exists )
+            res. musthave( logic::op_kleene_and );
+            res. getuniquesub( );
+            res. musthave( logic::op_kleene_or );
+            if( !res. has_value( ))
+               success = false; 
+            else
             {
-               auto ex = disj. view_quant( );
-               for( size_t i = 0; i != ex. size( ); ++ i )
-               {
-                  logic::exact name = 
-                     seq. assume( ex. var(i). pref, ex. var(i). tp );
-
-                  namesubst. push( logic::term( logic::op_exact, name ));
-               }
-
-               disj = ex. body( ); 
+               auto disj = res. value( ). view_kleene( );
+               for( size_t i = 0; i != disj. size( ); ++ i )
+                  intro. insert( disj. sub(i));  
             }
 
-            disj = outermost( namesubst, std::move( disj ), 0 );
-         }
-
-         seq. assume( res. name( ), disj ); 
-         std::cout << seq << "\n";
-         std::cout << "disj = " << disj << "\n";
-
-         auto first = deduce( res. first( ), seq, err );
-         if( !iscontradiction( first ))
-            throw std::logic_error( "not a contradiction" );
-
-         seq. restore( seqsize ); 
-         std::cout << seq << "\n";
-
-         auto rest = remove( subform( parent, res. conj( )), res. disj( ));
-         return replace( parent, res. conj( ), rest );
-#endif
             seq. restore( seqsize );
-
-            std::cout << seq << "\n";
          }
-         throw std::logic_error( "or-elim is unfinished" );
+
+         if( !success )
+            return { };
+
+         return logic::term( logic::op_kleene_and,
+            { logic::term( logic::op_kleene_or, 
+                           intro. begin( ), intro. end( )) } );
       }
 
    case prf_expand:
@@ -360,8 +337,6 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
    case prf_existselim:
       {
-         size_t seqsize = seq. size( );
-
          auto elim = prf. view_existselim( );
          auto conj = deduce( elim. parent( ), seq, err );
 
@@ -379,6 +354,8 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
             return { };
 
          // At this point, we are sure that existselim can be applied:
+
+         size_t seqsize = seq. size( );
 
          {
             logic::fullsubst namesubst;
@@ -407,12 +384,15 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          seq. assume( elim. name( ), exists. value( ));
 
-         std::cout << seq << "\n";
-         std::cout << "exists = " << exists << "\n";
+         auto res = optform( deduce( elim. intro( ), seq, err ),
+                             "subresult of exists-elim", seq, err );
 
-         auto res = deduce( elim. intro( ), seq, err );
-         if( res. has_value( ))
-            std::cout << "got " << res. value( ) << "\n";     
+         res. musthave( logic::op_kleene_and );
+         res. getuniquesub( );
+         res. musthave( logic::op_kleene_or );
+         if( !res. has_value( ))
+            return { };
+
 #if 0
          if( !iscontradiction( first ))
             throw std::logic_error( "not a contradiction" );
@@ -423,8 +403,11 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          auto rest = remove( subform( parent, res. conj( )), res. disj( ));
          return replace( parent, res. conj( ), rest );
 #endif
-         std::cout << "crashing with "; 
-         exists. print( std::cout );  
+         std::cout << seq << "\n";
+         std::cout << seqsize << "\n";
+         std::cout << "crashing with     "; 
+         exists. print( std::cout ); 
+         res. print( std::cout );  
          throw std::logic_error( "exists-elim is not implemented" );
       }
 
@@ -499,7 +482,9 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
       {
          auto show = prf. view_show( ); 
          auto res = deduce( show. prf( ), seq, err );
-         std::cout << "------------------------------------------------\n";
+         for( short unsigned int i = 0; i < 70; ++ i )
+            std::cout << '-';
+         std::cout << "\n"; 
          std::cout << "showing " << show. comment( ) << ":\n";
          std::cout << seq << "\n";
          if( res. has_value( ))

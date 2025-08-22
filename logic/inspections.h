@@ -158,6 +158,28 @@ namespace logic
       return near. nearest;
    }
 
+
+   struct exactcounter
+   {
+      logic::exact::unordered_map< size_t > occ;
+      bool extending;
+         // If extending == true, we insert exact names that are not in
+         // occ yet.
+
+      explicit exactcounter( bool extending ) noexcept
+         : extending( extending )
+      { }
+
+      void domain( logic::exact ex )
+         { occ. insert( std::pair< exact, size_t > ( ex, 0 )); }
+            // add ex to the domain, with zero occurrences.
+            // This is not needed if extending == true. 
+
+      void operator( ) ( const term& t, size_t vardepth );
+
+      void print( std::ostream& out ) const; 
+   };
+
 }
 
 #endif
