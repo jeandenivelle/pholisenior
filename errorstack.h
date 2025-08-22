@@ -23,7 +23,7 @@ struct error
    std::string top;
    seriousness ser;  
    mutable bool reported;
-      // Meaning is: Everyting that we have, has been reported.
+      // Meaning is: Everything that we have, has been reported.
 
    // We do not have a nice interface, because we want to be called 
    // only from errorstack.

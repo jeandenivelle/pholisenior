@@ -51,6 +51,7 @@
    sequent.cpp
    proofterm.cpp
    optform.cpp
+   formulaset.cpp
    proofchecking.cpp
  
 %dir Source/semantics

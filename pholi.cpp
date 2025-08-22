@@ -70,12 +70,12 @@ includefile( logic::beliefstate& blfs,
 
 }
 
+#include "calc/formulaset.h"
 
 int main( int argc, char* argv[] )
 {
-
    errorstack err;
-
+ 
    logic::beliefstate blfs;  
    filehasher seen;
    includefile( blfs, seen, "examples/standard.phl", err ); 

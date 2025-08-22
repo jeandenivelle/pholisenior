@@ -1,6 +1,7 @@
 
 #include "errorstack.h"
 #include <list>
+#include <string_view>
 
 void error::print( indentation ind, std::ostream& out ) const
 {
@@ -18,12 +19,21 @@ void error::print( indentation ind, std::ostream& out ) const
    default: out << ind << "??? "; break;
    }
 
-   for( char c : top )
+   std::string_view vw = top; 
+
+   while( vw. size( ) && isspace( vw. front( )))
+      vw. remove_prefix(1);
+
+   while( vw. size( ) && isspace( vw. back( )))
+      vw. remove_suffix(1);
+
+   for( char c : vw )
    {
       out << c;
       if( c == '\n' )
          out << ind;
    }
+   out << '\n';
    out << '\n';
 
    reported = true;
@@ -56,7 +66,7 @@ void errorstack::print( indentation ind,
                         size_t pos, std::ostream& out ) const
 {
    vect[ pos ]. print( ind, out );
-   print( ind + 3, sub[ pos ], pos, out );   
+   print( ind + 6, sub[ pos ], pos, out );   
 }
 
 
