@@ -8,8 +8,7 @@
 
 #include "sequent.h"
 #include "errorstack.h"
-#include "expander.h"
-
+#include "logic/outermost.h"
 
 // An optional formula. 
 
@@ -46,7 +45,26 @@ namespace calc
       void nrvarsmustbe( size_t i ); // Works for quantifiers only.
       void make_anf2( );
       void normalize( );
-      void expand( expander& def ); 
+      template< logic::replacement R > void rewr_outermost( const R& r )
+      {
+         if( fm. has_value( ))
+            fm. value( ) = logic::outermost( r, std::move( fm. value( )), 0 ); 
+      }
+ 
+      template< logic::replacement R > void rewr_outermost( R& r )
+      {
+         if( fm. has_value( ))
+            fm. value( ) = logic::outermost( r, std::move( fm. value( )), 0 );
+      }
+ 
+      void quantify( const std::vector< logic::vartype > & vars );
+      
+         // We must be a Kleene disjunction or conjunction.
+         // Replace every member M of the Kleene operator 
+         // by Q asm M, where Q is the
+         // quantifier that fits to the Kleene operator.
+         // Kleene disj -> Kleene exists.
+         // Kleene conj -> Kleene forall.
 
       void magic( );  // Generate message that fm was magically assumed.
                       // Don't reset, so that we can return it.

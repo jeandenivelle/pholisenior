@@ -477,7 +477,7 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
 
    using namespace calc;
 
-   auto id = identifier( ) + "just";
+   auto id = identifier( ) + "resolve";
 
    const auto& f = blfs. getformulas( id );
    std::cout << f. size( ) << "\n";
@@ -486,6 +486,29 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
 
    auto seq = sequent( blfs );
    seq. assume( "initial", ! blfs. at( f. front( )). view_thm( ). frm( ));
+   std::cout << seq << "\n";
+
+   auto mag = logic::term( logic::op_exact, logic::exact(69)) ||
+              logic::term( logic::op_exists,  
+                  logic::term( logic::op_exact, logic::exact(70)) &&
+                  1_db,
+                  { { "aa", T }, { "bb", O }} );
+
+   auto ref = 
+      proofterm( prf_existselim, 0, 
+         proofterm( prf_clausify,
+            proofterm( prf_ident, identifier( ) + "initial0001" )),
+         "hyp", proofterm( prf_magic, mag ));
+
+   ref. print( indentation(0), std::cout ); 
+
+   auto ff = deduce( ref, seq, err );
+   if( ff. has_value( ))
+      std::cout << "proved this formula: " << ff. value( ) << "\n";
+
+   return;
+ 
+   // It was auto id = identifier( ) + "resolve";
 
    logic::term indhyp = logic::term( logic::op_false );  // Q in the paper. 
    {

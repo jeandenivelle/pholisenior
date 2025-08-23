@@ -140,6 +140,29 @@ namespace logic
    };
 
 
+   // An introsubst replaces exact names by DeBruijn indices
+   // starting at #0,#1 
+   // We need this substitution due to a design error in
+   // class sequent. In the future, we implement a correct
+   // sequent class (using DeBruin indices), and remove this class. 
+
+   class introsubst
+   {
+      exact::unordered_map< size_t > map;
+
+   public:
+      introsubst( ) noexcept = default;
+
+      void bind( exact ex );
+
+      term operator( ) ( term t, size_t vardepth, bool& change ) const;
+
+      size_t size( ) const { return map. size( ); }
+
+      void print( std::ostream& out ) const;
+   };
+
+  
    // This is incomplete beta-reduction:
 
    struct betareduction 

@@ -155,17 +155,58 @@ void calc::optform::normalize( )
    do
    {
       beta. counter = 0;
-      fm. value( ) = outermost( beta, std::move( fm. value( )), 0 );
+      rewr_outermost( beta );
    }
    while( beta. counter );
 }
 
-void calc::optform::expand( expander& def )
+void calc::optform::quantify( const std::vector< logic::vartype > & vars )
 {
    if( !fm. has_value( ))
       return;
-   
-   fm. value( ) = outermost( def, std::move( fm. value( )), 0 );
+   if( !vars. size( ))
+      return; 
+
+   std::cout << "quantify\n";
+   for( const auto& v : vars )
+      std::cout << "   " << v << "\n";
+
+   if( !fm. value( ). option_is_kleene( ))
+      throw std::logic_error( "quantify: Not a Kleene operator" );
+
+   using namespace logic;
+
+   auto kl = fm. value( ). view_kleene( );
+   for( size_t i = 0; i != kl. size( ); ++ i )
+   {
+      auto repl = term( op_error );
+         // kl. sub(i) will be replaced by repl at the end
+         // of this block.
+
+      if( fm. value( ). sel( ) == op_kleene_and )
+         repl = term( op_kleene_forall, repl, vars. begin( ), vars. end( ));
+      if( fm. value( ). sel( ) == op_kleene_or )
+         repl = term( op_kleene_exists, repl, vars. begin( ), vars. end( ));
+
+      auto replquant = repl. view_quant( );
+
+      // As long as kl. sub(i) is the same quantifier, we
+      // add the quantified variables to repl, and replace kl. sub(i)
+      // by its body:
+
+      while( kl. sub(i). sel( ) == repl. sel( ))
+      {
+         auto q = kl. sub(i). view_quant( );
+         for( size_t v = 0; v != q. size( ); ++ v )
+            replquant. push_back( q. var(v) ); 
+         auto b = q. body( );
+         kl. update_sub( i, std::move(b) ); 
+      }
+
+      replquant. update_body( kl. extr_sub(i)); 
+      kl. update_sub( i, std::move( repl )); 
+   } 
+   print( std::cout );    
 }
 
 void calc::optform::magic( )
@@ -175,6 +216,7 @@ void calc::optform::magic( )
 
    auto bld = errorheader( );
    bld << "magically assuming :";
+   bld << "DELETE THIS, IT IS UGLY\n";
    pretty( bld );
    err. push( std::move( bld ));
 }

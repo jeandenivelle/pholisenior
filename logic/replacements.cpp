@@ -128,7 +128,6 @@ void logic::singlesubst::print( std::ostream& out ) const
    out << "singlesubst( #0 := " << value << " )";
 }
 
-
 logic::term
 logic::fullsubst::operator( ) ( term t, size_t vardepth, bool& change ) const
 {
@@ -203,6 +202,53 @@ void logic::argsubst::print( std::ostream& out ) const
       out << argterm. view_apply( ). arg(i) << "\n";
    }
 }
+
+void logic::introsubst::bind( exact ex )
+{
+   map. insert( std::pair< exact, size_t > ( ex, size( )) );
+}
+
+logic::term
+logic::introsubst::operator( ) ( term t, size_t vardepth, bool& change ) const
+{
+   if( t. sel( ) == op_debruijn )
+   {
+      size_t ind = t. view_debruijn( ). index( );
+      if( ind >= vardepth )
+      {
+         change = true; 
+         return term( op_debruijn, ind + size( ));
+      }
+      else
+         return t;
+   }
+
+   if( t. sel( ) == op_exact )
+   {
+      auto p = map. find( t. view_exact( ). ex( ));
+      if( p != map. end( ))
+      {
+         change = true;
+
+         // DeBruijn indices look backwards, and we need to
+         // add the vardepth:
+
+         return term( op_debruijn, vardepth + size( ) - ( p -> second ) - 1 );
+      }
+      else
+         return t;
+   }
+
+   return t;
+}
+
+void logic::introsubst::print( std::ostream& out ) const
+{
+   out << "IntroSubst:\n";
+   for( const auto& p : map )
+      out << "   " << p. first << " : #" << p. second << "\n";
+}
+
 
 logic::term 
 logic::betareduction::operator( ) ( term t, size_t vardepth, bool& change ) 

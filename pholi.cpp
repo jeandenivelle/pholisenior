@@ -70,7 +70,7 @@ includefile( logic::beliefstate& blfs,
 
 }
 
-#include "logic/inspections.h"
+#include "logic/replacements.h"
 
 int main( int argc, char* argv[] )
 {

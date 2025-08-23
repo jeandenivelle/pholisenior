@@ -5,8 +5,10 @@
 #include "logic/replacements.h"
 #include "logic/structural.h"
 #include "logic/cmp.h"
+#include "logic/inspections.h"
 
 #include "formulaset.h"
+#include "expander.h"
 
 errorstack::builder
 calc::errorheader( const sequent& seq, std::string_view rule )
@@ -297,7 +299,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          std::cout << def << "\n"; 
 
-         nm. expand( def ); 
+         nm. rewr_outermost( def ); 
          nm. normalize( );
          // nm. make_anf2( );
          std::cout << "expand returns " << nm << "\n";
@@ -358,27 +360,35 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          size_t seqsize = seq. size( );
 
+         std::vector< logic::vartype > assumptions;
+         std::vector< logic::exact > exactnames;
+            // The names that seq will give to the assumptions.
+            // Note that the sequent data structure is rotten.
+
+         while( exists. value( ). sel( ) == logic::op_kleene_exists )
+         {
+            auto ex = exists. value( ). view_quant( );
+            for( size_t i = 0; i != ex. size( ); ++ i )
+               assumptions. push_back( ex. var(i));
+
+            exists. value( ) = ex. body( );
+         }
+
+         for( const auto& a : assumptions ) 
+         {
+            logic::exact name = seq. assume( a.pref, a.tp );
+            exactnames. push_back( name );
+         }
+
          {
             logic::fullsubst namesubst;
                // We need to substitute global names in place of
                // of the DeBruijn indices.
 
-            while( exists. value( ). sel( ) == logic::op_kleene_exists )
-            {
-               auto ex = exists. value( ). view_quant( );
-               for( size_t i = 0; i != ex. size( ); ++ i )
-               {
-                  logic::exact name =
-                     seq. assume( ex. var(i). pref, ex. var(i). tp );
+            for( const auto& e : exactnames )
+               namesubst. push( logic::term( logic::op_exact, e ));
 
-                  namesubst. push( logic::term( logic::op_exact, name ));
-               }
-
-               exists. value( ) = ex. body( );
-            }
-
-            exists. value( ) = 
-               outermost( namesubst, std::move( exists. value( )), 0 );
+            exists. rewr_outermost( namesubst );
          }
 
          exists. make_anf2( );
@@ -387,6 +397,8 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          auto res = optform( deduce( elim. intro( ), seq, err ),
                              "subresult of exists-elim", seq, err );
+
+         // We require that the result is a singleton conjunction:
 
          res. musthave( logic::op_kleene_and );
          res. getuniquesub( );
@@ -397,20 +409,46 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
             return { };
          }
 
-#if 0
-         seq. restore( seqsize );
-         std::cout << seq << "\n";
-
-         auto rest = remove( subform( parent, res. conj( )), res. disj( ));
-         return replace( parent, res. conj( ), rest );
-#endif
          std::cout << seq << "\n";
          std::cout << seqsize << "\n";
-         std::cout << "crashing with     "; 
-         exists. print( std::cout ); 
-         res. print( std::cout ); std::cout << "\n";
-         res. pretty( std::cout );  
-         throw std::logic_error( "exists-elim is not implemented" );
+
+         logic::exactcounter eigenvars( false );
+         for( size_t i = seqsize; i + 1 < seq. size( ); ++ i )
+            eigenvars. addtodomain( seq. getexactname(i));
+
+         count( eigenvars, res. value( ), 0 );
+         std::cout << eigenvars << "\n";
+
+         logic::introsubst intro;
+
+         std::vector< logic::vartype > usedassumptions;
+            // The ones that are used in the result. They need
+            // to be assumed.
+         
+         for( size_t i = 0; i != exactnames. size( ); ++ i )
+         {
+            if( eigenvars. at( exactnames[i] ))
+            {
+               intro. bind( exactnames[i] ); 
+               usedassumptions. push_back( assumptions[i] );
+            }
+         }
+         std::cout << intro << "\n";
+
+         seq. restore( seqsize );
+         
+         // If no eigenvariable occurs in res, we can return res
+         // unchanged:
+
+         if( intro. size( ) == 0 ) 
+         {
+            std::cout << "simple case\n";
+            throw std::logic_error( "Exists-elim, this is the easy case" );
+         }
+
+         res. rewr_outermost( intro );
+         res. quantify( usedassumptions ); 
+         return logic::term( logic::op_kleene_and, { res. value( ) } );
       }
 
    case prf_forallelim:
