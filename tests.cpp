@@ -528,7 +528,6 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
 
    auto prf2 = proofterm( prf_orelim, disj, 2, {{ "forall", prf3 }} );
  
-
    auto res = 
       deduce( proofterm( prf_existselim, 0, exists, "main", prf2 ), seq, err );
 

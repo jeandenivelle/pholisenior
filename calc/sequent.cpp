@@ -65,6 +65,21 @@ calc::sequent::getformula( logic::exact ex, errorstack& err ) const
    return { };
 }
 
+logic::exact
+calc::sequent::getexactname( size_t i ) const
+{
+   if( i >= size( )) throw std::logic_error( "sequent::getexactname" ); 
+   switch( steps[i]. sel( ))
+   {
+   case seq_belief:
+      return steps[i]. view_belief( ). name( ); 
+
+
+   }
+   std::cout << steps[i]. sel( ) << "\n";
+   throw std::logic_error( "cannot get exact name" );
+}
+
 identifier
 calc::sequent::get_fresh_ident( std::string namebase ) 
 {

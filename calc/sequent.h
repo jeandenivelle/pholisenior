@@ -47,9 +47,10 @@ namespace calc
 
       std::optional< logic::term >
       getformula( logic::exact ex, errorstack& err ) const;
-         // We also throw a failure. 
          // We should separate this function into isformula( ) and getformula.
-     
+    
+      logic::exact getexactname( size_t i ) const;  
+         // Get the exact name used. 
    };
 
    inline std::ostream& operator << ( std::ostream& out, const sequent& seq )

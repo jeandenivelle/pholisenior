@@ -37,7 +37,7 @@ namespace logic
    replace_debruijn( indexedstack< std::string, size_t > & db, term t );
 
    logic::term replace_debruijn( term t );
-      // These functions also replace the identifiers
+      // These functions also replace the reserved identifiers
       // FF,EE,TT by their respective formulas.
 
    // Technically seen, we should return std::optional<T> ,

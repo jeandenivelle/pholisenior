@@ -74,11 +74,6 @@ includefile( logic::beliefstate& blfs,
 
 int main( int argc, char* argv[] )
 {
-   logic::exactcounter cnt( false );
-   cnt. domain( logic::exact(44) );
-   std::cout << cnt << "\n";
-   return 0;
-
    errorstack err;
  
    logic::beliefstate blfs;  

@@ -331,6 +331,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          std::cout << "YOU NEED TO CHECK THAT IDENTIFIER DOES NOT OCCUR IN FORMULA";
          std::cout << "(just substitute it away)\n\n";
+         std::cout << "it is " << seq. getexactname( seqsize ) << "\n\n";
          seq. restore( seqsize );
          return res;
       }
@@ -391,12 +392,12 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          res. getuniquesub( );
          res. musthave( logic::op_kleene_or );
          if( !res. has_value( ))
+         {
+            seq. restore( seqsize ); 
             return { };
+         }
 
 #if 0
-         if( !iscontradiction( first ))
-            throw std::logic_error( "not a contradiction" );
-
          seq. restore( seqsize );
          std::cout << seq << "\n";
 
@@ -407,7 +408,8 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          std::cout << seqsize << "\n";
          std::cout << "crashing with     "; 
          exists. print( std::cout ); 
-         res. print( std::cout );  
+         res. print( std::cout ); std::cout << "\n";
+         res. pretty( std::cout );  
          throw std::logic_error( "exists-elim is not implemented" );
       }
 

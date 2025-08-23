@@ -56,23 +56,23 @@ void logic::debruijn_cmp::print( std::ostream& out ) const
 
 void logic::exactcounter::operator( ) ( const term& t, size_t vardepth )
 {
-
-   if( t. sel( ) == op_debruijn )
+   if( t. sel( ) == op_exact )
    {
-      auto v = t. view_debruijn( ). index( );
+      auto ex = t. view_exact( ). ex( );
 
       // If we don't enter this if, the index is local,
       // and we don't count it:
 
-      if( v >= vardepth )
+      auto p = occ. find( ex );
+      if( p != occ. end( ))
+         ++ ( p -> second );
+      else
       {
-         v -= vardepth;
-         // ++ occ[v];
-      }
+         if( extending )
+            occ. insert( std::pair< exact, size_t > ( ex, 1 ));
+      } 
    }
-
 }
-
 
 void logic::exactcounter::print( std::ostream& out ) const
 {
