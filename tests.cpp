@@ -494,11 +494,20 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
                   1_db,
                   { { "aa", T }, { "bb", O }} );
 
+   auto orelim = proofterm( prf_orelim, 
+                    proofterm( prf_forallelim, 
+                       proofterm( prf_ident, identifier( ) + "hyp0001" ), 0,
+                       { "z0001"_unchecked } ), 0, 
+                 { { "aaa", proofterm( prf_magic, mag ) },
+                   { "bbb", proofterm( prf_magic, mag ) }} );
+      
    auto ref = 
       proofterm( prf_existselim, 0, 
          proofterm( prf_clausify,
             proofterm( prf_ident, identifier( ) + "initial0001" )),
-         "hyp", proofterm( prf_magic, mag ));
+         "hyp", proofterm( prf_existselim, 2, 
+                   proofterm( prf_ident, identifier( ) + "hyp0001" ),
+           "neg", orelim  ));
 
    ref. print( indentation(0), std::cout ); 
 

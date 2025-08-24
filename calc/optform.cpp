@@ -54,7 +54,7 @@ void calc::optform::getsub( size_t i )
    {
       auto bld = errorheader( );
       bld << "need subform nr " << i << ", but there are only ";
-      bld << kl. size( ) << " in: ";
+      bld << kl. size( ) << " subforms in: ";
       pretty( bld );
       err. push( std::move( bld ));
       fm. reset( );
@@ -167,10 +167,6 @@ void calc::optform::quantify( const std::vector< logic::vartype > & vars )
    if( !vars. size( ))
       return; 
 
-   std::cout << "quantify\n";
-   for( const auto& v : vars )
-      std::cout << "   " << v << "\n";
-
    if( !fm. value( ). option_is_kleene( ))
       throw std::logic_error( "quantify: Not a Kleene operator" );
 
@@ -199,14 +195,14 @@ void calc::optform::quantify( const std::vector< logic::vartype > & vars )
          auto q = kl. sub(i). view_quant( );
          for( size_t v = 0; v != q. size( ); ++ v )
             replquant. push_back( q. var(v) ); 
-         auto b = q. body( );
+         auto b = q. body( ); 
+            // Without this separate b, code is unsafe.
          kl. update_sub( i, std::move(b) ); 
       }
 
       replquant. update_body( kl. extr_sub(i)); 
       kl. update_sub( i, std::move( repl )); 
    } 
-   print( std::cout );    
 }
 
 void calc::optform::magic( )

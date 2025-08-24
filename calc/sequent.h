@@ -16,6 +16,7 @@ namespace calc
 
    // Sequent is not a complete class. It is more like a view
    // into a beliefstate.
+   // Add also comments?
 
    struct sequent
    {

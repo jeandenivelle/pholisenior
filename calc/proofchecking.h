@@ -45,8 +45,17 @@ namespace calc
 
    bool iscontradiction( const logic::term& fm );
       // True if fm counts as contradition.
-      // It must be in KNF2 and contain an empty disjunction.
+      // It must be in ANF2 and contain an empty disjunction.
 
+   bool inconflict( bool neg1, const logic::term& tm1,
+                    bool neg2, const logic::term& tm2 );
+
+   bool inconflict( const logic::term& tm1, const logic::term& tm2 );
+
+   bool inconflict( std::vector< logic::term > & checked,
+                    std::vector< logic::term > & unchecked );
+      // Return active is in conflict with either of checked.
+    
    std::optional< logic::term >
    deduce( const proofterm& prf, sequent& seq, errorstack& err );
       // In case of error, we express our frustration into err, and 

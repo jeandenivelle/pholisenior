@@ -70,10 +70,21 @@ includefile( logic::beliefstate& blfs,
 
 }
 
-#include "logic/replacements.h"
+#include "calc/proofchecking.h"
+
 
 int main( int argc, char* argv[] )
 {
+   std::vector< logic::term > checked;
+   std::vector< logic::term > unchecked;
+   unchecked. push_back( logic::term( logic::op_kleene_and,
+      { ! ( 5_db == 4_db ), 
+      logic::term( logic::op_kleene_or, { ( 4_db == 5_db ) } ) } ));
+
+   auto b = calc::inconflict( checked, unchecked );
+   std::cout << "inconflict = " << b << "\n";
+   return 0;
+
    errorstack err;
  
    logic::beliefstate blfs;  

@@ -175,6 +175,114 @@ calc::iscontradiction( const logic::term& fm )
 }
 
 
+bool 
+calc::inconflict( bool neg1, const logic::term& tm1,
+                  bool neg2, const logic::term& tm2 )
+{
+   std::cout << neg1 << "  " << tm1 << "   " << neg2 << "  " << tm2 << "\n";
+
+   if( neg1 && !neg2 && logic::cmp::equal( tm1, tm2 ))
+      return true;
+
+   if( !neg1 && neg2 && logic::cmp::equal( tm1, tm2 ))
+      return true;
+
+   if( neg1 && tm1. sel( ) == logic::op_prop &&
+       logic::cmp::equal( tm1. view_unary( ). sub( ), tm2 ))
+   {
+      return true;
+   }
+      
+   if( neg2 && tm2. sel( ) == logic::op_prop &&
+       logic::cmp::equal( tm1, tm2. view_unary( ). sub( )) )
+   {
+      return true;
+   }
+
+   return false;
+}
+
+bool 
+calc::inconflict( const logic::term& tm1, const logic::term& tm2 )
+{
+   // This is probably a point where one would like to have matching.
+   // We try to bring some order in the chaos by separating out
+   // negation.
+
+   if( tm1. sel( ) == logic::op_not )
+   {
+      if( tm2. sel( ) == logic::op_not )
+      {
+         return inconflict( true, tm1. view_unary( ). sub( ),
+                            true, tm2. view_unary( ). sub( )); 
+      }
+      else
+         return inconflict( true, tm1. view_unary( ). sub( ), false, tm2 ); 
+   }
+   else
+   {
+      if( tm2. sel( ) == logic::op_not )
+         return inconflict( false, tm1, true, tm2. view_unary( ). sub( ) );
+      else
+         return inconflict( false, tm1, false, tm2 );
+   }
+}
+
+bool 
+calc::inconflict( std::vector< logic::term > & checked,
+                  std::vector< logic::term > & unchecked )
+{
+restart: 
+   if( unchecked. empty( ))
+      return false;
+
+   auto picked = std::move( unchecked. back( ));
+   unchecked. pop_back( ); 
+
+   std::cout << "picked: " << picked << "\n";
+
+   if( picked. sel( ) == logic::op_not )
+   {
+      const auto& sub = picked. view_unary( ). sub( );
+      if( sub. sel( ) == logic::op_equals )
+      {
+         auto eq = sub. view_binary( );
+         if( logic::cmp::equal( eq. sub1( ), eq. sub2( )) )
+            return true;  
+      }
+   }
+
+   if( picked. sel( ) == logic::op_kleene_and )
+   {
+      auto kl = picked. view_kleene( );
+      for( size_t i = 0; i != kl. size( ); ++ i )
+         unchecked. push_back( kl. extr_sub(i) );
+      goto restart; 
+   }
+
+   if( picked. sel( ) == logic::op_kleene_or )
+   {
+      auto kl = picked. view_kleene( );
+      if( kl. size( ) == 0 )
+         return true;
+      if( kl. size( ) == 1 )
+      {
+         unchecked. push_back( kl. extr_sub(0));
+         goto restart;
+      }
+      goto restart;
+   }
+
+   for( const auto& ch : checked )
+   {
+      if( inconflict( ch, picked ))
+         return true;
+   }
+
+   checked. push_back( std::move( picked ));
+   goto restart;
+}
+
 std::optional< logic::term >
 calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 {
@@ -440,14 +548,11 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          // If no eigenvariable occurs in res, we can return res
          // unchanged:
 
-         if( intro. size( ) == 0 ) 
+         if( intro. size( ))
          {
-            std::cout << "simple case\n";
-            throw std::logic_error( "Exists-elim, this is the easy case" );
+            res. rewr_outermost( intro );
+            res. quantify( usedassumptions ); 
          }
-
-         res. rewr_outermost( intro );
-         res. quantify( usedassumptions ); 
          return logic::term( logic::op_kleene_and, { res. value( ) } );
       }
 

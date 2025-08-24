@@ -123,7 +123,6 @@ bool logic::cmp::equal( const type& tp1, const type& tp2 )
 bool
 logic::cmp::equal( const term& t1, const term& t2 ) 
 {
-
    if( t1. sel( ) != t2. sel( ))
       return false;
 
@@ -145,7 +144,7 @@ logic::cmp::equal( const term& t1, const term& t2 )
 
    case op_not:
    case op_prop:
-      return cmp::equal( t1.view_unary( ).sub( ), t2.view_unary( ).sub( ));
+      return equal( t1.view_unary( ).sub( ), t2.view_unary( ).sub( ));
 
    case op_and: 
    case op_or:
@@ -154,15 +153,30 @@ logic::cmp::equal( const term& t1, const term& t2 )
    case op_lazy_and:
    case op_lazy_or:
    case op_lazy_implies:
-   case op_equals:
       {
          auto bin1 = t1. view_binary( );
          auto bin2 = t2. view_binary( );
-         if( !cmp::equal( bin1.sub1( ), bin2.sub1( )))
+         if( !equal( bin1.sub1( ), bin2.sub1( )))
             return false;
-         return cmp::equal( bin1.sub2( ), bin2.sub2( ));
+         return equal( bin1.sub2( ), bin2.sub2( ));
       } 
 
+   case op_equals:
+      {
+         // We consider commutativity of equality: 
+
+         auto eq1 = t1. view_binary( );
+         auto eq2 = t2. view_binary( );
+
+         if( equal( eq1. sub1( ), eq2. sub1( )) &&
+             equal( eq1. sub2( ), eq2. sub2( )) )
+         {
+            return true;
+         }
+
+         return equal( eq1. sub1( ), eq2. sub2( )) &&
+                equal( eq1. sub2( ), eq2. sub1( ));
+      }
    case op_kleene_and:
    case op_kleene_or:
       {
