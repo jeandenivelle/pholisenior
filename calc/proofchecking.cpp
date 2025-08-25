@@ -10,42 +10,10 @@
 #include "formulaset.h"
 #include "expander.h"
 
-errorstack::builder
-calc::errorheader( const sequent& seq, std::string_view rule )
-{
-   errorstack::builder bld;
-   for( unsigned int i = 0; i < 60; ++ i )
-      bld. put( '-' );
-   bld. put( '\n' );
+#include "printing.h"
 
-   bld << "Error applying " << rule << ":\n";
-   bld << seq << "\n";
-   return bld;
-}
 
-void 
-calc::print( std::ostream& out, const sequent& seq, const logic::term& tm )
-{
-   logic::context ctxt;
-   logic::pretty::print( out, seq. blfs, ctxt, tm );
-}
-
-void calc::print( std::ostream& out, logic::selector op )
-{
-   switch( op )
-   {
-   case logic::op_kleene_or:
-      out << "kleene-or"; return;  
-   case logic::op_kleene_and:
-      out << "kleene-and"; return;
-   case logic::op_kleene_forall:
-      out << "kleene-forall"; return;
-   case logic::op_kleene_exists:
-      out << "kleene-exists"; return;
-   }
-   out << "???";
-}
-
+#if 0
 bool calc::operatorcorrect( logic::selector op, 
                             const logic::term& fm, const sequent& seq, 
                             std::string_view rule, errorstack& err )
@@ -63,7 +31,6 @@ bool calc::operatorcorrect( logic::selector op,
 
    return false; 
 }
-
 
 std::optional< logic::term > 
 calc::subform( const logic::term& fm, size_t i, const sequent& seq, 
@@ -135,7 +102,7 @@ calc::remove( logic::term fm, size_t i )
    kl. pop_back( );
    return fm;
 }
-
+#endif
 
 bool
 calc::iscontradiction( const logic::term& fm )
@@ -592,13 +559,12 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
                {
                   auto bld = errorstack::builder( ); 
                   bld << "true type of instance ";
-                  logic::context ctxt;
-                  logic::pretty::print( bld, seq. blfs, ctxt, tm );
+                  printing::pretty( bld, seq, tm );
                   bld << " is wrong\n"; 
                   bld << "It is "; 
-                  logic::pretty::print( bld, seq. blfs, tp. value( ), {0,0} );
+                  printing::pretty( bld, seq, tp. value( ));
                   bld << ", but must be ";
-                  logic::pretty::print( bld, seq. blfs, q. var(i). tp, {0,0} ); 
+                  printing::pretty( bld, seq, q. var(i). tp ); 
                   err. push( std::move( bld ));
                }
             }
@@ -606,13 +572,45 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
         
          if( subst. size( ) < elim. size( ))
          {
-            auto header = forall. errorheader( );
+            auto header = printing::makeheader( seq, "forall-elim" );
             err. addheader( errstart, std::move( header )); 
             return { };
          } 
          auto res = outermost( subst, std::move( q. body( )), 0 ); 
          res = logic::term( logic::op_kleene_and, { res } );
          return res; 
+      }
+
+   case prf_conflict2:
+      {
+         auto confl = prf. view_conflict2( );
+
+         auto form1 = deduce( confl. parent1( ), seq, err );
+         auto form2 = deduce( confl. parent2( ), seq, err );
+
+         if( !form1. has_value( ))
+            return form1;
+         if( !form2. has_value( ))
+            return form2;
+
+         std::vector< logic::term > checked;
+         std::vector< logic::term > unchecked = 
+                { form1. value( ), form2. value( ) }; 
+   
+         bool c = inconflict( checked, unchecked );
+         if( !c )
+         {
+            auto bld = printing::makeheader( seq, "conflict" );
+            bld << "formulas are not in conflict:\n";
+            bld << "  "; printing::pretty( bld, seq, form1. value( ));
+            bld << "\n";
+            bld << "  "; printing::pretty( bld, seq, form2. value( ));
+            bld << "\n";
+            err. push( std::move( bld ));
+         }
+
+         return logic::term( logic::op_kleene_and, {
+            logic::term( logic::op_kleene_or, { } ) } );
       }
 
    case prf_magic:

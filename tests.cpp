@@ -499,7 +499,11 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
                        proofterm( prf_ident, identifier( ) + "hyp0001" ), 0,
                        { "z0001"_unchecked } ), 0, 
                  { { "aaa", proofterm( prf_magic, mag ) },
-                   { "bbb", proofterm( prf_magic, mag ) }} );
+                   { "bbb", 
+                      proofterm( prf_conflict2, 
+                         proofterm( prf_ident, identifier( ) + "neg0001" ),
+                         proofterm( prf_ident, identifier( ) + "bbb0001" )) 
+                        }} );
       
    auto ref = 
       proofterm( prf_existselim, 0, 

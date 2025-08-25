@@ -50,6 +50,7 @@
    projection.cpp
    sequent.cpp
    proofterm.cpp
+   printing.cpp
    optform.cpp
    formulaset.cpp
    proofchecking.cpp

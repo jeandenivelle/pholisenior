@@ -73,13 +73,8 @@ namespace calc
       const logic::term& value( ) const { return fm. value( ); }
       logic::term& value( ) { return fm. value( ); }
 
-      errorstack::builder errorheader( );
-         // Not const, because we are pretending that we own err.
-
       void print( std::ostream& out ) const;
       void pretty( std::ostream& out ) const;
-
-      static const char* pretty( logic::selector op ); 
    };
 }
 

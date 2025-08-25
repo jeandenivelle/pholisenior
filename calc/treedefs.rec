@@ -31,8 +31,8 @@
    parent : proofterm, nrforall : size_t, [ value : logic::term ] 
 %option define { prf_define } =>
    name : std::string, val : logic::term, parent : proofterm
-%option conflict1 { prf_conflict1 } => prf : proofterm 
-%option conflict2 { prf_conflict2 } => prf1 : proofterm, prf2 : proofterm
+%option conflict1 { prf_conflict1 } => parent : proofterm 
+%option conflict2 { prf_conflict2 } => parent1 : proofterm, parent2 : proofterm
 
 %option magic { prf_magic } => goal : logic::term
 %option show { prf_show } => comment : std::string, prf : proofterm
@@ -128,6 +128,23 @@
             }
             out << ind << "on\n";
             elim. parent( ). print( ind + 3, out );
+            return;
+         }
+
+      case prf_conflict1:
+         {
+            auto confl = view_conflict1( );
+            out << ind << "conflict\n";
+            confl. parent( ). print( ind + 3, out );
+            return;
+          }
+
+      case prf_conflict2:
+         {
+            auto confl = view_conflict2( );
+            out << ind << "conflict\n";
+            confl. parent1( ). print( ind + 3, out );
+            confl. parent2( ). print( ind + 3, out );
             return;
          }
 

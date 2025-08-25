@@ -1,6 +1,6 @@
 
 #include "optform.h"
-#include "logic/pretty.h"
+#include "printing.h"
 
 #include "removelets.h"
 #include "alternating.h"
@@ -8,18 +8,6 @@
 
 #include "logic/replacements.h"
 
-errorstack::builder
-calc::optform::errorheader( )
-{
-   errorstack::builder bld;
-   for( unsigned int i = 0; i < 60; ++ i )
-      bld. put( '-' );
-   bld. put( '\n' );
-
-   bld << "Error applying " << rule << ":\n";
-   bld << seq << "\n";
-   return bld;
-}
 
 void calc::optform::musthave( logic::selector op )
 {
@@ -31,7 +19,7 @@ void calc::optform::musthave( logic::selector op )
 
    errorstack::builder bld;
    bld << "wrong operator for " << rule << " : ";
-   bld << "main operator must be " << pretty( op );
+   bld << "main operator must be " << printing::viewpretty( op );
    bld << ", but the formula is: ";
    pretty( bld );
    err. push( std::move( bld ));
@@ -52,7 +40,7 @@ void calc::optform::getsub( size_t i )
 
    if( i >= kl. size( ))
    {
-      auto bld = errorheader( );
+      auto bld = printing::makeheader( seq, rule );
       bld << "need subform nr " << i << ", but there are only ";
       bld << kl. size( ) << " subforms in: ";
       pretty( bld );
@@ -77,7 +65,7 @@ void calc::optform::getuniquesub( )
 
    if( kl. size( ) != 1 )
    {
-      auto bld = errorheader( );
+      auto bld = printing::makeheader( seq, rule );
       bld << "formula must have arity one, but it is :";
       pretty( bld );
       err. push( std::move( bld ));
@@ -101,7 +89,7 @@ void calc::optform::aritymustbe( size_t i )
 
    if( kl. size( ) != i )
    {
-      auto bld = errorheader( );
+      auto bld = printing::makeheader( seq, rule );
       bld << "formula must have arity " << i << ", but it is :";
       pretty( bld );
       err. push( std::move( bld ));
@@ -122,7 +110,7 @@ void calc::optform::nrvarsmustbe( size_t i )
 
    if( kl. size( ) != i )
    {
-      auto bld = errorheader( );
+      auto bld = printing::makeheader( seq, rule );
       bld << "quantifier must have " << i << " variables, but it is : ";
       pretty( bld );
       err. push( std::move( bld ));
@@ -210,7 +198,7 @@ void calc::optform::magic( )
    if( !fm. has_value( ))
       return; 
 
-   auto bld = errorheader( );
+   auto bld = printing::makeheader( seq, rule );
    bld << "magically assuming :";
    bld << "DELETE THIS, IT IS UGLY\n";
    pretty( bld );
@@ -229,29 +217,11 @@ void calc::optform::print( std::ostream& out ) const
 void calc::optform::pretty( std::ostream& out ) const
 {
    if( fm. has_value( ))
-   {
-      logic::context ctxt;
-      logic::pretty::print( out, seq. blfs, ctxt, fm. value( ));
-   }
+      printing::pretty( out, seq, fm. value( )); 
    else
       out << "(no formula)";
 
    out << "\n";
 }
 
-const char* calc::optform::pretty( logic::selector op )
-{
-   switch( op )
-   {
-   case logic::op_kleene_or:
-      return "kleene-or"; 
-   case logic::op_kleene_and:
-      return "kleene-and"; 
-   case logic::op_kleene_forall:
-      return "kleene-forall"; 
-   case logic::op_kleene_exists:
-      return "kleene-exists"; 
-   }
-   return "???";
-}
 
