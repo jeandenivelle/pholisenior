@@ -494,11 +494,22 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
                   1_db,
                   { { "aa", T }, { "bb", O }} );
 
+   auto orelim2 = proofterm( prf_orelim,
+                     proofterm( prf_forallelim,
+                        proofterm( prf_ident, identifier( ) + "hyp0001" ), 1,
+                        { "z0001"_unchecked } ), 0,
+                  { { "ccc", proofterm( prf_conflict2,
+                       proofterm( prf_ident, identifier( ) + "aaa0001" ),
+                       proofterm( prf_ident, identifier( ) + "ccc0001" )) },
+                    { "ddd", proofterm( prf_conflict2,
+                       proofterm( prf_ident, identifier( ) + "neg0001" ),
+                       proofterm( prf_ident, identifier( ) + "ddd0001" )) }} );
+
    auto orelim = proofterm( prf_orelim, 
                     proofterm( prf_forallelim, 
                        proofterm( prf_ident, identifier( ) + "hyp0001" ), 0,
                        { "z0001"_unchecked } ), 0, 
-                 { { "aaa", proofterm( prf_magic, mag ) },
+                 { { "aaa", orelim2 },
                    { "bbb", 
                       proofterm( prf_conflict2, 
                          proofterm( prf_ident, identifier( ) + "neg0001" ),
