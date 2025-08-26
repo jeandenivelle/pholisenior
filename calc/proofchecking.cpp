@@ -523,6 +523,49 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          return logic::term( logic::op_kleene_and, { res. value( ) } );
       }
 
+   case prf_forallintro:
+      {
+         auto intro = prf. view_forallintro( );
+
+         std::vector< logic::exact > exactnames;
+            // The names that seq will give to the assumptions.
+            // We need them, so that we can subtitute them away later.
+
+         auto seqsize = seq. size( );
+         for( size_t i = 0; i != intro. size( ); ++ i )
+         {
+            logic::exact name = 
+               seq. assume( intro.var(i).pref, intro.var(i).tp );
+
+            exactnames. push_back( name );
+         }
+ 
+         auto res = optform( deduce( intro. parent( ), seq, err ), 
+                             "forall-intro", seq, err );
+
+         if( !res. has_value( ))
+            return { };
+        
+         logic::introsubst subst;
+         for( const auto& e : exactnames )
+            subst. bind( e );
+
+         std::cout << subst << "\n"; 
+         std::cout << seq << "\n";
+
+         res. rewr_outermost( subst );
+         std::cout << res << "\n";
+
+         std::vector< logic::vartype > vars; 
+         for( size_t i = 0; i != intro. size( ); ++ i ) 
+            vars. push_back( intro. var(i));
+ 
+         res. quantify( vars );
+         std::cout << res << "\n";
+
+         throw std::logic_error( "forallinto" ); 
+      }
+
    case prf_forallelim:
       {
          auto elim = prf. view_forallelim( );

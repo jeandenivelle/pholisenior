@@ -488,10 +488,12 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
    seq. assume( "initial", ! blfs. at( f. front( )). view_thm( ). frm( ));
    std::cout << seq << "\n";
 
+   // This is the first proof that passed!
+
    auto mag = logic::term( logic::op_exact, logic::exact(69)) ||
               logic::term( logic::op_exists,  
                   logic::term( logic::op_exact, logic::exact(70)) &&
-                  1_db,
+                  2_db,
                   { { "aa", T }, { "bb", O }} );
 
    auto orelim2 = proofterm( prf_orelim,
@@ -515,7 +517,7 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
                          proofterm( prf_ident, identifier( ) + "neg0001" ),
                          proofterm( prf_ident, identifier( ) + "bbb0001" )) 
                         }} );
-      
+
    auto ref = 
       proofterm( prf_existselim, 0, 
          proofterm( prf_clausify,
@@ -527,6 +529,16 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
    ref. print( indentation(0), std::cout ); 
 
    auto ff = deduce( ref, seq, err );
+   if( ff. has_value( ))
+      std::cout << "proved this formula: " << ff. value( ) << "\n";
+
+   auto prf = calc::proofterm( prf_forallintro, 
+      calc::proofterm( prf_magic, mag ),
+         { { "aaa", O }, { "bbb", T }} );
+
+   prf. print( indentation(0), std::cout );
+
+   ff = deduce( prf, seq, err );
    if( ff. has_value( ))
       std::cout << "proved this formula: " << ff. value( ) << "\n";
 
@@ -585,96 +597,11 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
 
 #if 0
 #if 0
-   std::cout << edit << "\n";
-
-   edit. apply_exists( 0_db, "a", "h0_" );
-   edit. apply_exists( 0_db, "b", "h1_" );
-   edit. apply_exists( 0_db, "c", "h2_" );
-
-   edit. show( std::cout, { 
-      logic::term( logic::prf_and1, logic::term( logic::prf_and1, 0_db )),
-      logic::term( logic::prf_and2, 0_db ),
-      logic::term( logic::prf_repl,
-         logic::term( logic::prf_and1, logic::term( logic::prf_and1, 0_db )),
-         logic::term( logic::prf_and2, 0_db )) } );
-
-   edit. apply_abbreviate( logic::term( logic::prf_repl,
-         logic::term( logic::prf_and1, logic::term( logic::prf_and1, 0_db )),
-         logic::term( logic::prf_and2, 0_db )), "repl" );
-
-   edit. show( std::cout, { logic::term( logic::prf_repl,
-         logic::term( logic::prf_and2, logic::term( logic::prf_and1, 1_db )),
-         0_db ) } );
-
-   edit. apply_proof( logic::term( logic::prf_false,
-      logic::term( logic::prf_repl,
-         logic::term( logic::prf_and2, logic::term( logic::prf_and1, 1_db )),
-         0_db )) ); 
-
-   edit. show( std::cout, { } );
-
-   thm = bel. at( bel. find( identifier( ) + "contrapos" )). second. view_thm( ). form( );
-   edit = logic::proofeditor( &bel, bel. size( ), !thm );
-
-   std::cout << edit << "\n";
-
-   edit. apply_exists( term( prf_and2, 0_db ), "a" );
-   edit. apply_exists( 0_db, "b" );
-
-   edit. apply_disj( term( prf_inst,
-                            term( prf_inst, term( prf_and1, 4_db ), 3_db ), 1_db ) );
-
-   edit. show( std::cout, { term( prf_and2, 1_db ) } );
-
-   // Unfinished Point.
-
-   return;
-
-   edit. apply_exists( logic::term( logic::prf_and2, 0_db ), "a" );
-   edit. apply_exists( 0_db, "b" );
-
-   edit. show( std::cout, { logic::term( logic::prf_inst,
-                               logic::term( logic::prf_inst,
-                                  logic::term( logic::prf_and1, 4_db ), 3_db ),
-                                  1_db ) } );
-  
-   edit. apply_disj( logic::term( logic::prf_inst,
-                               logic::term( logic::prf_inst,
-                                  logic::term( logic::prf_and1, 4_db ), 3_db ),
-                                  1_db ),
-                     "h", "h" );
-
-   edit. apply_proof( logic::term( logic::prf_contr,
-      0_db, logic::term( logic::prf_and2, 1_db )) );
- 
-   edit. show( std::cout, {} );
-
-   edit. setfocus(1);
-   edit. show( std::cout, {} );
-
-   edit. apply_proof( logic::term( logic::prf_contr,
-      0_db, logic::term( logic::prf_and1, 1_db )) ); 
-
-   edit. setfocus(0);
-
-   edit = logic::proofeditor( &bel, bel. size( ), 
-      !bel. at( bel. find( identifier( ) + "def" + "expand" )). second. view_thm_file( ). form( ));
-
-   edit. setfocus(0);
-   logic::position pos;
-   pos. extend(0);
-   pos. extend(0);
-   pos. extend(0);
-   pos. extend(1);
-   edit. show( std::cout, { logic::term( logic::prf_exp, 0_db, identifier( ) + "pair", pos ) } );
-
 #if 0
    auto b = edit. apply_exists( 0_db, "a", "b" );  
    if( !b ) std::cout << "EXISTS FAILED\n";
    std::cout << edit << "\n";
 
-   //return;
-   
    edit. show( std::cout, { } );
    if( !edit. apply_abbreviate( logic::term( logic::prf_and1, 0_db ), "and" )) std::cout << "ABBREVIATE FAILED\n";
    if( !edit. apply_abbreviate( logic::term( logic::prf_and2, 1_db ), "and" )) std::cout << "ABBREVIATE FAILED\n";

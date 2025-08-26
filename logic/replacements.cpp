@@ -246,7 +246,11 @@ void logic::introsubst::print( std::ostream& out ) const
 {
    out << "IntroSubst:\n";
    for( const auto& p : map )
-      out << "   " << p. first << " : #" << p. second << "\n";
+   {
+      out << "   " << p. first << " : ";
+      out << "#" << size( ) - p. second - 1;
+      out << "\n"; 
+   }
 }
 
 

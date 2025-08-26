@@ -27,6 +27,8 @@
                name : std::string, intro : proofterm 
 %option expand { prf_expand } => 
    ident : identifier, occ : size_t, parent : proofterm 
+%option forallintro { prf_forallintro } =>
+   parent : proofterm, [ var : logic::vartype ]
 %option forallelim { prf_forallelim } =>
    parent : proofterm, nrforall : size_t, [ value : logic::term ] 
 %option define { prf_define } =>
@@ -114,6 +116,21 @@
             def. parent( ). print( ind + 3, out );
             return;
          }
+
+      case prf_forallintro:
+         {
+            auto intro = view_forallintro( );
+            out << ind << "forallintro with";
+            for( size_t i = 0; i != intro. size( ); ++ i )
+            {
+               if(i)
+                  out << ", ";
+               out << intro. var(i);
+            }
+            out << "\n";
+            intro. parent( ). print( ind + 3, out );
+            return; 
+         }
  
       case prf_forallelim:
          {
@@ -164,7 +181,6 @@
             show. prf( ). print( ind + 3, out );
             return;
          }
-
       }
 
       out << sel( ) << "\n";
