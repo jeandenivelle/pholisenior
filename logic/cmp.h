@@ -24,6 +24,10 @@ namespace logic
   
       bool equal( const type& tp1, const type& tp2 );
       bool equal( const term& tm1, const term& tm2 );
+
+      bool equal( const term& t1, size_t lift1, 
+                  const term& t2, size_t lift2, size_t vardepth );
+
    }
 
 }

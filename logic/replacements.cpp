@@ -3,6 +3,7 @@
 // Made additions in April 2023.
 
 #include "replacements.h"
+#include "cmp.h"
 
 
 logic::term 
@@ -301,169 +302,28 @@ void logic::betareduction::print( std::ostream& out ) const
   out << "betareduction(" << counter << ")";
 }
 
-
-#if 0
-
-namespace logic
-{
-   namespace
-   {
-      bool equal( const term& t1, lifter lift1,
-                  const term& t2, lifter lift2, size_t vardepth )
-      {
-#if 0
-         std::cout << t1 << " / " << lift1 << " == ";
-         std::cout << t2 << " / " << lift2 << " ?\n"; 
-#endif
-
-         if( t1. sel( ) != t2. sel( ) )
-            return false;
-
-         switch( t1. sel( ) )
-         {
-         case sel_debruijn:
-            {
-               auto p1 = t1. view_debruijn( );
-               auto p2 = t2. view_debruijn( );
-
-               size_t ind1 = p1. index( );
-               if( ind1 >= vardepth ) 
-                  ind1 += lift1. dist; 
-
-               size_t ind2 = p2. index( ); 
-               if( ind2 >= vardepth )
-                  ind2 += lift2. dist; 
-
-               return ind1 == ind2; 
-            }
-
-         case sel_ident:
-            {
-               normident::equal_to eq;
-               return eq( t1. view_id( ). ident( ), t2. view_id( ). ident( ));
-            }
-         
-         case sel_false:
-         case sel_true:
-         case sel_emptyset:
-         case sel_infset:
-            return true;
-
-         case sel_not:
-         case sel_union:
-         case sel_pow:
-         case sel_unique:
-            {
-               auto v1 = t1. view_unary( );
-               auto v2 = t2. view_unary( );  
-               return equal( v1. sub( ), lift1, v2. sub( ), lift2, vardepth );
-            }
-
-         case sel_and:
-         case sel_or:
-         case sel_implies:
-         case sel_equiv: 
-         case sel_equals: 
-         case sel_in:
-         case sel_subset:
-         case sel_insert:
-         case sel_sep:
-         case sel_repl:
-            {
-               auto v1 = t1. view_binary( );
-               auto v2 = t2. view_binary( );
-
-               if( !equal( v1. sub1( ), lift1, v2. sub1( ), lift2, vardepth ))
-                  return false;
-               if( !equal( v1. sub2( ), lift1, v2. sub2( ), lift2, vardepth ))
-                  return false;
-
-               return true;
-            }
-         case sel_forall:
-         case sel_exists:
-            {
-               auto v1 = t1. view_quant( );
-               auto v2 = t2. view_quant( ); 
-
-               if( !is_eq( kbo::topleftright( v1. var( ). tp, v2. var( ). tp )))
-                  return false;
- 
-               return equal( v1. body( ), lift1, v2. body( ), lift2, 
-                             vardepth + 1 );
-            }
-
-         case sel_appl:
-            {
-               auto v1 = t1. view_appl( );
-               auto v2 = t2. view_appl( );
-
-               if( v1. size( ) != v2. size( ))
-                  return false; 
-
-               if( !equal( v1. func( ), lift1, v2. func( ), lift2, vardepth ))
-                  return false;
-               
-               for( size_t i = 0; i < v1. size( ); ++i )
-               {
-                  if( !equal( v1. arg(i), lift1, v2. arg(i), lift2, vardepth ))
-                     return false;
-               }
-               return true;
-            }
-
-         case sel_lambda:
-            {
-               auto v1 = t1. view_lambda( );
-               auto v2 = t2. view_lambda( );
-
-               if( v1. size( ) != v2. size( ) )
-                  return false;
-
-               for( size_t i = 0; i != v1. size( ); ++ i )
-               {
-                  if( !is_eq( 
-                         kbo::topleftright( v1. var(i). tp, v2. var(i). tp )))
-                  {
-                     return false;
-                  }
-               }
-
-               return equal( v1. body( ), lift1, v2. body( ), lift2, 
-                             vardepth + v1. size( ));
-            }
-         }
-         
-         std::cout << "equal " << t1. sel( ) << " case not implemented\n";
-         throw std::logic_error( "stop" );
-      }
-   }
-}
-
-
 logic::term
-logic::equalitysystem::operator( ) ( const term& t, size_t vardepth ) const
+logic::rewritesystem::operator( ) ( const term& t, size_t vardepth,
+                                    bool& change ) const
 {
-   for( const auto& eq : sys )
+   for( const auto& repl : sys )
    {
-      if( equal( eq. first, lifter( vardepth ), t, lifter(0), 0 ))
+      if( cmp::equal( repl. first, vardepth, t, 0, 0 ))
       {
-         lifter lift( vardepth );
-         long unsigned int changes = 0;
-         return outermost_sar( changes, lift, eq. second, 0 );
-      }
+         change = true;
+         return lift( repl. second, vardepth );
+      } 
    }
 
    return t;
 }
 
 void
-logic::equalitysystem::print( std::ostream& out ) const
+logic::rewritesystem::print( std::ostream& out ) const
 {
-   out << "equality system:\n";
-   for( const auto& eq : sys )
-      out << "   " << eq. first << " --> " << eq. second << "\n";
+   out << "rewrite system:\n";
+   for( const auto& repl : sys )
+      out << "   " << repl. first << " --> " << repl. second << "\n";
 }
 
-#endif
 

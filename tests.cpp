@@ -280,74 +280,8 @@ void tests::pretty( const logic::beliefstate& blfs )
    pretty::uniquenamestack un;
    pretty::print( std::cout, blfs, un, tm, {0,0} );
 
-#if 0
-   initial. push_back( exists( { "x", S },
-                         logic::term( logic::sel_appl, "p"_unchecked, { 0_db } ) ||
-                         logic::term( logic::sel_appl, "q"_unchecked, { 0_db } )));
-   initial. push_back( ! exists( { "x", S },
-                         logic::term( logic::sel_appl, "p"_unchecked, { 0_db } )));
-   initial. push_back( ! exists( { "x", S },
-                         logic::term( logic::sel_appl, "p"_unchecked, { 0_db } )));   
-   for( auto& init: initial )
-      init = logic::simplifications::topnorm( init );
-
-   for( const auto& f : initial )
-   {
-      if( is_confl( tab. insert_initial(f)))
-      {
-         std::cout << "**** was a conflict\n";
-      }
-   }
-
-   std::cout << tab << "\n";
-   std::cout << tab. try_refute(0) << "\n";
-#endif
-
 }
 
-#if 0
-void tests::setsimplifications( )
-{
-   std::cout << "testing set simplifications\n";
-
-   logic::simplifications::settheoretic set;
-   std::cout << set << "\n"; 
-   std::cout << "\n";
- 
-   auto S = logic::type( logic::sel_set );
-   auto T = logic::type( logic::sel_truthval );
-   auto B = logic::type( logic::sel_belief );
-
-   auto a = "A"_unchecked; 
-   auto b = "B"_unchecked;
-   auto c = "C"_unchecked; 
-
-   auto t = logic::term( logic::sel_appl, "T"_unchecked, { 0_db } );
-
-   auto fx = logic::term( logic::sel_appl, "f"_unchecked, { 0_db } );
-   auto Pfx = logic::term( logic::sel_appl, 
-                      "P"_unchecked, { fx } );
-
-   logic::term func = logic::term( logic::sel_lambda, Pfx, { { "x", S }} ); 
-
-   logic::term fa = forall( { "x", S }, 0_db && 1_db ); 
-   logic::term f = logic::term( logic::sel_in, "x"_unchecked, 
-       logic::term( logic::sel_insert, "t"_unchecked, "rest"_unchecked ));
-
-   for( unsigned int i = 0; i < 6; ++ i )
-   {
-      auto f1 = set(f,0);
-      std::cout << f << " ==>  " << f1 << "   ";
-      if( f. very_equal_to( f1 ))
-         std::cout << "result is very equal\n";
-      else
-         std::cout << "\n";
-
-      f = !f;
-   }
-}
-
-#endif
 
 void tests::cmp( )
 {
@@ -365,10 +299,10 @@ void tests::cmp( )
    type X = type( type_unchecked, identifier( ) + "X" );
 
    auto tm1 = "aba"_unchecked || 3_db;
-   tm1 = term( op_forall, tm1, { { "x", T }, { "y", Seq }, { "z", O }} );
+   tm1 = term( op_lambda, tm1, { { "x", T }, { "y", Seq }, { "z", O }} );
 
    auto tm2 = "aba"_unchecked || 3_db;
-   tm2 = term( op_exists, tm2, { { "x", T }, { "y", Seq }, { "t", O }} );
+   tm2 = term( op_lambda, tm2, { { "x", T }, { "y", Seq }, { "t", O }} );
  
    tm1 = apply( tm1, { 2_db, "bbb"_unchecked, 3_db } );
    tm2 = apply( tm2, { 2_db, "bbb"_unchecked, 3_db } );
@@ -376,6 +310,12 @@ void tests::cmp( )
   
    bool b = cmp::equal( tm1, tm2 );
    std::cout << "result = " << b << "\n"; 
+
+   tm1 = lift( tm1, 1 );
+   tm2 = lift( tm2, 4 );
+   b = cmp::equal( tm1, 6, tm2, 3, 0 );
+   std::cout << "lifted result = " << b << "\n";
+
 }
 
 
@@ -595,26 +535,6 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
    else
       std::cout << "eval returned no value\n";
 
-#if 0
-#if 0
-#if 0
-   auto b = edit. apply_exists( 0_db, "a", "b" );  
-   if( !b ) std::cout << "EXISTS FAILED\n";
-   std::cout << edit << "\n";
-
-   edit. show( std::cout, { } );
-   if( !edit. apply_abbreviate( logic::term( logic::prf_and1, 0_db ), "and" )) std::cout << "ABBREVIATE FAILED\n";
-   if( !edit. apply_abbreviate( logic::term( logic::prf_and2, 1_db ), "and" )) std::cout << "ABBREVIATE FAILED\n";
-   edit. show( std::cout, { } );
-
-   //return;
-
-   if( !edit. apply_proof( logic::term( logic::prf_contr, 0_db, 1_db )))
-      std::cout << "IMMEDIATE FAILED\n";
-
-#endif 
-#endif
-#endif
 }
 
 

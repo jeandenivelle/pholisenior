@@ -180,24 +180,23 @@ namespace logic
    };
 
  
-
-   struct equalitysystem
+   struct rewritesystem
    {
       std::vector< std::pair< term, term >> sys;
 
-      equalitysystem( ) = default;
+      rewritesystem( ) noexcept = default;
 
       // Use const& or move:
 
-      equalitysystem( const std::vector< std::pair< term, term >> & sys )
+      rewritesystem( const std::vector< std::pair< term, term >> & sys )
          : sys( sys )
       { }
 
-      equalitysystem( std::vector< std::pair< term, term >> && sys )
+      rewritesystem( std::vector< std::pair< term, term >> && sys )
          : sys( std::move( sys ))
       { }
 
-      term operator( ) ( const term& t, size_t vardepth ) const;
+      term operator( ) ( const term& t, size_t vardepth, bool& change ) const;
 
       void print( std::ostream& out ) const;
    };

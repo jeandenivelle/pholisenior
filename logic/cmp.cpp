@@ -177,6 +177,7 @@ logic::cmp::equal( const term& t1, const term& t2 )
          return equal( eq1. sub1( ), eq2. sub2( )) &&
                 equal( eq1. sub2( ), eq2. sub1( ));
       }
+
    case op_kleene_and:
    case op_kleene_or:
       {
@@ -266,4 +267,172 @@ logic::cmp::equal( const term& t1, const term& t2 )
    throw std::logic_error( "equal: operator not implemented" ); 
 }
 
+bool
+logic::cmp::equal( const term& t1, size_t lift1,
+                   const term& t2, size_t lift2, size_t vardepth )
+{
+   std::cout << t1 << " / " << lift1 << " == ";
+   std::cout << t2 << " / " << lift2 << " [" << vardepth << "]?\n";
+
+   if( t1. sel( ) != t2. sel( ) )
+      return false;
+
+   switch( t1. sel( ))
+   {
+   case op_exact:
+      return t1. view_exact( ). ex( ) == t2. view_exact( ). ex( );
+
+   case op_debruijn:
+      {
+         size_t ind1 = t1. view_debruijn( ). index( );
+         size_t ind2 = t2. view_debruijn( ). index( );
+
+         if( ind1 >= vardepth )
+            ind1 += lift1;
+
+         if( ind2 >= vardepth )
+            ind2 += lift2;
+
+         return ind1 == ind2;
+      }
+
+   case op_unchecked:
+      return t1. view_unchecked( ). id( ) == t2. view_unchecked( ). id( );
+
+   case op_false:
+   case op_error:
+   case op_true:
+      return true;
+
+   case op_not:
+   case op_prop:
+      {
+         auto un1 = t1. view_unary( );
+         auto un2 = t2. view_unary( );
+         return equal( un1. sub( ), lift1, un2. sub( ), lift2, vardepth );
+      }
+
+   case op_and:
+   case op_or:
+   case op_implies:
+   case op_equiv:
+   case op_lazy_and:
+   case op_lazy_or:
+   case op_lazy_implies:
+      {
+         auto bin1 = t1. view_binary( );
+         auto bin2 = t2. view_binary( );
+         if( !equal( bin1. sub1( ), lift1, bin2. sub1( ), lift2, vardepth ))
+            return false;
+         return equal( bin1. sub2( ), lift1, bin2. sub2( ), lift2, vardepth );
+      }
+
+   case op_equals:
+      {
+         // We consider commutativity of equality:
+
+         auto eq1 = t1. view_binary( );
+         auto eq2 = t2. view_binary( );
+
+         if( equal( eq1. sub1( ), lift1, eq2. sub1( ), lift2, vardepth ) &&
+             equal( eq1. sub2( ), lift1, eq2. sub2( ), lift2, vardepth ))
+         {
+            return true;
+         }
+
+         return equal( eq1. sub1( ), lift1, eq2. sub2( ), lift2, vardepth ) &&
+                equal( eq1. sub2( ), lift1, eq2. sub1( ), lift2, vardepth );
+      }
+
+   case op_kleene_and:
+   case op_kleene_or:
+      {
+         auto kl1 = t1. view_kleene( );
+         auto kl2 = t2. view_kleene( );
+
+         if( kl1. size( ) != kl2. size( ))
+            return false;
+
+         for( size_t i = 0; i != kl1. size( ); ++ i )
+         {
+            if( !equal( kl1. sub(i), lift1, kl2. sub(i), lift2, vardepth ))
+               return false;
+         }
+         return true;
+      }
+
+   case op_forall:
+   case op_exists:
+   case op_kleene_forall:
+   case op_kleene_exists:
+      {
+         auto quant1 = t1. view_quant( );
+         auto quant2 = t2. view_quant( );
+
+         if( quant1. size( ) != quant2. size( ))
+            return false;
+
+         for( size_t i = 0; i != quant1. size( ); ++ i )
+         {
+            if( !equal( quant1.var(i).tp, quant2.var(i).tp ))
+               return false;
+         }
+
+         return equal( quant1. body( ), lift1, 
+                       quant2. body( ), lift2, vardepth + quant1. size( ));
+      }
+
+   case op_let:
+      {
+         auto let1 = t1. view_let( );
+         auto let2 = t2. view_let( );
+
+         if( !equal( let1.var( ).tp, let2.var( ).tp ))
+            return false;
+         if( !equal( let1.val( ), lift1, let2.val( ), lift2, vardepth ))
+            return false;
+         return  equal( let1.body( ), lift1, let2.body( ), lift2, 
+                        vardepth + 1 );
+      }
+
+   case op_apply:
+      {
+         auto ap1 = t1. view_apply( );
+         auto ap2 = t2. view_apply( );
+
+         if( ap1. size( ) != ap2. size( ))
+            return false;
+
+         for( size_t i = 0; i != ap1. size( ); ++ i )
+         {
+            if( !equal( ap1.arg(i), lift1, ap2.arg(i), lift2, vardepth ))
+               return false;
+         }
+
+         return equal( ap1.func( ), lift1, ap2.func( ), lift2, vardepth );
+      }
+
+   case op_lambda:
+      {
+         auto lamb1 = t1. view_lambda( );
+         auto lamb2 = t2. view_lambda( );
+
+         if( lamb1. size( ) != lamb2. size( ))
+            return false;
+
+         for( size_t i = 0; i != lamb1. size( ); ++ i )
+         {
+            if( !equal( lamb1.var(i).tp, lamb2.var(i).tp ))
+               return false;
+         }
+
+         return equal( lamb1.body( ), lift1, lamb2.body( ), lift2, 
+                       vardepth + lamb1. size( ));
+      }
+
+   }
+
+   std::cout << t1. sel( ) << "\n";
+   throw std::logic_error( "equal: operator not implemented" );
+}
 
