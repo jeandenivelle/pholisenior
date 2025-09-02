@@ -253,10 +253,6 @@ restart:
 std::optional< logic::term >
 calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 {
-   std::cout << "deducing result of proof term\n";
-   prf. print( indentation( ), std::cout ); 
-   std::cout << "\n";
-
    switch( prf. sel( ))
    {
 
@@ -545,25 +541,23 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          if( !res. has_value( ))
             return { };
+
+         res. musthave( logic::op_kleene_and );
         
          logic::introsubst subst;
          for( const auto& e : exactnames )
-            subst. bind( e );
-
-         std::cout << subst << "\n"; 
-         std::cout << seq << "\n";
+            subst. bind(e);
 
          res. rewr_outermost( subst );
-         std::cout << res << "\n";
 
          std::vector< logic::vartype > vars; 
          for( size_t i = 0; i != intro. size( ); ++ i ) 
             vars. push_back( intro. var(i));
  
          res. quantify( vars );
-         std::cout << res << "\n";
+         seq. restore( seqsize );
 
-         throw std::logic_error( "forallinto" ); 
+         return res. value( ); 
       }
 
    case prf_forallelim:
@@ -578,7 +572,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          forall. getsub( elim. nrforall( ));
          forall. musthave( logic::op_kleene_forall );
          forall. nrvarsmustbe( elim. size( )); 
-         forall. pretty( std::cout );
+
          if( !forall. has_value( )) 
             return { };
 

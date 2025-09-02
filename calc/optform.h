@@ -59,7 +59,7 @@ namespace calc
  
       void quantify( const std::vector< logic::vartype > & vars );
       
-         // We must be a Kleene disjunction or conjunction.
+         // We must contain a Kleene disjunction or conjunction.
          // Replace every member M of the Kleene operator 
          // by Q asm M, where Q is the
          // quantifier that fits to the Kleene operator.

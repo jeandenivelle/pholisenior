@@ -430,12 +430,6 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
 
    // This is the first proof that passed!
 
-   auto mag = logic::term( logic::op_exact, logic::exact(69)) ||
-              logic::term( logic::op_exists,  
-                  logic::term( logic::op_exact, logic::exact(70)) &&
-                  2_db,
-                  { { "aa", T }, { "bb", O }} );
-
    auto orelim2 = proofterm( prf_orelim,
                      proofterm( prf_forallelim,
                         proofterm( prf_ident, identifier( ) + "hyp0001" ), 1,
@@ -472,6 +466,12 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
    if( ff. has_value( ))
       std::cout << "proved this formula: " << ff. value( ) << "\n";
 
+   auto mag = logic::term( logic::op_exact, logic::exact(69)) ||
+              logic::term( logic::op_exists,  
+                  logic::term( logic::op_exact, logic::exact(68)) &&
+                  1_db,
+                  { { "aa", T }, { "bb", O }} );
+
    auto prf = calc::proofterm( prf_forallintro, 
       calc::proofterm( prf_magic, mag ),
          { { "aaa", O }, { "bbb", T }} );
@@ -480,7 +480,7 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
 
    ff = deduce( prf, seq, err );
    if( ff. has_value( ))
-      std::cout << "proved this formula: " << ff. value( ) << "\n";
+      std::cout << "forallintro proved this formula: " << ff. value( ) << "\n";
 
    return;
  
