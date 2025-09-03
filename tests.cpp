@@ -471,8 +471,9 @@ void tests::smallproofs( logic::beliefstate& blfs, errorstack& err )
    auto mag1 = proofterm( prf_magic, "hans"_unchecked );
    auto mag2 = proofterm( prf_magic, "de"_unchecked ); 
    auto mag3 = proofterm( prf_magic, "nivelle"_unchecked );
+   auto mag4 = proofterm( prf_magic, "hans"_unchecked == "jean"_unchecked );
 
-   ref = proofterm( prf_andintro, { mag1, mag2, mag3 } );
+   ref = proofterm( prf_andintro, { mag1, mag2, mag3, mag4 } );
    ref = proofterm( prf_select, ref, { 2,1,0,3 } );
    ref. print( indentation(0), std::cout );
 

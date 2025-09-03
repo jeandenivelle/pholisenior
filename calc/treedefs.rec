@@ -20,26 +20,33 @@
 %option exact { prf_exact } => exact : logic::exact
 %option ident { prf_ident } => ident : identifier
 %option clausify { prf_clausify } => parent : proofterm
+
 %option orelim { prf_orelim } => parent : proofterm, nror : size_t,
-      [ name : std::string, branch : proofterm ] 
+   [ name : std::string, branch : proofterm ] 
 %option existselim { prf_existselim } => 
                nrexists : size_t, parent : proofterm, 
                name : std::string, intro : proofterm 
+
 %option expand { prf_expand } => 
    ident : identifier, occ : size_t, parent : proofterm 
+
 %option forallintro { prf_forallintro } =>
    parent : proofterm, [ var : logic::vartype ]
 %option forallelim { prf_forallelim } =>
    parent : proofterm, nrforall : size_t, [ value : logic::term ] 
+
+%option eqrepl { prf_eqrepl } =>
+   parent : proofterm, [ eq : size_t, leftright : bool ]
+
 %option define { prf_define } =>
    name : std::string, val : logic::term, parent : proofterm
+
 %option andintro { prf_andintro } => [ parent : proofterm ]
 %option select { prf_select } => parent : proofterm, [ nr : size_t ]
 %option conflict { prf_conflict } => parent : proofterm 
 
 %option magic { prf_magic } => goal : logic::term
 %option show { prf_show } => comment : std::string, prf : proofterm
-
 
 %h_incl {
    #include "sequent.h"
@@ -169,9 +176,26 @@
                if(i) out << ",";
                out << elim. nr(i);
             }
-            out << " from\n";
+            out << "from\n";
             elim. parent( ). print( ind + 3, out );
             return;
+         }
+
+      case prf_eqrepl:
+         {
+            auto repl = view_eqrepl( );
+            out << ind << "replace ";
+            for( size_t i = 0; i != repl. size( ); ++ i )
+            {
+               if(i) out << ", ";
+               out << repl. eq(i);
+               if( repl. leftright(i))
+                  out << "L -> R";
+               else
+                  out << "R -> L";
+            } 
+            repl. parent( ). print( ind + 3, out );
+            return; 
          }
 
       case prf_conflict:
