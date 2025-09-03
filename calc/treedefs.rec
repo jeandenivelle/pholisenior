@@ -170,13 +170,17 @@
       case prf_select:
          {
             auto elim = view_select( );
-            out << ind << "select ";
+            out << ind << "select";
             for( size_t i = 0; i != elim. size( ); ++ i )
             {
-               if(i) out << ",";
+               if(i) 
+                  out << ",";
+               else
+                  out << " ";
+
                out << elim. nr(i);
             }
-            out << "from\n";
+            out << " from\n";
             elim. parent( ). print( ind + 3, out );
             return;
          }
@@ -187,13 +191,18 @@
             out << ind << "replace ";
             for( size_t i = 0; i != repl. size( ); ++ i )
             {
-               if(i) out << ", ";
-               out << repl. eq(i);
-               if( repl. leftright(i))
-                  out << "L -> R";
+               if(i) 
+                  out << ", ";
                else
-                  out << "R -> L";
+                  out << " ";
+
+               out << repl. eq(i) << ":";
+               if( repl. leftright(i))
+                  out << "L->R";
+               else
+                  out << "R->L";
             } 
+            out << " in\n";
             repl. parent( ). print( ind + 3, out );
             return; 
          }
