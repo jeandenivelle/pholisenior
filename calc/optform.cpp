@@ -28,13 +28,13 @@ void calc::optform::musthave( logic::selector op )
 }
 
 
-void calc::optform::getsub( size_t i ) 
+void calc::optform::replacebysub( size_t i ) 
 {
    if( !fm. has_value( ))
       return; 
 
    if( !fm. value( ). option_is_kleene( ))
-      throw std::logic_error( "getsub: Not a Kleene operator" );
+      throw std::logic_error( "replacebysub: Not a Kleene operator" );
 
    auto kl = fm. value( ). view_kleene( );
 

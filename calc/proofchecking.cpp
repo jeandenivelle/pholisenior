@@ -13,97 +13,6 @@
 #include "printing.h"
 
 
-#if 0
-bool calc::operatorcorrect( logic::selector op, 
-                            const logic::term& fm, const sequent& seq, 
-                            std::string_view rule, errorstack& err )
-{
-   if( fm. sel( ) == op )
-      return true; 
-
-   errorstack::builder bld;
-   bld << "wrong operator for " << rule << " : ";
-   bld << "operator must be ";
-   print( bld, op ); 
-   bld << ", but the formula is: ";
-   print( bld, seq, fm );
-   err. push( std::move( bld ));
-
-   return false; 
-}
-
-std::optional< logic::term > 
-calc::subform( const logic::term& fm, size_t i, const sequent& seq, 
-               std::string_view rule, errorstack& err )
-{
-   if( !fm. option_is_kleene( ))
-      throw std::logic_error( "subform: Not a Kleene operator" ); 
-
-   if( i >= fm. view_kleene( ). size( ))
-   {
-      auto bld = errorheader( seq, rule ); 
-      bld << "need subform nr " << i << ", but there are only ";
-      bld << fm. view_kleene( ). size( ) << " in: ";
-      print( bld, seq, fm );
-      err. push( std::move( bld )); 
-      return { };
-   }
-
-   return fm. view_kleene( ). sub(i); 
-}
-
-std::optional< logic::term >
-calc::uniquesubform( const logic::term& fm, const sequent& seq,
-                     std::string_view rule, errorstack& err )
-{
-   if( fm. sel( ) == logic::op_kleene_or )
-   {
-      auto kl = fm. view_kleene( );
-      if( kl. size( ) == 1 )
-         return kl. sub(0);
-   }
-
-   auto bld = errorheader( seq, rule );
-   bld << "formula must a disjunction of arity one, but it is :";
-   print( bld, seq, fm );
-   err. push( std::move( bld ));
-   return { };
-}
-
-logic::term
-calc::replace( logic::term fm, size_t i, const logic::term& val )
-{
-   if( !fm. option_is_kleene( ))
-      throw std::logic_error( "replace: Not a Kleene operator" ); 
-
-   if( i >= fm. view_kleene( ). size( )) 
-      throw std::logic_error( "replace: index too big" );
-
-   fm. view_kleene( ). update_sub( i, val ); 
-   return fm; 
-}
-
-logic::term
-calc::remove( logic::term fm, size_t i )
-{
-   if( !fm. option_is_kleene( )) 
-      throw std::logic_error( "remove: Not a Kleene operator" );
-
-   auto kl = fm. view_kleene( );
-   if( i >= kl. size( ))
-      throw std::logic_error( "remove: index too big" );
-
-   while( i + 1 < kl. size( ))
-   {
-      kl. update_sub( i, kl. extr_sub( i + 1 ));
-      ++ i;
-   }
-
-   kl. pop_back( );
-   return fm;
-}
-#endif
-
 bool
 calc::iscontradiction( const logic::term& fm )
 {
@@ -309,10 +218,10 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          auto disj = optform( std::move( conj ), "or-elim", seq, err );
          disj. musthave( logic::op_kleene_and );
-         disj. getsub( elim. nror( ));
+         disj. replacebysub( elim. nror( ));
          disj. musthave( logic::op_kleene_or );
          disj. aritymustbe( elim. size( ));
-         if( !disj. has_value( ))
+         if( !disj )
             return { };
  
          auto kl = disj. value( ). view_kleene( );
@@ -334,7 +243,8 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
             res. musthave( logic::op_kleene_and );
             res. getuniquesub( );
             res. musthave( logic::op_kleene_or );
-            if( !res. has_value( ))
+
+            if( !res )
                success = false; 
             else
             {
@@ -419,12 +329,12 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          auto exists = optform( conj, "exists-elim", seq, err );
          exists. musthave( logic::op_kleene_and ); 
-         exists. getsub( elim. nrexists( ));
+         exists. replacebysub( elim. nrexists( ));
          exists. musthave( logic::op_kleene_or );
          exists. getuniquesub( );
          exists. musthave( logic::op_kleene_exists );
 
-         if( !exists. has_value( ))
+         if( !exists )
             return { };
 
          // At this point, we are sure that existselim can be applied:
@@ -474,7 +384,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          res. musthave( logic::op_kleene_and );
          res. getuniquesub( );
          res. musthave( logic::op_kleene_or );
-         if( !res. has_value( ))
+         if( !res )
          {
             seq. restore( seqsize ); 
             return { };
@@ -539,7 +449,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          auto res = optform( deduce( intro. parent( ), seq, err ), 
                              "forall-intro", seq, err );
 
-         if( !res. has_value( ))
+         if( !res )
             return { };
 
          res. musthave( logic::op_kleene_and );
@@ -569,11 +479,11 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          auto forall = optform( std::move( anf ), "forall-elim", seq, err );
          forall. musthave( logic::op_kleene_and );
-         forall. getsub( elim. nrforall( ));
+         forall. replacebysub( elim. nrforall( ));
          forall. musthave( logic::op_kleene_forall );
          forall. nrvarsmustbe( elim. size( )); 
 
-         if( !forall. has_value( )) 
+         if( !forall ) 
             return { };
 
          size_t errstart = err. size( );
@@ -618,30 +528,96 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          return res; 
       }
 
-   case prf_conflict2:
+   case prf_andintro:
       {
-         auto confl = prf. view_conflict2( );
+         auto intro = prf. view_andintro( ); 
 
-         auto form1 = deduce( confl. parent1( ), seq, err );
-         auto form2 = deduce( confl. parent2( ), seq, err );
+         formulaset result;
 
-         if( !form1. has_value( ))
-            return form1;
-         if( !form2. has_value( ))
-            return form2;
+         for( size_t i = 0; i != intro. size( ); ++ i )
+         {
+            auto fm = deduce( intro. parent(i), seq, err );
+
+            // There is no point in continuing I think:
+
+            if( !fm. has_value( ))
+               return fm; 
+
+            auto conj = optform( std::move( fm ), "andintro", seq, err );
+            conj. musthave( logic::op_kleene_and );
+            if( !conj )
+               return { };
+
+            auto kl = conj. value( ). view_kleene( );
+
+            for( size_t i = 0; i != kl. size( ); ++ i )
+               result. insert( kl. sub(i));
+         }
+
+         return logic::term( logic::op_kleene_and, 
+                             result. begin( ), result. end( ));
+      }
+
+   case prf_select:
+      {
+         auto sel = prf. view_select( );
+         auto fm = deduce( sel. parent( ), seq, err );
+         if( !fm. has_value( ))
+            return fm;
+
+         auto conj = optform( std::move( fm ), "select", seq, err );
+         conj. musthave( logic::op_kleene_and );
+         if( !conj ) 
+            return { };
+
+         auto errsize = err. size( );
+
+         auto kl = conj. value( ). view_kleene( );
+         formulaset result; 
+
+         for( size_t i = 0; i != sel. size( ); ++ i )
+         {
+            if( sel. nr(i) >= kl. size( ))
+            {
+               auto bld = errorstack::builder( );
+               bld << "selected subterm " << sel. nr(i);
+               bld << " >= " << kl. size( ); 
+               err. push( std::move( bld )); 
+            }
+            else
+               result. insert( kl. sub( sel. nr(i) ));
+         } 
+
+         if( err. size( ) > errsize )
+         {
+            auto bld = printing::makeheader( seq, "select" );
+            err. addheader( errsize, std::move( bld ));
+         }
+
+         return logic::term( logic::op_kleene_and,
+                                result. begin( ), result. end( ));
+      }
+ 
+   case prf_conflict:
+      {
+         auto confl = prf. view_conflict( );
+
+         auto form = deduce( confl. parent( ), seq, err );
+
+         if( !form. has_value( ))
+            return form;
 
          std::vector< logic::term > checked;
-         std::vector< logic::term > unchecked = 
-                { form1. value( ), form2. value( ) }; 
+         std::vector< logic::term > unchecked;
+         unchecked. push_back( std::move( form. value( )) );
    
          bool c = inconflict( checked, unchecked );
+
          if( !c )
          {
             auto bld = printing::makeheader( seq, "conflict" );
-            bld << "formulas are not in conflict:\n";
-            bld << "  "; printing::pretty( bld, seq, form1. value( ));
-            bld << "\n";
-            bld << "  "; printing::pretty( bld, seq, form2. value( ));
+            bld << "formula does not contain a conflict:\n";
+            bld << "  "; printing::pretty( bld, seq, form. value( ));
             bld << "\n";
             err. push( std::move( bld ));
          }

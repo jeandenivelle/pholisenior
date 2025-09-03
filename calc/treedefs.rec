@@ -33,8 +33,9 @@
    parent : proofterm, nrforall : size_t, [ value : logic::term ] 
 %option define { prf_define } =>
    name : std::string, val : logic::term, parent : proofterm
-%option conflict1 { prf_conflict1 } => parent : proofterm 
-%option conflict2 { prf_conflict2 } => parent1 : proofterm, parent2 : proofterm
+%option andintro { prf_andintro } => [ parent : proofterm ]
+%option select { prf_select } => parent : proofterm, [ nr : size_t ]
+%option conflict { prf_conflict } => parent : proofterm 
 
 %option magic { prf_magic } => goal : logic::term
 %option show { prf_show } => comment : std::string, prf : proofterm
@@ -148,20 +149,36 @@
             return;
          }
 
-      case prf_conflict1:
+      case prf_andintro:
          {
-            auto confl = view_conflict1( );
+           auto intro = view_andintro( );
+           out << ind << "andintro:\n";
+           for( size_t i = 0; i != intro. size( ); ++ i )
+           {
+              intro. parent(i). print( ind + 3, out ); 
+           }
+           return;
+         }
+
+      case prf_select:
+         {
+            auto elim = view_select( );
+            out << ind << "select ";
+            for( size_t i = 0; i != elim. size( ); ++ i )
+            {
+               if(i) out << ",";
+               out << elim. nr(i);
+            }
+            out << " from\n";
+            elim. parent( ). print( ind + 3, out );
+            return;
+         }
+
+      case prf_conflict:
+         {
+            auto confl = view_conflict( );
             out << ind << "conflict\n";
             confl. parent( ). print( ind + 3, out );
-            return;
-          }
-
-      case prf_conflict2:
-         {
-            auto confl = view_conflict2( );
-            out << ind << "conflict\n";
-            confl. parent1( ). print( ind + 3, out );
-            confl. parent2( ). print( ind + 3, out );
             return;
          }
 

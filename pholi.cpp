@@ -104,7 +104,7 @@ int main( int argc, char* argv[] )
 
    // tests::add_proof( blfs );
 
-   tests::proofchecking( blfs, err );
+   tests::smallproofs( blfs, err );
    std::cout << err << "\n";
 
    return 0;

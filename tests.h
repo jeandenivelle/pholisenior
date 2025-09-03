@@ -18,7 +18,8 @@ namespace tests
       // Test beta reduction, using Church numerals.
       // I am also interested in performance.
 
-   void proofchecking( logic::beliefstate& blfs, errorstack& err );
+   void smallproofs( logic::beliefstate& blfs, errorstack& err );
+   void bigproof( logic::beliefstate& blfs, errorstack& err );
 
    void unification( const logic::beliefstate& blfs, errorstack& err );
 

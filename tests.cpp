@@ -408,14 +408,15 @@ void tests::betareduction( logic::beliefstate& blfs, errorstack& err )
 
 }
 
-
-void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
+void tests::smallproofs( logic::beliefstate& blfs, errorstack& err )
 {
    auto O = logic::type( logic::type_obj );
    auto T = logic::type( logic::type_form );
    auto Nat = logic::type( logic::type_unchecked, identifier( ) + "Nat" );
 
    using namespace calc;
+
+   // This is the first proof that passed!
 
    auto id = identifier( ) + "resolve";
 
@@ -428,63 +429,77 @@ void tests::proofchecking( logic::beliefstate& blfs, errorstack& err )
    seq. assume( "initial", ! blfs. at( f. front( )). view_thm( ). frm( ));
    std::cout << seq << "\n";
 
-   // This is the first proof that passed!
-
    auto orelim2 = proofterm( prf_orelim,
                      proofterm( prf_forallelim,
                         proofterm( prf_ident, identifier( ) + "hyp0001" ), 1,
                         { "z0001"_unchecked } ), 0,
-                  { { "ccc", proofterm( prf_conflict2,
-                       proofterm( prf_ident, identifier( ) + "aaa0001" ),
-                       proofterm( prf_ident, identifier( ) + "ccc0001" )) },
-                    { "ddd", proofterm( prf_conflict2,
-                       proofterm( prf_ident, identifier( ) + "neg0001" ),
-                       proofterm( prf_ident, identifier( ) + "ddd0001" )) }} );
+                  { { "ccc", proofterm( prf_conflict,
+                       proofterm( prf_andintro, 
+                       { proofterm( prf_ident, identifier( ) + "aaa0001" ),
+                         proofterm( prf_ident, identifier( ) + "ccc0001" ) } )) },
+                    { "ddd", proofterm( prf_conflict,
+                       proofterm( prf_andintro, 
+                       { proofterm( prf_ident, identifier( ) + "neg0001" ),
+                         proofterm( prf_ident, identifier( ) + "ddd0001" ) } )) }} );
 
-   auto orelim = proofterm( prf_orelim, 
-                    proofterm( prf_forallelim, 
+   auto orelim = proofterm( prf_orelim,
+                    proofterm( prf_forallelim,
                        proofterm( prf_ident, identifier( ) + "hyp0001" ), 0,
-                       { "z0001"_unchecked } ), 0, 
+                       { "z0001"_unchecked } ), 0,
                  { { "aaa", orelim2 },
-                   { "bbb", 
-                      proofterm( prf_conflict2, 
-                         proofterm( prf_ident, identifier( ) + "neg0001" ),
-                         proofterm( prf_ident, identifier( ) + "bbb0001" )) 
+                   { "bbb",
+                      proofterm( prf_conflict,
+                         proofterm( prf_andintro,
+                            { proofterm( prf_ident, identifier( ) + "neg0001" ),
+                              proofterm( prf_ident, identifier( ) + "bbb0001" ) } ))
                         }} );
 
-   auto ref = 
-      proofterm( prf_existselim, 0, 
+   auto ref =
+      proofterm( prf_existselim, 0,
          proofterm( prf_clausify,
             proofterm( prf_ident, identifier( ) + "initial0001" )),
-         "hyp", proofterm( prf_existselim, 2, 
+         "hyp", proofterm( prf_existselim, 2,
                    proofterm( prf_ident, identifier( ) + "hyp0001" ),
            "neg", orelim  ));
 
-   ref. print( indentation(0), std::cout ); 
+   ref. print( indentation(0), std::cout );
 
    auto ff = deduce( ref, seq, err );
    if( ff. has_value( ))
       std::cout << "proved this formula: " << ff. value( ) << "\n";
 
-   auto mag = logic::term( logic::op_exact, logic::exact(69)) ||
-              logic::term( logic::op_exists,  
-                  logic::term( logic::op_exact, logic::exact(68)) &&
-                  1_db,
-                  { { "aa", T }, { "bb", O }} );
+   auto mag1 = proofterm( prf_magic, "hans"_unchecked );
+   auto mag2 = proofterm( prf_magic, "de"_unchecked ); 
+   auto mag3 = proofterm( prf_magic, "nivelle"_unchecked );
 
-   auto prf = calc::proofterm( prf_forallintro, 
-      calc::proofterm( prf_magic, mag ),
-         { { "aaa", O }, { "bbb", T }} );
+   ref = proofterm( prf_andintro, { mag1, mag2, mag3 } );
+   ref = proofterm( prf_select, ref, { 2,1,0,3 } );
+   ref. print( indentation(0), std::cout );
 
-   prf. print( indentation(0), std::cout );
-
-   ff = deduce( prf, seq, err );
+   ff = deduce( ref, seq, err );
    if( ff. has_value( ))
-      std::cout << "forallintro proved this formula: " << ff. value( ) << "\n";
+      std::cout << "proved this formula: " << ff. value( ) << "\n";
 
-   return;
- 
-   // It was auto id = identifier( ) + "resolve";
+}
+
+
+void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
+{
+   auto O = logic::type( logic::type_obj );
+   auto T = logic::type( logic::type_form );
+   auto Nat = logic::type( logic::type_unchecked, identifier( ) + "Nat" );
+
+   using namespace calc;
+
+   auto id = identifier( ) + "resolve";
+   const auto& f = blfs. getformulas( id );
+   std::cout << f. size( ) << "\n";
+   if( f. size( ) != 1 )
+      throw std::runtime_error( "cannot continue" );
+
+   auto seq = sequent( blfs );
+   seq. assume( "initial", ! blfs. at( f. front( )). view_thm( ). frm( ));
+   std::cout << seq << "\n";
 
    logic::term indhyp = logic::term( logic::op_false );  // Q in the paper. 
    {
@@ -1065,82 +1080,3 @@ void tests::truthtables( )
    semantics::check_preceq( { { identifier( ) + "P", O2T }, { identifier( ) + "Q", O2T }}, from, into );
 }
 
-#if 0
-#if 0
-
-void tests::parser( ) {
-   logic::beliefstate blfs;
-   logic::proofeditor editor( &blfs,  blfs. size( ), logic::term( logic::sel_false ) );
-   parsing::tokenizer token;
-   parsing::parser prs( token, blfs, editor );
-   prs. debug = 0;
-   prs. checkattrtypes = 0;
-   prs. checkmovable = 0;
-
-   while( true )
-   {
-      std::cout << editor. focus << "\n";
-      std::cout << ">>> ";
-      prs. ensurelookahead( );
-
-      if( prs. getlookahead( ). type == parsing::sym_EOF )
-      {
-         std::cerr << "   end of file is reached.\n";
-         break;
-      }
-
-      //std::cout << "\n~~~" << parsing::sym_start << "~~~\n";
-
-      const auto res = prs. parse( parsing::sym_start );
-      //std::cout << "\n";
-
-      //std::cout << "   parsing res: " << res << "\n";
-      prs. ensurelookahead( );
-      //std::cout << "   lookahead: " << prs. getlookahead( ) << "\n";
-
-      if( res. type == parsing::sym_command &&
-          prs. getlookahead( ). type == parsing::sym_SEMICOLON )
-      {
-         //std::cout << "\nstatement parsed successfully.";
-         std::cout << "\n----------------------------------\n";
-         editor. show( std::cout );
-         pretty::print( std::cout, blfs );
-         editor. check.localbeliefs;
-         std::cout << "Local Belief: \n";
-         
-         logic::context ctxt;
-         editor. check. extendcontext( ctxt, editor. focus );
-         auto names = pretty::getnames( ctxt );
-         const size_t ctxt_size = ctxt. size( );
-
-         std::cout << "Proof term:\n";
-         pretty::print(std::cout, names, editor. check. topterm ); std::cout << "\n";
-         for( auto e: editor.check. localbeliefs)
-         {
-            std::cout << "\t" << e. first << " -> "; pretty::print( std::cout, names, e. second. at( 0 ) );
-            std::cout << "\n";
-         }
-
-         std::cout << "\n----------------------------------\n\n";
-      }
-      else
-      {
-         std::cout << "   error:\n"; 
-         while( prs. getlookahead( ). type != parsing::sym_SEMICOLON &&
-                pr.s getlookahead( ). type != parsing::sym_EOF )
-         {
-            std::cout << "'"<< prs. getlookahead( ) <<"'\n";
-            prs. resetlookahead( );
-            prs. ensurelookahead( );
-         }
-      }
-      
-      if( prs. getlookahead( ). type == parsing::sym_SEMICOLON )
-         prs. resetlookahead( );
-
-      prs. reset( );
-   }
-}
-#endif
-
-#endif
