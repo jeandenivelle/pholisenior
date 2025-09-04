@@ -475,7 +475,7 @@ void tests::smallproofs( logic::beliefstate& blfs, errorstack& err )
 
    ref = proofterm( prf_andintro, { mag1, mag2, mag3, mag4 } );
    ref = proofterm( prf_select, ref, { 2,1,0,3 } );
-   ref = proofterm( prf_eqrepl, ref, { { 3, true }, { 2, false }} );
+   ref = proofterm( prf_eqrepl, ref, 2, { { 3, true }, { 2, false }} );
 
    ref. print( indentation(0), std::cout );
 

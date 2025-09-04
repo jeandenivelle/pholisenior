@@ -198,6 +198,12 @@ namespace logic
 
       term operator( ) ( const term& t, size_t vardepth, bool& change ) const;
 
+      void append( const term& left, const term& right )
+         { sys. push_back( std::pair( left, right )); }
+
+      void append( term&& left, term&& right )
+         { sys. push_back( std::pair( std::move(left), std::move(right))); }
+
       void print( std::ostream& out ) const;
    };
 

@@ -36,13 +36,14 @@
    parent : proofterm, nrforall : size_t, [ value : logic::term ] 
 
 %option eqrepl { prf_eqrepl } =>
-   parent : proofterm, [ eq : size_t, leftright : bool ]
+   parent : proofterm, times : size_t, [ eqnr : size_t, leftright : bool ]
 
 %option define { prf_define } =>
    name : std::string, val : logic::term, parent : proofterm
 
 %option andintro { prf_andintro } => [ parent : proofterm ]
 %option select { prf_select } => parent : proofterm, [ nr : size_t ]
+
 %option conflict { prf_conflict } => parent : proofterm 
 
 %option magic { prf_magic } => goal : logic::term
@@ -188,7 +189,7 @@
       case prf_eqrepl:
          {
             auto repl = view_eqrepl( );
-            out << ind << "replace ";
+            out << ind << "replace";
             for( size_t i = 0; i != repl. size( ); ++ i )
             {
                if(i) 
@@ -196,12 +197,13 @@
                else
                   out << " ";
 
-               out << repl. eq(i) << ":";
+               out << repl. eqnr(i) << ":";
                if( repl. leftright(i))
                   out << "L->R";
                else
                   out << "R->L";
             } 
+            out << " trying " << repl. times( ) << " times"; 
             out << " in\n";
             repl. parent( ). print( ind + 3, out );
             return; 

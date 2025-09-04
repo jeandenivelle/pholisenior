@@ -2,7 +2,7 @@
 // A position in a term. 
 // These are needed, so that one can specify where to expand
 // definitions, and the proof editor keeps a set of 
-// unfinished points.
+// unfinished points. Currently not used.
 
 #ifndef LOGIC_POSITION_
 #define LOGIC_POSITION_   

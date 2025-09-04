@@ -14,6 +14,9 @@
 
 namespace calc
 {
+   // Shall I make this the main data structure returned by the
+   // proof checker?
+
    struct optform
    {
       std::optional< logic::term > fm;

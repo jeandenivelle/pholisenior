@@ -528,6 +528,67 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          return res; 
       }
 
+   case prf_eqrepl:
+      {
+         auto eqrepl = prf. view_eqrepl( );
+         auto anf = optform( deduce( eqrepl. parent( ), seq, err ),
+                             "eq-repl", seq, err );
+         anf. musthave( logic::op_kleene_and );
+         if( !anf ) return { };   // Not Kleene-and, bye bye! 
+
+         auto errsize = err. size( );
+
+         logic::rewritesystem sys;
+     
+         auto kl = anf. value( ). view_kleene( );
+         std::vector< bool > equalities;
+         for( size_t i = 0; i != kl. size( ); ++ i )
+            equalities. push_back( false );  
+
+         for( size_t i = 0; i != eqrepl. size( ); ++ i )
+         {
+            std::cout << "i = " << i << "\n";
+
+            if( eqrepl. eqnr(i) >= kl. size( ))
+            {
+               auto bld = errorstack::builder( );
+               bld << "selected equality " << eqrepl. eqnr(i);
+               bld << " >= " << kl. size( );
+               err. push( std::move( bld ));
+            }
+            else
+            {
+               auto eq = kl. sub( eqrepl. eqnr(i));
+               // Failing because of Kleene disj;
+
+               if( eq. sel( ) != logic::op_equals ) 
+               {
+                  auto bld = errorstack::builder( );
+                  bld << "selected equality " << eqrepl. eqnr(i);
+                  bld << " is not an equality"; 
+                  err. push( std::move( bld ));
+               } 
+               else
+               {
+                  auto bin = eq. view_binary( );
+                  if( eqrepl. leftright(i))
+                     sys. append( bin. sub1( ), bin. sub2( ));
+                  else
+                     sys. append( bin. sub2( ), bin. sub1( )); 
+
+                  equalities[ eqrepl. eqnr(i) ] = true;
+                  std::cout << "where did the assignment go\n";
+               }
+            }
+         }
+
+         std::cout << sys << "\n";
+         for( auto b : equalities )
+            std::cout << b << " ";
+         std::cout << "\n";
+         throw std::logic_error( "rest I do tomorrow, equalities are always in a disjunction" ); 
+      }
+
    case prf_andintro:
       {
          auto intro = prf. view_andintro( ); 
