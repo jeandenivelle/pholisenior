@@ -13,8 +13,7 @@
 #include "printing.h"
 
 
-bool
-calc::iscontradiction( const logic::term& fm )
+bool calc::iscontradiction( const logic::term& fm )
 {
    switch( fm. sel( ))
    {
@@ -483,8 +482,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          forall. musthave( logic::op_kleene_forall );
          forall. nrvarsmustbe( elim. size( )); 
 
-         if( !forall ) 
-            return { };
+         if( !forall ) return { };
 
          size_t errstart = err. size( );
          logic::fullsubst subst;
@@ -534,7 +532,8 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          auto anf = optform( deduce( eqrepl. parent( ), seq, err ),
                              "eq-repl", seq, err );
          anf. musthave( logic::op_kleene_and );
-         if( !anf ) return { };   // Not Kleene-and, bye bye! 
+
+         if( !anf ) return { };   // Not a Kleene-and, bye bye! 
 
          auto errsize = err. size( );
 
@@ -547,8 +546,6 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          for( size_t i = 0; i != eqrepl. size( ); ++ i )
          {
-            std::cout << "i = " << i << "\n";
-
             if( eqrepl. eqnr(i) >= kl. size( ))
             {
                auto bld = errorstack::builder( );
@@ -558,26 +555,35 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
             }
             else
             {
-               auto eq = kl. sub( eqrepl. eqnr(i));
-               // Failing because of Kleene disj;
-
-               if( eq. sel( ) != logic::op_equals ) 
+               auto disj = kl. sub( eqrepl. eqnr(i) );
+               if( disj. sel( ) != logic::op_kleene_or ||
+                   disj. view_kleene( ). size( ) != 1 )
                {
                   auto bld = errorstack::builder( );
                   bld << "selected equality " << eqrepl. eqnr(i);
-                  bld << " is not an equality"; 
+                  bld << " is not an equality";
                   err. push( std::move( bld ));
                } 
                else
                {
-                  auto bin = eq. view_binary( );
-                  if( eqrepl. leftright(i))
-                     sys. append( bin. sub1( ), bin. sub2( ));
+                  auto eq = disj. view_kleene( ). sub(0); 
+                  if( eq. sel( ) != logic::op_equals ) 
+                  {
+                     auto bld = errorstack::builder( );
+                     bld << "selected equality " << eqrepl. eqnr(i);
+                     bld << " is not an equality"; 
+                     err. push( std::move( bld ));
+                  } 
                   else
-                     sys. append( bin. sub2( ), bin. sub1( )); 
+                  {
+                     auto bin = eq. view_binary( );
+                     if( eqrepl. leftright(i))
+                        sys. append( bin. sub1( ), bin. sub2( ));
+                     else
+                        sys. append( bin. sub2( ), bin. sub1( )); 
 
-                  equalities[ eqrepl. eqnr(i) ] = true;
-                  std::cout << "where did the assignment go\n";
+                     equalities[ eqrepl. eqnr(i) ] = true;
+                  }
                }
             }
          }
@@ -586,6 +592,18 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          for( auto b : equalities )
             std::cout << b << " ";
          std::cout << "\n";
+         for( size_t i = 0; i != kl. size( ); ++ i )
+         {
+            if( !equalities[i] )
+            {
+               std::cout << "rewriting " << i << "\n";
+               for( size_t nr = 0; nr != eqrepl. times( ); ++ nr )
+               {
+                  kl. update_sub( i, outermost( sys, kl. extr_sub(i), 0 )); 
+               }
+            } 
+         }
+
          throw std::logic_error( "rest I do tomorrow, equalities are always in a disjunction" ); 
       }
 

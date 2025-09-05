@@ -13,9 +13,8 @@
    #include "logic/exact.h"
 }
 
-%define proofterm ( prf_truthconst )
-%option truthconst { prf_truthconst } =>
-   // The truth constant (in Kleene logic).
+%define proofterm ( prf_truthconst ) 
+%option truthconst { prf_truthconst } => 
 %option tautology { prf_tautology } => fm : logic::term
 %option exact { prf_exact } => exact : logic::exact
 %option ident { prf_ident } => ident : identifier
