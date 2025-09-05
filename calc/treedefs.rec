@@ -16,6 +16,9 @@
 %define proofterm ( prf_truthconst ) 
 %option truthconst { prf_truthconst } => 
 %option tautology { prf_tautology } => fm : logic::term
+%option cut { prf_cut } => 
+   first : proofterm, name : std::string, second : proofterm
+                          
 %option exact { prf_exact } => exact : logic::exact
 %option ident { prf_ident } => ident : identifier
 %option clausify { prf_clausify } => parent : proofterm
