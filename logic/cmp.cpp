@@ -271,8 +271,8 @@ bool
 logic::cmp::equal( const term& t1, size_t lift1,
                    const term& t2, size_t lift2, size_t vardepth )
 {
-   std::cout << t1 << " / " << lift1 << " == ";
-   std::cout << t2 << " / " << lift2 << " [" << vardepth << "]?\n";
+   // std::cout << t1 << " / " << lift1 << " == ";
+   // std::cout << t2 << " / " << lift2 << " [" << vardepth << "]?\n";
 
    if( t1. sel( ) != t2. sel( ) )
       return false;

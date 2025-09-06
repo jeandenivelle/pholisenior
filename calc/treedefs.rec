@@ -15,11 +15,10 @@
 
 %define proofterm ( prf_truthconst ) 
 %option truthconst { prf_truthconst } => 
-%option tautology { prf_tautology } => fm : logic::term
+%option triple { prf_triple } => fm : logic::term
 %option cut { prf_cut } => 
    first : proofterm, name : std::string, second : proofterm
                           
-%option exact { prf_exact } => exact : logic::exact
 %option ident { prf_ident } => ident : identifier
 %option clausify { prf_clausify } => parent : proofterm
 
@@ -83,6 +82,16 @@
          out << ind << "clausify\n";
          view_clausify( ). parent( ). print( ind + 3, out );
          return; 
+
+      case prf_cut:
+         {
+            out << ind << "cut:\n";
+            auto cut = view_cut( ); 
+            cut. first( ). print( ind + 3, out );
+            out << ind << "assumed as " << view_cut( ). name( ) << " in\n";
+            cut. second( ). print( ind + 3, out );
+            return;
+         }
 
       case prf_orelim:
          {

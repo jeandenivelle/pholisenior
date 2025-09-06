@@ -474,11 +474,12 @@ void tests::smallproofs( logic::beliefstate& blfs, errorstack& err )
    auto mag4 = proofterm( prf_magic, "hans"_unchecked == "jean"_unchecked );
 
    ref = proofterm( prf_andintro, { mag1, mag2, mag3, mag4 } );
-   ref = proofterm( prf_select, ref, { 2,1,0,3 } );
-   ref = proofterm( prf_eqrepl, ref, 2, { { 3, false }, { 2, false }} );
+
+   ref = proofterm( prf_cut, ref, "asm", 
+            proofterm( prf_select, proofterm( prf_ident, identifier( ) + "asm" ), {1} ));
 
    ref. print( indentation(0), std::cout );
-
+   
    ff = deduce( ref, seq, err );
    if( ff. has_value( ))
       std::cout << "proved this formula: " << ff. value( ) << "\n";

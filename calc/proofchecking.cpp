@@ -12,7 +12,6 @@
 
 #include "printing.h"
 
-
 bool calc::iscontradiction( const logic::term& fm )
 {
    switch( fm. sel( ))
@@ -164,14 +163,6 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
    switch( prf. sel( ))
    {
 
-#if 0
-   case prf_exact:
-      {
-         auto ex = prf. view_exact( ). exact( );
-         return seq. getformula( ex, err ); 
-      }
-#endif
-
    case prf_ident:
       {
          auto id = prf. view_ident( ). ident( );
@@ -179,7 +170,8 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          if( f. empty( ))
          {
             errorstack::builder bld;
-            bld << "unknown identifier " << id << " was used in a proof";
+            bld << "unknown identifier " << id << " was used in a proof\n";
+            bld << seq << "\n";
             err. push( std::move( bld ));
             return { };
          }
@@ -187,7 +179,8 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          if( f. size( ) > 1 )
          {
             errorstack::builder bld; 
-            bld << "ambiguous identifier " << id << " was used in a proof";
+            bld << "ambiguous identifier " << id << " was used in a proof\n";
+            bld << seq << "\n";
             err. push( std::move( bld ));
             return { };
          }
@@ -266,6 +259,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
    case prf_expand:
       {
          auto exp = prf. view_expand( ); 
+
          auto parent = deduce( exp. parent( ), seq, err ); 
          if( !parent. has_value( ))
             return { };
@@ -318,6 +312,24 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          return res;
       }
 
+   case prf_cut:
+      {
+         auto cut = prf. view_cut( );
+
+         // We evaluate the first parent: 
+
+         auto first = deduce( cut. first( ), seq, err );
+         if( !first. has_value( ))
+            return { };
+
+         size_t seqsize = seq. size( );
+         seq. assume( cut. name( ), first. value( ));
+
+         auto res = deduce( cut. second( ), seq, err );
+         seq. restore( seqsize );
+         return res;
+      }
+   
    case prf_existselim:
       {
          auto elim = prf. view_existselim( );
@@ -531,9 +543,11 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          auto eqrepl = prf. view_eqrepl( );
          auto anf = optform( deduce( eqrepl. parent( ), seq, err ),
                              "eq-repl", seq, err );
+
          anf. musthave( logic::op_kleene_and );
 
-         if( !anf ) return { };   // Not a Kleene-and, bye bye! 
+         if( !anf ) 
+            return { };   // Not a Kleene-and, bye bye! 
 
          auto errsize = err. size( );
 
@@ -596,7 +610,6 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          {
             if( !equalities[i] )
             {
-               std::cout << "rewriting " << i << "\n";
                for( size_t nr = 0; nr != eqrepl. times( ); ++ nr )
                {
                   kl. update_sub( i, outermost( sys, kl. extr_sub(i), 0 )); 
@@ -604,7 +617,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
             } 
          }
 
-         throw std::logic_error( "rest I do tomorrow, equalities are always in a disjunction" ); 
+         return anf. value( );
       }
 
    case prf_andintro:
