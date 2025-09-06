@@ -305,9 +305,12 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          auto res = deduce( def. parent( ), seq, err );
 
-         std::cout << "YOU NEED TO CHECK THAT IDENTIFIER DOES NOT OCCUR IN FORMULA";
-         std::cout << "(just substitute it away)\n\n";
-         std::cout << "it is " << seq. getexactname( seqsize ) << "\n\n";
+         logic::rewritesystem rewr;
+         rewr. append( 
+            logic::term( logic::op_exact, seq. getexactname( seqsize )), 
+            val );
+
+         res. value( ) = outermost( rewr, std::move( res. value( )), 0 );
          seq. restore( seqsize );
          return res;
       }
@@ -401,15 +404,11 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
             return { };
          }
 
-         std::cout << seq << "\n";
-         std::cout << seqsize << "\n";
-
          logic::exactcounter eigenvars( false );
          for( size_t i = seqsize; i + 1 < seq. size( ); ++ i )
             eigenvars. addtodomain( seq. getexactname(i));
 
          count( eigenvars, res. value( ), 0 );
-         std::cout << eigenvars << "\n";
 
          logic::introsubst intro;
 
@@ -425,8 +424,6 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
                usedassumptions. push_back( assumptions[i] );
             }
          }
-         std::cout << intro << "\n";
-
          seq. restore( seqsize );
          
          // If no eigenvariable occurs in res, we can return res
@@ -737,11 +734,13 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          std::cout << seq << "\n";
          if( res. has_value( ))
          {
-            std::cout << "deduced formula: " << res. value( ) << "\n";
+            std::cout << "Deduced subformula:\n";
+            std::cout << "   ";
+            printing::pretty( std::cout, seq, res. value( ));
          }
          else
             std::cout << "(proof failed)\n";
-         std::cout << "\n";
+         std::cout << "\n\n";
          return res;
       } 
    }

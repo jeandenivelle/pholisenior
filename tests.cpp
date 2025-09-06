@@ -495,13 +495,15 @@ void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
 
    using namespace calc;
 
-   auto id = identifier( ) + "resolve";
+   auto id = identifier( ) + "just";
    const auto& f = blfs. getformulas( id );
    std::cout << f. size( ) << "\n";
    if( f. size( ) != 1 )
       throw std::runtime_error( "cannot continue" );
 
    auto seq = sequent( blfs );
+   std::cout << "start of a big proof --------------------------\n";
+
    seq. assume( "initial", ! blfs. at( f. front( )). view_thm( ). frm( ));
    std::cout << seq << "\n";
 
@@ -530,13 +532,27 @@ void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
       indhyp = lambda( {{ "n1", Nat }, { "n2", Nat }}, indhyp );
    }
 
+   auto magcontr = proofterm( prf_magic, logic::op_false );
    auto exists = proofterm( prf_clausify, 
            proofterm( prf_ident, identifier( ) + "initial0001" )); 
 
    auto prf3 = proofterm( prf_ident, identifier( ) + "forall0001" );
    auto inst = apply( "Q0001"_unchecked, { "s0001"_unchecked, "s0002"_unchecked } );
+
+   auto goal2 = proofterm( prf_expand, identifier( ) + "Q0001", 0,
+                   proofterm( prf_ident, identifier( ) + "alt0002" ));
+   goal2 = proofterm( prf_expand, identifier( ) + "homrel", 0, goal2 );
+
+   goal2 = proofterm( prf_show, "the main part", goal2 );
+ 
+   auto goal3 = proofterm( prf_expand, identifier( ) + "Q0001", 0, 
+                   proofterm( prf_ident, identifier( ) + "alt0003" ));
+   goal3 = proofterm( prf_show, "(the final goal, very easy I think)", goal3 );
+
    prf3 = proofterm( prf_forallelim, prf3, 0, { inst } );
-   prf3 = proofterm( prf_show, "instantiated", prf3 );
+   prf3 = proofterm( prf_orelim, prf3, 0, 
+      { { "alt1", magcontr }, { "alt2", goal2 }, { "alt3", goal3 }} );
+
    prf3 = proofterm( prf_define, "Q", indhyp, prf3 );
 
    auto disj = proofterm( prf_ident, identifier( ) + "main0001" );
@@ -550,10 +566,9 @@ void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
       deduce( proofterm( prf_existselim, 0, exists, "main", prf2 ), seq, err );
 
    if( res. has_value( ))
-      std::cout << "eval returned " << res. value( ) << "\n";
+      std::cout << "evaluation of main proof returned: " << res. value( ) << "\n";
    else
-      std::cout << "eval returned no value\n";
-
+      std::cout << "(evaluation of main proof failed)\n";
 }
 
 
@@ -588,89 +603,7 @@ void tests::prove_pluscom( )
 {
    using namespace logic;
 #if 0
-   logic::beliefstate bel;
-   add_addition( bel );
-
-   pretty::print( std::cout, bel );
-   check_everything( std::cout, bel );
-
-   // [x:S, y:S] nat(x) -> nat(y) -> succ(X) + Y = succ( X + Y ).
-
-   size_t ind = bel. find( identifier( ) + "plus" + "zero" + "rev" );
-   if( ind >= bel. size( ))
-   {
-      std::cout << "did not find the theorem\n";
-      return;
-   }
-
-   auto thm = bel. at( ind ). second. view_thm( ). form( );
-   logic::proofeditor edit( &bel, ind, !thm );
-   std::cout << edit << "\n";
-
-   edit. show( std::cout, 
-               { term( sel_unchecked, identifier( ) + "peano" + "induction" ) } );
-
-   edit. apply_abbreviate( { {
-      "ind_hyp", 
-      term( prf_inst,  
-      term( sel_unchecked, identifier( ) + "peano" + "induction" ),
-                  term( sel_lambda, 
-                     term( sel_appl, "plus"_unchecked, { "zero"_unchecked, 0_db } ) == 0_db, 
-                     { { "x", type( sel_set ) }} )) }} );
-
-
-   edit. show( std::cout, { } );
-
-   edit. apply_disj( 0_db );
-
-
-   edit. apply_abbreviate( { 
-        { "ax_zero", term( prf_inst, term( sel_unchecked, identifier( ) + "plus" + "zero" ), 
-                           "zero"_unchecked ) },
-        { "nat_zero", term( sel_unchecked, identifier( ) + "peano" + "zero" ) } } );
-
-    
-   edit. apply_proof( term( prf_axiom, { 0_db, 1_db, 2_db } ));
-
-   edit. setfocus(0);
-
-   edit. show( std::cout, { } );
-
-   
-   edit. apply_disj( 0_db );
-
-   edit. apply_exists( 0_db );
-
-   edit. apply_abbreviate(  
-      {
-      { "type_zero", term( sel_unchecked, identifier( ) + "peano" + "zero" ) }, 
-
-      { "ax_zero", term( prf_inst, term( sel_unchecked, identifier( ) + "plus" + "zero" ), 
-                         "zero"_unchecked ) },
-      { "ax_succ", term( prf_inst,
-                      term( sel_unchecked, identifier( ) + "plus" + "succ" ),
-                      "zero"_unchecked ) }} ); 
-
-
-   edit. apply_disj( 0_db );
-
-   edit. apply_proof( term( prf_axiom, { 0_db, 3_db } ));
-
-   edit. setfocus(0);
- 
-   edit. apply_abbreviate( { { "inst", term( prf_inst, 0_db, 5_db ) }} );
-
-   edit. apply_proof( term( prf_axiom, { 0_db, 5_db } ));
-
-   edit. setfocus(0);
-
-   edit. apply_proof( term( prf_axiom, { 0_db, 3_db } ));
-
-   edit. show( std::cout, { } );
-
-   edit. setfocus(0);
-
-   // Pluscom. 
+   // Pluscom: 
 
    return;
 
@@ -683,74 +616,7 @@ void tests::prove_pluscom( )
 
    edit. show( std::cout, { } );
 #if 0
-
-   // Current Focus
-
-   edit. apply_disj( 0_db );
-   edit. apply_disj( logic::term( logic::prf_inst,
-                                  logic::term( logic::sel_unchecked, identifier( ) + "plus" + "zero" ),
-                                  "zero"_unchecked ));
-
-   edit. apply_proof( logic::term( logic::prf_contr,
-                        logic::term( logic::sel_unchecked, identifier( ) + "peano" + "zero" ),
-                        0_db ));
-   edit. setfocus(0);
-   edit. apply_proof( logic::term( logic::prf_contr, 0_db, 1_db ));
-   edit. setfocus(0);
-   edit. apply_disj( 0_db );
-
-   edit. apply_exists( 0_db );
-
-   edit. apply_disj( logic::term( logic::prf_inst,
-                               logic::term( logic::sel_unchecked, identifier( ) + "plus" + "succ" ),
-                               "zero"_unchecked ));
-   edit. apply_proof( logic::term( logic::prf_contr,
-                        logic::term( logic::sel_ident, identifier( ) + "peano" + "zero" ),
-                        0_db ));
-
-   edit. setfocus(0);
-   edit. apply_disj( logic::term( logic::prf_inst, 0_db, 2_db ));
-   
-   edit. apply_proof( logic::term( logic::prf_contr,
-                        logic::term( logic::sel_ident, identifier( ) + "peano" + "zero" ),
-                        0_db ));
-
-   edit. setfocus(0);
-   
-   edit. apply_abbreviate( logic::term( logic::prf_repl, 
-      logic::term( logic::prf_repl, logic::term( logic::prf_and1,
-         logic::term( logic::prf_and2, 2_db )), 0_db ), 2_db ) );
-
-   edit. apply_proof( logic::term( logic::prf_false, logic::term( logic::prf_and2, logic::term( logic::prf_and2, 0_db ))) );
-
-   edit. setfocus(0);
-
-   edit. apply_exists( 3_db );
-   
-   edit. apply_abbreviate( logic::term( logic::prf_inst, 2_db, 1_db ));
-
-   edit. apply_disj( 0_db );
-
-   edit. apply_proof( logic::term( logic::prf_contr, 0_db, 
-                         logic::term( logic::prf_and1, 2_db )));
-
-   edit. setfocus(0);
-
-   edit. apply_proof( logic::term( logic::prf_contr, 0_db,
-                         logic::term( logic::prf_and2, 2_db )));
-
-   edit. setfocus(0);
-   
-   // edit. show( std::cout, { } );
-
 #if 1  // Start proof plus::succ:rev
-   ind = bel. find( identifier( ) + "plus" + "succ" + "rev" );
-   if( ind >= bel. size( ))
-   {
-      std::cout << "did not find the theorem\n";
-      return;
-   }
-
    thm = bel. at( ind ). second. view_thm( ). form( );
    edit = logic::proofeditor( &bel, ind, !thm );
 
@@ -847,212 +713,10 @@ void tests::prove_pluscom( )
    edit. setfocus( 0 );
    edit. show( std::cout, { } );
 #endif
-
-#if 1 // Start proof plus::com 
-   
-   bel. add( identifier( ) + "plus" + "com",
-      belief(
-         bel_thm,
-         forall( { "x", type( sel_set ) },
-                 implies( 
-                    apply( "nat"_ident, 0_db),
-                    forall( { "y", type( sel_set ) },
-                             implies( apply( "nat"_ident, 0_db ),
-                                      apply( "plus"_ident, 1_db, 0_db ) == apply( "plus"_ident, 0_db , 1_db ) 
-                             )
-                    )
-                 )
-         ), 
-         term( sel_lambda, term( prf_unfinished ), {{ "goal", type( sel_belief ) }} )
-      )
-   );
-
-   ind = bel. find( identifier( ) + "plus" + "com");
-   if( ind >= bel. size( ))
-   {
-      std::cout << "did not find the theorem\n";
-      return;
-   }
-
-   thm = bel. at( ind ). second. view_thm( ). form( );
-   edit = logic::proofeditor( &bel, ind, !thm );
-
-   edit. apply_exists( 0_db );
-   edit. apply_abbreviate( term( prf_inst,
-                                 term( sel_ident, identifier( ) + "peano" + "induction" ),
-                                 term( sel_lambda,
-                                       implies( apply( "nat"_ident, 0_db),
-                                                apply( "plus"_ident, 2_db, 0_db ) == apply( "plus"_ident, 0_db, 2_db )),
-                                       { { "z", type( sel_set ) } })) );
-
-   // peano induction part 1
-   edit. apply_disj( 0_db );
-   
-   edit. apply_abbreviate( term( prf_inst, term( sel_ident, identifier( ) + "plus" + "zero" ), 3_db ) );
-   edit. apply_disj( 0_db );
-   edit. apply_proof( term( prf_contr, 0_db, term( prf_and1, 4_db ) ) );
-   edit. setfocus( 0 );
-   
-   edit. apply_abbreviate( term( prf_inst, term( sel_ident, identifier( ) + "plus" + "zero" + "rev" ), 5_db ) );
-   edit. apply_disj( 0_db );
-   edit. apply_proof( term( prf_contr, 0_db, term( prf_and1, 6_db) ) );
-   edit. setfocus( 0 );
-
-   edit. apply_abbreviate( term( prf_repl, 0_db, term( prf_repl, 2_db, term( prf_and2, 4_db ) ) ) );
-   edit. apply_proof( term( prf_false, 0_db ) );
-   edit. setfocus( 0 );
-
-   // peano induction part 2
-
-   edit. apply_disj( 0_db );
-   edit. apply_exists( 0_db );
-
-   edit. apply_abbreviate( term( prf_inst, term( sel_ident, identifier( ) + "plus" + "succ" ), 6_db ) );
-   edit. apply_disj( 0_db );
-   edit. apply_proof( term( prf_contr, 0_db, term( prf_and1, 7_db ) ) );
-   edit. setfocus( 0 );
-   edit. apply_abbreviate( term( prf_inst, 0_db,  3_db ) );
-   edit. apply_disj( 0_db );
-   edit. apply_proof( term( prf_contr, 0_db, term( prf_and1, 4_db ) ) );
-   edit. setfocus( 0 );
-
-   edit. apply_abbreviate( term( prf_inst, term( sel_ident, identifier( ) + "plus" + "succ" + "rev" ), 5_db ) );
-   edit. apply_disj( 0_db );
-   edit. apply_proof( term( prf_contr, 0_db, term( prf_and1, 6_db ) ) );
-   edit. setfocus( 0 );
-   edit. apply_abbreviate( term( prf_inst, 0_db, 12_db ) );
-   edit. apply_disj( 0_db );
-   edit. apply_proof( term( prf_contr, 0_db, term( prf_and1, 13_db ) ) );
-   edit. setfocus( 0 );
-
-   edit. apply_abbreviate( term( prf_and1, term( prf_and2, 8_db ) ) );
-   edit. apply_disj( 0_db );
-   edit. apply_proof( term( prf_contr, 0_db, term( prf_and1, 10_db ) ) );
-   edit. setfocus( 0 );
-
-   edit. apply_abbreviate( term( prf_repl, 0_db, 6_db ) );
-   edit. apply_abbreviate( term( prf_repl, 0_db, 3_db ) );
-   edit. apply_abbreviate( term( prf_and2, term( prf_and2, term( prf_and2, 12_db ) ) ) );
-   edit. apply_proof( term( prf_contr, 0_db, 1_db ) );
-   edit. setfocus( 0 );
-
-   // peano induction part 3
-
-   edit. apply_exists( term( prf_and2, 3_db ), "y" );
-   edit. apply_abbreviate( term( prf_and2, 0_db ) );
-
-   edit. apply_abbreviate( term( prf_inst, 3_db, 2_db ) );
-   edit. apply_disj( 0_db );
-   edit. apply_proof( term( prf_contr, 0_db, term( prf_and1, 3_db ) ) );
-   edit. setfocus( 0 );
-   edit. apply_disj( 0_db );
-   edit. apply_proof( term( prf_contr, 0_db, term( prf_and1, 4_db ) ) );
-   edit. setfocus( 0 );
-   
-   edit. apply_proof( term( prf_contr, 0_db, term( prf_and2, 4_db ) ) );
-   edit. setfocus( 0 );
-   edit. show( std::cout, { } );
-#endif
 #endif
 #endif
 }
 
-
-void tests::prove_von_neumann( )
-{
-   using namespace logic;
-
-#if 0
-   beliefstate bel;
-   add_von_neumann( bel );
-
-   pretty::print( std::cout, bel );
-   check_everything( std::cout, bel );
-
-   size_t ind = bel. find( identifier( ) + "von" + "neumann" + "subset" );
-   if( ind >= bel. size( ))
-   {
-      std::cout << "did not find the theorem\n";
-      return;
-   }
-
-   auto thm = bel. at( ind ). second. view_thm_file( ). form( );
-   proofeditor edit( &bel, ind, !thm );
-
-   edit. apply_exists( 0_db );
-
-   edit. apply_proof( term( prf_contr,
-      term( prf_and1, 
-         term( prf_exp, term( prf_and1, 0_db ), identifier( ) + "von" + "neumann" + "omega1",
-               position( ) )),
-      term( prf_and2, 0_db )));
-
-   edit. show( std::cout, { } );
-#endif
-   //////////////////////////////////////////////////////////////
-
-#if 0
-   ind = bel. find( identifier( ) + "von" + "neumann" + "smallest" );
-   if( ind >= bel. size( ))
-   {
-      std::cout << "did not find the theorem\n";
-      return;
-   }
-
-   thm = bel. at( ind ). second. view_thm_file( ). form( );
-   edit = proofeditor( &bel, ind, !thm );
-
-   edit. apply_exists( 0_db );
-
-   edit. apply_abbreviate( term( prf_exp, term( prf_and1, 0_db ),
-                                 identifier( ) + "von"+"neumann"+"clos1",
-                                 position( ) ));
-
-   edit. apply_abbreviate( term( prf_exp, term( prf_and2, 1_db ),
-                                 identifier( ) + "von"+"neumann"+"omega1",
-                                 position( ) )); 
-
-   edit. apply_exists( 0_db );
-
-   edit. apply_abbreviate( term( prf_exp,
-                              term( prf_exp, term( prf_and1, 0_db ),
-                                    identifier( ) + "von" + "neumann" + "clos1",
-                                    position( ) ),
-                              identifier( ) + "von"+"neumann"+"intersect",
-                              position( )) );
-
-   edit. apply_abbreviate( term( prf_inst, term( prf_and2, 0_db ), 6_db ));
-
-   edit. apply_disj( 0_db );
-
-   edit. apply_disj( 0_db );
-
-   // edit. apply_proof( term( prf_contr, 0_db, term( prf_and1, 7_db )));
-
-   edit. setfocus(0);
-
-   edit. apply_exists( 0_db );
-
-   edit. apply_disj( term( prf_inst, term( prf_and2, 9_db ), 1_db ));
- 
-   // edit. apply_proof( term( prf_contr, term( prf_and1, 1_db ), 0_db ));
-
-   edit. setfocus(0);
-
-   // edit. apply_proof( term( prf_contr, term( prf_and2, 1_db ), 0_db ));
-
-   edit. setfocus(0);
-
-   // edit. apply_proof( term( prf_contr, term( prf_and2, 3_db ), 0_db ));
-   edit. show( std::cout, {} );
-
-   edit. setfocus(0);
-
-   edit. show( std::cout, {} );
-
-#endif
-   // Current Focus
-}
 
 #endif
 

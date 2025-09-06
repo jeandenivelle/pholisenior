@@ -99,12 +99,8 @@ int main( int argc, char* argv[] )
 
    // tests::truthtables( );
 
-   // tests::add_function( blfs );
-   // tests::add_seq( blfs );
+   tests::bigproof( blfs, err );
 
-   // tests::add_proof( blfs );
-
-   tests::smallproofs( blfs, err );
    std::cout << err << "\n";
 
    return 0;

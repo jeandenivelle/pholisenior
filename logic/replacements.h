@@ -143,8 +143,8 @@ namespace logic
    // An introsubst replaces exact names by DeBruijn indices
    // starting at #0,#1 
    // We need this substitution due to a design error in
-   // class sequent. In the future, we implement a correct
-   // sequent class (using DeBruin indices), and remove this class. 
+   // class sequent. In the future, we will implement a correct
+   // sequent class (strictly using DeBruin indices), and remove this class. 
 
    class introsubst
    {

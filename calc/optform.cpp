@@ -199,8 +199,7 @@ void calc::optform::magic( )
       return; 
 
    auto bld = printing::makeheader( seq, rule );
-   bld << "magically assuming :";
-   bld << "DELETE THIS, IT IS UGLY\n";
+   bld << "magically proved:  ";
    pretty( bld );
    err. push( std::move( bld ));
 }
