@@ -31,7 +31,7 @@ calc::alternating( const logic::term& f, logic::selector op,
 {
    if constexpr( false )
    {
-      std::cout << "alternating " << op << " " << rank << " :  " << f << "\n\n";
+      std::cout << "alternating " << op << "/" << rank << " :  " << f << "\n\n";
    }
 
    if( rank == 0 )

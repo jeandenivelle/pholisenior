@@ -539,10 +539,10 @@ void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
    auto prf3 = proofterm( prf_ident, identifier( ) + "forall0001" );
    auto inst = apply( "Q0001"_unchecked, { "s0001"_unchecked, "s0002"_unchecked } );
 
-   auto goal2 = proofterm( prf_expand, identifier( ) + "Q0001", 0,
-                   proofterm( prf_ident, identifier( ) + "alt0002" ));
+   auto goal2 = proofterm( prf_ident, identifier( ) + "alt0002" );
+   // goal2 = proofterm( prf_expand, identifier( ) + "Q0001", 0, goal2 );
    goal2 = proofterm( prf_expand, identifier( ) + "homrel", 0, goal2 );
-
+   goal2 = proofterm( prf_clausify, goal2 );
    goal2 = proofterm( prf_show, "the main part", goal2 );
  
    auto goal3 = proofterm( prf_expand, identifier( ) + "Q0001", 0, 
