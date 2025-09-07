@@ -231,7 +231,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
             auto res = optform( deduce( elim. branch(i), seq, err ),
                                 "option in or-elim", seq, err );
-                            
+              
             res. musthave( logic::op_kleene_and );
             res. getuniquesub( );
             res. musthave( logic::op_kleene_or );
@@ -283,7 +283,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
    case prf_define: 
       {
          auto def = prf. view_define( );
-         
+
          // We first need to typecheck the value:
 
          auto val = def. val( );
@@ -302,8 +302,13 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          size_t seqsize = seq. size( );
          seq. define( def. name( ), val, tp. value( ));
-
+         
          auto res = deduce( def. parent( ), seq, err );
+         if( !res. has_value( ))
+         {
+            seq. restore( seqsize ); 
+            return res; 
+         }
 
          logic::rewritesystem rewr;
          rewr. append( 
@@ -698,7 +703,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          std::vector< logic::term > checked;
          std::vector< logic::term > unchecked;
-         unchecked. push_back( std::move( form. value( )) );
+         unchecked. push_back( form. value( ));
    
          bool c = inconflict( checked, unchecked );
 
@@ -730,7 +735,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          for( short unsigned int i = 0; i < 70; ++ i )
             std::cout << '-';
          std::cout << "\n"; 
-         std::cout << "showing " << show. comment( ) << ":\n";
+         std::cout << "this is " << show. comment( ) << ":\n";
          std::cout << seq << "\n";
          if( res. has_value( ))
          {

@@ -4,8 +4,8 @@
 
 #include "logic/replacements.h" 
 #include "logic/pretty.h"
-#include "logic/termoperators.h"
 #include "logic/cmp.h"
+#include "logic/termoperators.h"
 
 #include "calc/proofterm.h"
 #include "calc/proofchecking.h"
@@ -14,6 +14,7 @@
 #include "calc/removelets.h"
 #include "calc/expander.h"
 #include "calc/projection.h"
+#include "calc/proofoperators.h"
 
 #include "semantics/interpretation.h"
 
@@ -455,11 +456,11 @@ void tests::smallproofs( logic::beliefstate& blfs, errorstack& err )
                         }} );
 
    auto ref =
-      proofterm( prf_existselim, 0,
+      proofterm( prf_existselim, 
          proofterm( prf_clausify,
-            proofterm( prf_ident, identifier( ) + "initial0001" )),
-         "hyp", proofterm( prf_existselim, 2,
-                   proofterm( prf_ident, identifier( ) + "hyp0001" ),
+            proofterm( prf_ident, identifier( ) + "initial0001" )), 0, 
+         "hyp", proofterm( prf_existselim, 
+                   proofterm( prf_ident, identifier( ) + "hyp0001" ), 2,
            "neg", orelim  ));
 
    ref. print( indentation(0), std::cout );
@@ -533,21 +534,33 @@ void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
    }
 
    auto magcontr = proofterm( prf_magic, logic::op_false );
-   auto exists = proofterm( prf_clausify, 
-           proofterm( prf_ident, identifier( ) + "initial0001" )); 
+   auto exists = clausify( "initial0001"_assumption ); 
 
    auto prf3 = proofterm( prf_ident, identifier( ) + "forall0001" );
    auto inst = apply( "Q0001"_unchecked, { "s0001"_unchecked, "s0002"_unchecked } );
 
-   auto goal2 = proofterm( prf_ident, identifier( ) + "alt0002" );
+   auto base = "base0001"_assumption;
+   base = expand( "Q0001", 0, base );
+   base = clausify( base );
+   base = conflict( base );
+   base = show( "base case", base );
+
+   auto step = magcontr;
+   step = show( "step case", step );
+   step = existselim( "step0001"_assumption, 0, "exists", step );
+
+
+   auto goal2 = "alt0002"_assumption;
    // goal2 = proofterm( prf_expand, identifier( ) + "Q0001", 0, goal2 );
-   goal2 = proofterm( prf_expand, identifier( ) + "homrel", 0, goal2 );
-   goal2 = proofterm( prf_clausify, goal2 );
+   goal2 = expand( "homrel", 0, goal2 );
+   goal2 = clausify( goal2 );
+   goal2 = proofterm( prf_orelim, goal2, 0,
+      { { "base", base }, { "step", step }} );
+
    goal2 = proofterm( prf_show, "the main part", goal2 );
  
-   auto goal3 = proofterm( prf_expand, identifier( ) + "Q0001", 0, 
-                   proofterm( prf_ident, identifier( ) + "alt0003" ));
-   goal3 = proofterm( prf_show, "(the final goal, very easy I think)", goal3 );
+   auto goal3 = expand( "Q0001", 0, "alt0003"_assumption );
+   goal3 = show( "(the final goal, very easy I think)", goal3 );
 
    prf3 = proofterm( prf_forallelim, prf3, 0, { inst } );
    prf3 = proofterm( prf_orelim, prf3, 0, 
@@ -556,14 +569,14 @@ void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
    prf3 = proofterm( prf_define, "Q", indhyp, prf3 );
 
    auto disj = proofterm( prf_ident, identifier( ) + "main0001" );
-   disj = proofterm( prf_expand, identifier( ) + "minhomrel", 0, disj );
-   disj = proofterm( prf_expand, identifier( ) + "inductive", 0, disj );
+   disj = expand( "minhomrel", 0, disj );
+   disj = expand( "inductive", 0, disj );
    disj = proofterm( prf_show, "expanded disj", disj );
 
    auto prf2 = proofterm( prf_orelim, disj, 2, {{ "forall", prf3 }} );
  
    auto res = 
-      deduce( proofterm( prf_existselim, 0, exists, "main", prf2 ), seq, err );
+      deduce( proofterm( prf_existselim, exists, 0, "main", prf2 ), seq, err );
 
    if( res. has_value( ))
       std::cout << "evaluation of main proof returned: " << res. value( ) << "\n";

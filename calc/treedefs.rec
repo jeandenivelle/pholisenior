@@ -25,7 +25,7 @@
 %option orelim { prf_orelim } => parent : proofterm, nror : size_t,
    [ name : std::string, branch : proofterm ] 
 %option existselim { prf_existselim } => 
-               nrexists : size_t, parent : proofterm, 
+               parent : proofterm, nrexists : size_t, 
                name : std::string, intro : proofterm 
 
 %option expand { prf_expand } => 
