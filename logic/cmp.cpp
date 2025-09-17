@@ -169,12 +169,12 @@ logic::operator <=> ( const term& t1, const term& t2 )
 
    case op_equals:
       {
-         // We need to consider commutativity of equality: 
+         // We need to consider commutativity of equality.
 
          auto eq1 = t1. view_binary( );
          auto eq2 = t2. view_binary( );
 
-         // We some trickery, we sort the equalities:
+         // We use some trickery, we sort the equalities:
 
          std::pair< const term* , const term* > decr1 =
             is_gt( eq1. sub1( ) <=> eq1. sub2( )) ?
@@ -186,12 +186,12 @@ logic::operator <=> ( const term& t1, const term& t2 )
                std::pair( &eq2.sub1( ), &eq2.sub2( )) :
                std::pair( &eq2.sub2( ), &eq2.sub1( ));
 
-         // First compare maxima:
+         // First compare the bigger elements.
 
          if( auto c = *decr1. first <=> *decr2. first; !is_eq(c))
             return c; 
       
-         // Otherwise, the smaller ones:
+         // Otherwise, we compare the smaller ones:
 
          if( auto c = *decr1. second <=> *decr2. second; !is_eq(c))
             return c;
@@ -352,8 +352,9 @@ logic::equal( const term& t1, size_t lift1,
 
    case op_equals:
       {
-         // We consider commutativity of equality:
-
+         // equals is separate because
+         // we consider commutativity of equality:
+         
          auto eq1 = t1. view_binary( );
          auto eq2 = t2. view_binary( );
 
@@ -457,5 +458,29 @@ logic::equal( const term& t1, size_t lift1,
 
    std::cout << t1. sel( ) << "\n";
    throw std::logic_error( "equal: operator not implemented" );
+}
+
+
+// Why is this not in STL? chren etogo znayet:
+
+std::ostream&
+logic::operator << ( std::ostream& out, std::strong_ordering ord )
+{
+   if( is_lt( ord ))
+   {
+      out << "lt"; return out;
+   }
+
+   if( is_gt( ord ))
+   {
+      out << "gt"; return out; 
+   }
+
+   if( is_eq( ord ))
+   {
+      out << "eq"; return out;
+   }
+
+   out << "???"; return out;
 }
 

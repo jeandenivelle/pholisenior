@@ -20,7 +20,9 @@ namespace logic
 
    weight_type weight( const type& tp );
    weight_type weight( const term& t );
- 
+
+   // This implements a total, but not well-founded order:
+
    std::strong_ordering operator <=> ( const type& tp1, const type& tp2 );
    std::strong_ordering operator <=> ( const term& tm1, const term& tm2 );
  
@@ -32,6 +34,9 @@ namespace logic
 
    bool equal( const term& t1, size_t lift1, 
                const term& t2, size_t lift2, size_t vardepth );
+
+   std::ostream& 
+   operator << ( std::ostream& out, std::strong_ordering ord );
 
 }
 

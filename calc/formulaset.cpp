@@ -35,12 +35,12 @@ void calc::formulaset::sort_increasing( )
 {
    for( auto p = repr. begin( ); p != repr. end( ); ++ p )
    {
-      logic::weight_type w = logic::weight(*p);
+      logic::weight_type w = weight(*p);
 
       auto q = p; ++ q;
       while( q != end( ))
       {
-         logic::weight_type w1 = logic::weight(*q);
+         logic::weight_type w1 = weight(*q);
          if( w1 < w )
          {
             std::swap( *p, *q );

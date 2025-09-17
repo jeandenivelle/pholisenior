@@ -75,7 +75,9 @@ includefile( logic::beliefstate& blfs,
 
 int main( int argc, char* argv[] )
 {
-
+   tests::cmp( );
+   return 0;
+ 
    errorstack err;
  
    logic::beliefstate blfs;  

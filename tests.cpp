@@ -247,7 +247,6 @@ void tests::clausify( logic::beliefstate& blfs, errorstack& err )
       std::cout << exp << "\n";
       return;
    }
-
 }
 
 
@@ -290,6 +289,8 @@ void tests::cmp( )
 
    using namespace logic;
 
+   std::cout << ( ( 1_db == 3_db ) <=> ( 1_db == 3_db ) ) << "\n";
+
    type O = type( logic::type_obj );
    type T = type( logic::type_form );
    type O2T = type( type_func, T, { O } );
@@ -306,11 +307,14 @@ void tests::cmp( )
    tm2 = term( op_lambda, tm2, { { "x", T }, { "y", Seq }, { "t", O }} );
  
    tm1 = apply( tm1, { 2_db, "bbb"_unchecked, 3_db } );
-   tm2 = apply( tm2, { 2_db, "bbb"_unchecked, 3_db } );
+   tm2 = !apply( tm2, { 2_db, "bbb"_unchecked, 3_db } );
+   std::cout << tm1 << "\n";
+   std::cout << tm2 << "\n";
+   std::cout << ( tm1 <=> tm2 ) << "\n";
    std::cout << tm1 << "\n" << weight( tm1 ) << "\n";
   
    bool b = equal( tm1, tm2 );
-   std::cout << "result = " << b << "\n"; 
+   // std::cout << "result = " << b << "\n"; 
 
    tm1 = lift( tm1, 1 );
    tm2 = lift( tm2, 4 );
