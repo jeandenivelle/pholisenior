@@ -193,13 +193,13 @@ void calc::optform::quantify( const std::vector< logic::vartype > & vars )
    } 
 }
 
-void calc::optform::magic( )
+void calc::optform::fake( )
 {
    if( !fm. has_value( ))
       return; 
 
    auto bld = printing::makeheader( seq, rule );
-   bld << "magically proved:  ";
+   bld << "faked proof of:  ";
    pretty( bld );
    err. push( std::move( bld ));
 }

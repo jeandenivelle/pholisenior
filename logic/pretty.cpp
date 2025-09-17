@@ -179,7 +179,7 @@ logic::pretty::print( std::ostream& out, const beliefstate& blfs,
       // [ v, e ) are variables with the same type.
 
       size_t e = v + 1;
-      while( e != sz && cmp::equal( vt(v).tp, vt(e).tp ))
+      while( e != sz && equal( vt(v).tp, vt(e).tp ))
          ++ e;
 
       if(v)

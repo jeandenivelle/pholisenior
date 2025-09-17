@@ -2,9 +2,8 @@
 #include "cmp.h"
 #include "inspections.h"
 
-logic::cmp::weight_t logic::cmp::weight( const type& tp )
+logic::weight_type logic::weight( const type& tp )
 {
-
    switch( tp. sel( )) 
    {
    case type_form:
@@ -17,7 +16,7 @@ logic::cmp::weight_t logic::cmp::weight( const type& tp )
    case type_func:
       {
          auto f = tp. view_func( ); 
-         size_t w = weight( f. result( ));
+         weight_type w = weight( f. result( ));
          for( size_t i = 0; i != f. size( ); ++ i )
             w += weight( f. arg(i));
          return w + 1; 
@@ -28,15 +27,16 @@ logic::cmp::weight_t logic::cmp::weight( const type& tp )
    throw std::logic_error( "wrong selector in type" );  
 }
 
-namespace logic::cmp
+
+namespace logic
 {
    namespace 
    {
-      struct counter
+      struct weight_counter
       {
-         weight_t val;
+         weight_type val;
 
-         counter( ) noexcept : val(0) 
+         weight_counter( ) noexcept : val(0) 
             { }
 
          void operator( ) ( const term& tm, size_t vardepth ) 
@@ -59,38 +59,41 @@ namespace logic::cmp
    }
 }
 
-logic::cmp::weight_t logic::cmp::weight( const term& t ) 
+logic::weight_type logic::weight( const term& t ) 
 {
-   counter cnt;
+   weight_counter cnt;
 
    count( cnt, t, 0 );
    return cnt. val; 
 }
 
 
-bool logic::cmp::equal( const type& tp1, const type& tp2 ) 
+std::strong_ordering 
+logic::operator <=> ( const type& tp1, const type& tp2 ) 
 {
-   if( tp1. sel( ) != tp2. sel( ))
-      return false;
- 
+   // Selector is still an enum type:
+
+   if( auto c = ( tp1. sel( ) <=> tp2. sel( )); !is_eq(c)) 
+      return c;
+
    switch( tp1. sel()) 
    {
    case type_form:
    case type_obj:
-      return true;
+      return std::strong_ordering::equal;
 
    case type_struct:
       {
-         exact s1 = tp1. view_struct( ). def( );
-         exact s2 = tp2. view_struct( ). def( );
-         return s1 == s2;
+         exact name1 = tp1. view_struct( ). def( );
+         exact name2 = tp2. view_struct( ). def( );
+         return name1 <=> name2;
       } 
   
    case type_unchecked:
       { 
-         identifier id1 = tp1. view_unchecked( ). id( );
-         identifier id2 = tp2. view_unchecked( ). id( ); 
-         return id1 == id2;
+         const identifier& id1 = tp1. view_unchecked( ). id( );
+         const identifier& id2 = tp2. view_unchecked( ). id( ); 
+         return id1 <=> id2;
       }
 
    case logic::type_func:
@@ -98,53 +101,55 @@ bool logic::cmp::equal( const type& tp1, const type& tp2 )
          auto func1 = tp1. view_func( );
          auto func2 = tp2. view_func( );
 
-         if( !equal( func1. result( ), func2. result( )) )
-            return false;
+         if( auto c = func1. result( ) <=> func2. result( ); !is_eq(c))
+            return c;
 
-         if( func1. size( ) != func2. size( )) 
-            return false;
+         if( auto c = func1. size( ) <=> func2. size( ); !is_eq(c))
+            return c;
 
          for( size_t i = 0; i < func1. size( ); ++i ) 
          {
-            if( !equal( func1. arg(i), func2. arg(i)) )
-               return false;
+            if( auto c = ( func1. arg(i) <=> func2. arg(i) ); !is_eq(c))
+               return c;
          }
 
-         return true;
+         return std::strong_ordering::equal;
       }
 
    default:
       std::cout << "the selector is " << tp1. sel( ) << "\n";
-      throw std::logic_error("unknown selector in equal()");
+      throw std::logic_error("unknown selector in operator <=>");
    }
 }
 
 
-bool
-logic::cmp::equal( const term& t1, const term& t2 ) 
+std::strong_ordering
+logic::operator <=> ( const term& t1, const term& t2 ) 
 {
-   if( t1. sel( ) != t2. sel( ))
-      return false;
+   // Selector is still an enum type:
+
+   if( auto c = ( t1. sel( ) <=> t2. sel( )); !is_eq(c))
+      return c;
 
    switch( t1.sel( )) 
    {
    case op_exact:
-      return t1.view_exact( ).ex( ) == t2.view_exact( ).ex( );
+      return t1.view_exact( ).ex( ) <=> t2.view_exact( ).ex( );
 
    case op_debruijn:
-      return t1.view_debruijn( ).index( ) == t2.view_debruijn( ). index( ); 
+      return t1.view_debruijn( ).index( ) <=> t2.view_debruijn( ).index( ); 
 
    case op_unchecked:
-      return t1.view_unchecked( ).id( ) == t2.view_unchecked( ).id( );
+      return t1.view_unchecked( ).id( ) <=> t2.view_unchecked( ).id( );
 
    case op_false:
    case op_error:
    case op_true:
-      return true;
+      return std::strong_ordering::equal;
 
    case op_not:
    case op_prop:
-      return equal( t1.view_unary( ).sub( ), t2.view_unary( ).sub( ));
+      return t1.view_unary( ).sub( ) <=> t2.view_unary( ).sub( );
 
    case op_and: 
    case op_or:
@@ -156,26 +161,44 @@ logic::cmp::equal( const term& t1, const term& t2 )
       {
          auto bin1 = t1. view_binary( );
          auto bin2 = t2. view_binary( );
-         if( !equal( bin1.sub1( ), bin2.sub1( )))
-            return false;
-         return equal( bin1.sub2( ), bin2.sub2( ));
+
+         if( auto c = ( bin1.sub1( ) <=> bin2.sub1( ) ); !is_eq(c)) 
+            return c;
+         return ( bin1.sub2( ) <=> bin2.sub2( ) );
       } 
 
    case op_equals:
       {
-         // We consider commutativity of equality: 
+         // We need to consider commutativity of equality: 
 
          auto eq1 = t1. view_binary( );
          auto eq2 = t2. view_binary( );
 
-         if( equal( eq1. sub1( ), eq2. sub1( )) &&
-             equal( eq1. sub2( ), eq2. sub2( )) )
-         {
-            return true;
-         }
+         // We some trickery, we sort the equalities:
 
-         return equal( eq1. sub1( ), eq2. sub2( )) &&
-                equal( eq1. sub2( ), eq2. sub1( ));
+         std::pair< const term* , const term* > decr1 =
+            is_gt( eq1. sub1( ) <=> eq1. sub2( )) ?
+               std::pair( &eq1.sub1( ), &eq1.sub2( )) :
+               std::pair( &eq1.sub2( ), &eq1.sub1( ));
+
+         std::pair< const term* , const term* > decr2 =
+            is_gt( eq2. sub1( ) <=> eq2. sub2( )) ?
+               std::pair( &eq2.sub1( ), &eq2.sub2( )) :
+               std::pair( &eq2.sub2( ), &eq2.sub1( ));
+
+         // First compare maxima:
+
+         if( auto c = *decr1. first <=> *decr2. first; !is_eq(c))
+            return c; 
+      
+         // Otherwise, the smaller ones:
+
+         if( auto c = *decr1. second <=> *decr2. second; !is_eq(c))
+            return c;
+
+         // That should do the job:
+
+         return std::strong_ordering::equal; 
       }
 
    case op_kleene_and:
@@ -184,15 +207,15 @@ logic::cmp::equal( const term& t1, const term& t2 )
          auto kl1 = t1. view_kleene( );
          auto kl2 = t2. view_kleene( );
 
-         if( kl1. size( ) != kl2. size( ))
-            return false;
+         if( auto c = kl1. size( ) <=> kl2. size( ); !is_eq(c))
+            return c;
 
          for( size_t i = 0; i != kl1. size( ); ++ i )
          {
-            if( !equal( kl1.sub(i), kl2.sub(i)) )
-               return false;
+            if( auto c = kl1.sub(i) <=> kl2.sub(i); !is_eq(c))
+               return c;
          }
-         return true;
+         return std::strong_ordering::equal;
       }
  
    case op_forall:
@@ -203,16 +226,16 @@ logic::cmp::equal( const term& t1, const term& t2 )
          auto quant1 = t1. view_quant( );
          auto quant2 = t2. view_quant( );
 
-         if( quant1. size( ) != quant2. size( ))
-            return false;
+         if( auto c = quant1. size( ) <=> quant2. size( ); !is_eq(c))
+            return c;
 
          for( size_t i = 0; i != quant1. size( ); ++ i )
          {
-            if( !equal( quant1.var(i).tp, quant2.var(i).tp ))
-               return false;
+            if( auto c = quant1.var(i).tp <=> quant2.var(i).tp; !is_eq(c))
+               return c;
          }
 
-         return equal( quant1. body( ), quant2. body( ));
+         return quant1. body( ) <=> quant2. body( );
       }
 
    case op_let:
@@ -220,11 +243,11 @@ logic::cmp::equal( const term& t1, const term& t2 )
          auto let1 = t1. view_let( );
          auto let2 = t2. view_let( );
 
-         if( !equal( let1.var( ).tp, let2.var( ).tp ))
-            return false;
-         if( !equal( let1.val( ), let2.val( )))
-            return false;
-         return  equal( let1.body( ), let2.body( ));
+         if( auto c = let1.var( ).tp <=> let2.var( ).tp; !is_eq(c))
+            return c;
+         if( auto c = let1.val( ) <=> let2.val( ); !is_eq(c))
+            return c;
+         return let1.body( ) <=> let2.body( );
       }
 
    case op_apply: 
@@ -232,16 +255,16 @@ logic::cmp::equal( const term& t1, const term& t2 )
          auto ap1 = t1. view_apply( );
          auto ap2 = t2. view_apply( );
 
-         if( ap1. size( ) != ap2. size( ))
-            return false; 
+         if( auto c = ap1. size( ) <=> ap2. size( ); !is_eq(c))
+            return c;
 
          for( size_t i = 0; i != ap1. size( ); ++ i )
          {
-            if( !equal( ap1.arg(i), ap2.arg(i)) )
-               return false;
+            if( auto c = ap1.arg(i) <=> ap2.arg(i); !is_eq(c))
+               return c; 
          }
 
-         return equal( ap1.func( ), ap2.func( ));
+         return ap1.func( ) <=> ap2.func( );
       } 
 
    case op_lambda:
@@ -249,27 +272,27 @@ logic::cmp::equal( const term& t1, const term& t2 )
          auto lamb1 = t1. view_lambda( );
          auto lamb2 = t2. view_lambda( );
 
-         if( lamb1. size( ) != lamb2. size( ))
-            return false;
+         if( auto c = lamb1. size( ) <=> lamb2. size( ); !is_eq(c))
+            return c;
 
          for( size_t i = 0; i != lamb1. size( ); ++ i )
          {
-            if( !equal( lamb1.var(i).tp, lamb2.var(i).tp ))
-               return false;
+            if( auto c = lamb1.var(i).tp <=> lamb2.var(i).tp; !is_eq(c))
+               return c;
          }
 
-         return equal( lamb1.body( ), lamb2.body( ));
+         return lamb1.body( ) <=> lamb2.body( );
       }
 
    }
 
    std::cout << t1. sel( ) << "\n";
-   throw std::logic_error( "equal: operator not implemented" ); 
+   throw std::logic_error( "operator <=>: operator not implemented" ); 
 }
 
 bool
-logic::cmp::equal( const term& t1, size_t lift1,
-                   const term& t2, size_t lift2, size_t vardepth )
+logic::equal( const term& t1, size_t lift1,
+              const term& t2, size_t lift2, size_t vardepth )
 {
    // std::cout << t1 << " / " << lift1 << " == ";
    // std::cout << t2 << " / " << lift2 << " [" << vardepth << "]?\n";

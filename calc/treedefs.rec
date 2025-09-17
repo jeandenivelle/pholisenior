@@ -47,7 +47,7 @@
 
 %option conflict { prf_conflict } => parent : proofterm 
 
-%option magic { prf_magic } => goal : logic::term
+%option fake { prf_fake } => goal : logic::term
 %option show { prf_show } => comment : std::string, prf : proofterm
 
 %h_incl {
@@ -228,10 +228,10 @@
             return;
          }
 
-      case prf_magic:
+      case prf_fake:
          {
-            out << ind << "magic ";
-            auto mag = view_magic( );
+            out << ind << "faking ";
+            auto mag = view_fake( );
             out << mag. goal( ) << "\n";
             return;
          }

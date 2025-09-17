@@ -208,7 +208,7 @@ void logic::checkandresolve( beliefstate& everything, errorstack& err )
             auto tp = checkandresolve( everything, err, tm );
             def. update_val( tm );
 
-            if( tp. has_value( ) && !cmp::equal( tp. value( ), def. tp( )))
+            if( tp. has_value( ) && !equal( tp. value( ), def. tp( )))
             {
                errorstack::builder bld;
                bld << "Declared type differs from true type:\n";
@@ -833,7 +833,7 @@ logic::checkandresolve( const beliefstate& blfs, errorstack& errors,
          // and replace the declared type by the type of the value. 
 
          if( decltype_ok && valtype. has_value( ) &&
-             !cmp::equal( let. var( ). tp, valtype. value( )) )
+             !equal( let. var( ). tp, valtype. value( )) )
          {
             auto err = errorheader( blfs, ctxt, t );
             err << "let: declared type ";
@@ -1107,7 +1107,7 @@ logic::try_apply( type ftype,
 
       for( size_t i = 0; i != fun. size( ); ++ i )
       {
-         if( !cmp::equal( fun. arg(i), argtypes[ pos ] ))
+         if( !equal( fun. arg(i), argtypes[ pos ] ))
             return { };
 
          ++ pos; 
@@ -1197,7 +1197,7 @@ logic::try_apply( const beliefstate& blfs, exact name,
 
          for( size_t i = 0; i != sdef. size( ); ++ i )
          {
-            if( !cmp::equal( sdef. at(i). tp, argtypes[ pos + i ] ))
+            if( !equal( sdef. at(i). tp, argtypes[ pos + i ] ))
                return { };
          }
             

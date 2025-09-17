@@ -77,6 +77,9 @@ operator <=> ( const identifier& id1, const identifier& id2 );
 
 inline bool operator == ( const identifier& id1, const identifier& id2 )
    { return is_eq( id1 <=> id2 ); }
+
+inline bool operator != ( const identifier& id1, const identifier& id2 )
+   { return !is_eq( id1 <=> id2 ); }
  
 std::ostream& operator << ( std::ostream& out, const identifier& id );
 util::hashbuilder& operator << ( util::hashbuilder&, const identifier& id );

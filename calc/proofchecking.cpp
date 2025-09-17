@@ -55,20 +55,20 @@ calc::inconflict( bool neg1, const logic::term& tm1,
 {
    std::cout << neg1 << "  " << tm1 << "   " << neg2 << "  " << tm2 << "\n";
 
-   if( neg1 && !neg2 && logic::cmp::equal( tm1, tm2 ))
+   if( neg1 && !neg2 && logic::equal( tm1, tm2 ))
       return true;
 
-   if( !neg1 && neg2 && logic::cmp::equal( tm1, tm2 ))
+   if( !neg1 && neg2 && logic::equal( tm1, tm2 ))
       return true;
 
    if( neg1 && tm1. sel( ) == logic::op_prop &&
-       logic::cmp::equal( tm1. view_unary( ). sub( ), tm2 ))
+       logic::equal( tm1. view_unary( ). sub( ), tm2 ))
    {
       return true;
    }
       
    if( neg2 && tm2. sel( ) == logic::op_prop &&
-       logic::cmp::equal( tm1, tm2. view_unary( ). sub( )) )
+       logic::equal( tm1, tm2. view_unary( ). sub( )) )
    {
       return true;
    }
@@ -121,7 +121,7 @@ restart:
       if( sub. sel( ) == logic::op_equals )
       {
          auto eq = sub. view_binary( );
-         if( logic::cmp::equal( eq. sub1( ), eq. sub2( )) )
+         if( logic::equal( eq. sub1( ), eq. sub2( )) )
             return true;  
       }
    }
@@ -510,7 +510,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
             if( tp. has_value( )) 
             {
-               if( logic::cmp::equal( tp. value( ), q. var(i). tp ))
+               if( logic::equal( tp. value( ), q. var(i). tp ))
                {
                   subst. push( std::move( tm ));
                }
@@ -720,11 +720,11 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
             logic::term( logic::op_kleene_or, { } ) } );
       }
 
-   case prf_magic:
+   case prf_fake:
       {
-         auto res = optform( prf. view_magic( ). goal( ), "magic", seq, err );
+         auto res = optform( prf. view_fake( ). goal( ), "fake", seq, err );
          res. make_anf2( );
-         res. magic( ); 
+         res. fake( ); 
          return res. value( ); 
       }
 

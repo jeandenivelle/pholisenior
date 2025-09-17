@@ -307,16 +307,15 @@ void tests::cmp( )
  
    tm1 = apply( tm1, { 2_db, "bbb"_unchecked, 3_db } );
    tm2 = apply( tm2, { 2_db, "bbb"_unchecked, 3_db } );
-   std::cout << tm1 << "\n" << cmp::weight( tm1 ) << "\n";
+   std::cout << tm1 << "\n" << weight( tm1 ) << "\n";
   
-   bool b = cmp::equal( tm1, tm2 );
+   bool b = equal( tm1, tm2 );
    std::cout << "result = " << b << "\n"; 
 
    tm1 = lift( tm1, 1 );
    tm2 = lift( tm2, 4 );
-   b = cmp::equal( tm1, 6, tm2, 3, 0 );
+   b = equal( tm1, 6, tm2, 3, 0 );
    std::cout << "lifted result = " << b << "\n";
-
 }
 
 
@@ -469,10 +468,10 @@ void tests::smallproofs( logic::beliefstate& blfs, errorstack& err )
    if( ff. has_value( ))
       std::cout << "proved this formula: " << ff. value( ) << "\n";
 
-   auto mag1 = proofterm( prf_magic, "hans"_unchecked );
-   auto mag2 = proofterm( prf_magic, "de"_unchecked ); 
-   auto mag3 = proofterm( prf_magic, "nivelle"_unchecked );
-   auto mag4 = proofterm( prf_magic, "hans"_unchecked == "jean"_unchecked );
+   auto mag1 = proofterm( prf_fake, "hans"_unchecked );
+   auto mag2 = proofterm( prf_fake, "de"_unchecked ); 
+   auto mag3 = proofterm( prf_fake, "nivelle"_unchecked );
+   auto mag4 = proofterm( prf_fake, "hans"_unchecked == "jean"_unchecked );
 
    ref = proofterm( prf_andintro, { mag1, mag2, mag3, mag4 } );
 
@@ -533,7 +532,7 @@ void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
       indhyp = lambda( {{ "n1", Nat }, { "n2", Nat }}, indhyp );
    }
 
-   auto magcontr = proofterm( prf_magic, logic::op_false );
+   auto magcontr = proofterm( prf_fake, logic::op_false );
    auto exists = clausify( "initial0001"_assumption ); 
 
    auto prf3 = proofterm( prf_ident, identifier( ) + "forall0001" );

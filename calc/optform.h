@@ -71,8 +71,8 @@ namespace calc
          // Kleene disj -> Kleene exists.
          // Kleene conj -> Kleene forall.
 
-      void magic( );  // Generate message that fm was magically assumed.
-                      // Don't reset, so that we can return it.
+      void fake( );  // Generate a message that fm was faked.
+                     // Don't reset, so that we can return it.
 
       operator bool( ) const { return fm. has_value( ); }
       const logic::term& value( ) const { return fm. value( ); }

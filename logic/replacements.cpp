@@ -308,7 +308,7 @@ logic::rewritesystem::operator( ) ( const term& t, size_t vardepth,
 {
    for( const auto& repl : sys )
    {
-      if( cmp::equal( repl. first, vardepth, t, 0, 0 ))
+      if( equal( repl. first, vardepth, t, 0, 0 ))
       {
          change = true;
          return lift( repl. second, vardepth );

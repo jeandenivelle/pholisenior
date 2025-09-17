@@ -7,7 +7,7 @@ bool calc::formulaset::contains( const logic::term& fm ) const
 {
    for( auto it = begin( ); it != end( ); ++ it )
    {
-      if( logic::cmp::equal( fm, *it ))
+      if( logic::equal( fm, *it ))
          return true;
    }
    return false; 
@@ -35,12 +35,12 @@ void calc::formulaset::sort_increasing( )
 {
    for( auto p = repr. begin( ); p != repr. end( ); ++ p )
    {
-      size_t w = logic::cmp::weight(*p);
+      logic::weight_type w = logic::weight(*p);
 
       auto q = p; ++ q;
       while( q != end( ))
       {
-         auto w1 = logic::cmp::weight(*q);
+         logic::weight_type w1 = logic::weight(*q);
          if( w1 < w )
          {
             std::swap( *p, *q );

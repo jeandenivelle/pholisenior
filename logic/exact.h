@@ -6,6 +6,7 @@
 
 #include <unordered_set>
 #include <unordered_map>
+#include <compare>
 
 #include "util/print.h"
 
@@ -22,27 +23,6 @@ namespace logic
 
       void print( std::ostream& out ) const
          { out << '$' << nr; } 
-
-      bool operator == ( exact e ) const
-         { return nr == e. nr; }
-
-      bool operator != ( exact e ) const
-         { return nr != e. nr; }
-
-      // exact must be an ordered type, because of KBO:
-      // (In Aug 2025, we are not using KBO.)
-
-      bool operator > ( exact e ) const
-         { return nr > e. nr; }
-
-      bool operator < ( exact e ) const
-         { return nr < e. nr; }
-
-      bool operator >= ( exact e ) const
-         { return nr >= e. nr; }
-
-      bool operator <= ( exact e ) const
-         { return nr <= e. nr; }
 
       struct equal_to
       {
@@ -65,6 +45,20 @@ namespace logic
       std::unordered_map< exact, V, exact::hash, exact::equal_to > ;
 
    };
+
+   // exact must be an ordered type, because of KBO.
+   // We assume that e1 < e2 if e1 was defined before e2,
+   // which is a natural order I think. 
+
+   inline std::strong_ordering operator <=> ( exact e1, exact e2 ) 
+      { return ( e1. nr <=> e2. nr ); }
+
+   inline bool operator == ( exact e1, exact e2 )
+      { return is_eq( e1 <=> e2 ); }
+
+   inline bool operator != ( exact e1, exact e2 )
+      { return is_neq( e1 <=> e2 ); }
+
 }
 
 #endif
