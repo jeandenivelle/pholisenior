@@ -15,6 +15,7 @@
 #include "calc/expander.h"
 #include "calc/projection.h"
 #include "calc/proofoperators.h"
+#include "calc/clauseset.h"
 
 #include "semantics/interpretation.h"
 
@@ -279,6 +280,29 @@ void tests::pretty( const logic::beliefstate& blfs )
 
    pretty::uniquenamestack un;
    pretty::print( std::cout, blfs, un, tm, {0,0} );
+
+}
+
+
+void tests::simplify( )
+{
+   std::cout << "testing simplify\n";
+
+   using namespace logic;
+
+   type O = type( logic::type_obj );
+   type T = type( logic::type_form );
+   type O2T = type( type_func, T, { O } );
+   type O2O = type( type_func, O, { O } );
+   type OT2O = type( type_func, O, { O, T } );
+ 
+   auto cls1 = term( logic::op_kleene_or,
+      { 4_db, 3_db, 2_db } );
+
+   auto cls2 = term( logic::op_kleene_or,
+      { 0_db, 1_db, 2_db, 4_db } );
+
+   std::cout << calc::merge( cls1, 0, cls2, 4 ) << "\n";
 
 }
 

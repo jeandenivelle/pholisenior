@@ -54,6 +54,7 @@
    optform.cpp
    formulaset.cpp
    proofchecking.cpp
+   clauseset.cpp
  
 %dir Source/semantics
 %sources

@@ -75,7 +75,7 @@ includefile( logic::beliefstate& blfs,
 
 int main( int argc, char* argv[] )
 {
-   tests::cmp( );
+   tests::simplify( );
    return 0;
  
    errorstack err;
@@ -106,16 +106,6 @@ int main( int argc, char* argv[] )
    std::cout << err << "\n";
 
    return 0;
-
-#if 0
-   // tests::context( ); 
-   // tests::setsimplifications( );
-   // tests::betareduction( ); 
-   // tests::proofpluscom( );
-   // tests::replacements( );
-
-   // tests::tableau( );
-#endif
 
    return 0;
 }

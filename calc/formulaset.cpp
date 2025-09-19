@@ -7,7 +7,7 @@ bool calc::formulaset::contains( const logic::term& fm ) const
 {
    for( auto it = begin( ); it != end( ); ++ it )
    {
-      if( logic::equal( fm, *it ))
+      if( equal( fm, *it ))
          return true;
    }
    return false; 
