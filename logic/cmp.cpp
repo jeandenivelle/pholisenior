@@ -71,6 +71,8 @@ logic::weight_type logic::weight( const term& t )
 std::strong_ordering 
 logic::operator <=> ( const type& tp1, const type& tp2 ) 
 {
+   std::cout << tp1 << " <=> " << tp2 << "\n";
+
    // Selector is still an enum type:
 
    if( auto c = ( tp1. sel( ) <=> tp2. sel( )); !is_eq(c)) 
@@ -126,6 +128,8 @@ logic::operator <=> ( const type& tp1, const type& tp2 )
 std::strong_ordering
 logic::operator <=> ( const term& t1, const term& t2 ) 
 {
+   std::cout << t1 << " <=> " << t2 << "\n";
+
    // Selector is still an enum type:
 
    if( auto c = ( t1. sel( ) <=> t2. sel( )); !is_eq(c))
@@ -255,6 +259,9 @@ logic::operator <=> ( const term& t1, const term& t2 )
          auto ap1 = t1. view_apply( );
          auto ap2 = t2. view_apply( );
 
+         if( auto c = ap1.func( ) <=> ap2.func( ); !is_eq(c))
+            return c;
+
          if( auto c = ap1. size( ) <=> ap2. size( ); !is_eq(c))
             return c;
 
@@ -264,7 +271,7 @@ logic::operator <=> ( const term& t1, const term& t2 )
                return c; 
          }
 
-         return ap1.func( ) <=> ap2.func( );
+         return std::strong_ordering::equal;
       } 
 
    case op_lambda:

@@ -330,20 +330,19 @@ void tests::cmp( )
    auto tm2 = "aba"_unchecked || 3_db;
    tm2 = term( op_lambda, tm2, { { "x", T }, { "y", Seq }, { "t", O }} );
  
-   tm1 = apply( tm1, { 2_db, "bbb"_unchecked, 3_db } );
-   tm2 = !apply( tm2, { 2_db, "bbb"_unchecked, 3_db } );
-   std::cout << tm1 << "\n";
-   std::cout << tm2 << "\n";
+   tm1 = apply( tm2, { 2_db, "bba"_unchecked, 1_db } );
+   tm2 = apply( tm1, { 2_db, "bba"_unchecked, term( op_exact, exact(12)) } );
    std::cout << ( tm1 <=> tm2 ) << "\n";
-   std::cout << tm1 << "\n" << weight( tm1 ) << "\n";
+   std::cout << "weights\n";
+   std::cout << weight(tm1) << "\n" << weight( tm2 ) << "\n";
   
-   bool b = equal( tm1, tm2 );
+   // bool b = equal( tm1, tm2 );
    // std::cout << "result = " << b << "\n"; 
 
    tm1 = lift( tm1, 1 );
    tm2 = lift( tm2, 4 );
-   b = equal( tm1, 6, tm2, 3, 0 );
-   std::cout << "lifted result = " << b << "\n";
+   // b = equal( tm1, 6, tm2, 3, 0 );
+   // std::cout << "lifted result = " << b << "\n";
 }
 
 
