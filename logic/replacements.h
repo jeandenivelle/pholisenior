@@ -180,29 +180,24 @@ namespace logic
    };
 
  
-   struct rewritesystem
+   struct rewriterule
    {
-      std::vector< std::pair< term, term >> sys;
+      term from;
+      term to; 
 
-      rewritesystem( ) noexcept = default;
-
-      // Use const& or move:
-
-      rewritesystem( const std::vector< std::pair< term, term >> & sys )
-         : sys( sys )
+      rewriterule( const term& from, const term& to )
+         : from( from ), to( to )
       { }
 
-      rewritesystem( std::vector< std::pair< term, term >> && sys )
-         : sys( std::move( sys ))
+      rewriterule( term&& from, term&& to )
+         : from( std::move( from )),
+           to( std::move( to ))
       { }
+
+      void swap( ) 
+         { std::swap( from, to ); } 
 
       term operator( ) ( const term& t, size_t vardepth, bool& change ) const;
-
-      void append( const term& left, const term& right )
-         { sys. push_back( std::pair( left, right )); }
-
-      void append( term&& left, term&& right )
-         { sys. push_back( std::pair( std::move(left), std::move(right))); }
 
       void print( std::ostream& out ) const;
    };

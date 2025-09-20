@@ -303,27 +303,22 @@ void logic::betareduction::print( std::ostream& out ) const
 }
 
 logic::term
-logic::rewritesystem::operator( ) ( const term& t, size_t vardepth,
-                                    bool& change ) const
+logic::rewriterule::operator( ) ( const term& t, size_t vardepth,
+                                  bool& change ) const
 {
-   for( const auto& repl : sys )
+   if( equal( from, vardepth, t, 0, 0 ))
    {
-      if( equal( repl. first, vardepth, t, 0, 0 ))
-      {
-         change = true;
-         return lift( repl. second, vardepth );
-      } 
+      change = true;
+      return lift( to, vardepth );
    }
 
    return t;
 }
 
 void
-logic::rewritesystem::print( std::ostream& out ) const
+logic::rewriterule::print( std::ostream& out ) const
 {
-   out << "rewrite system:\n";
-   for( const auto& repl : sys )
-      out << "   " << repl. first << " --> " << repl. second << "\n";
+   out << "rewrite rule: " << from << " --> " << to << "\n";
 }
 
 

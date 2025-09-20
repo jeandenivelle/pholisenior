@@ -466,6 +466,20 @@ logic::equal( const term& t1, size_t lift1,
 }
 
 
+std::strong_ordering 
+logic::kbo( const term& tm1, const term& tm2 )
+{
+   weight_type w1 = weight( tm1 );
+   weight_type w2 = weight( tm2 );
+   std::cout << w1 << " " << w2 << "\n";
+   if( auto c = w1 <=> w2; !is_eq(c))
+      return c;
+
+   std::cout << "it didn't help\n";
+   return tm1 <=> tm2;
+}
+
+
 // Why is this not in STL? chren etogo znayet:
 
 std::ostream&

@@ -9,65 +9,13 @@
 
 #include "formulaset.h"
 #include "expander.h"
+#include "clauseset.h"
 
 #include "printing.h"
 
 
-bool 
-calc::inconflict( bool neg1, const logic::term& tm1,
-                  bool neg2, const logic::term& tm2 )
-{
-   std::cout << neg1 << "  " << tm1 << "   " << neg2 << "  " << tm2 << "\n";
-
-   if( neg1 && !neg2 && logic::equal( tm1, tm2 ))
-      return true;
-
-   if( !neg1 && neg2 && logic::equal( tm1, tm2 ))
-      return true;
-
-   if( neg1 && tm1. sel( ) == logic::op_prop &&
-       logic::equal( tm1. view_unary( ). sub( ), tm2 ))
-   {
-      return true;
-   }
-      
-   if( neg2 && tm2. sel( ) == logic::op_prop &&
-       logic::equal( tm1, tm2. view_unary( ). sub( )) )
-   {
-      return true;
-   }
-
-   return false;
-}
-
-bool 
-calc::inconflict( const logic::term& tm1, const logic::term& tm2 )
-{
-   // This is probably a point where one would like to have matching.
-   // We try to bring some order in the chaos by separating out
-   // negation.
-
-   if( tm1. sel( ) == logic::op_not )
-   {
-      if( tm2. sel( ) == logic::op_not )
-      {
-         return inconflict( true, tm1. view_unary( ). sub( ),
-                            true, tm2. view_unary( ). sub( )); 
-      }
-      else
-         return inconflict( true, tm1. view_unary( ). sub( ), false, tm2 ); 
-   }
-   else
-   {
-      if( tm2. sel( ) == logic::op_not )
-         return inconflict( false, tm1, true, tm2. view_unary( ). sub( ) );
-      else
-         return inconflict( false, tm1, false, tm2 );
-   }
-}
-
-
-// This is a very bad case of bloated implementation.
+// This is a very bad case of bloated implementation, 
+// which should be looked at from the programming language point of view. 
 
 bool calc::istautology( const logic::term& disj ) 
 {
@@ -132,6 +80,49 @@ bool calc::istautology( const logic::term& disj )
    }
 
    return false; 
+}
+
+logic::term calc::simplify( const logic::term& conj )
+{
+   clauseset cls;
+
+   cls. insert( conj );
+
+   std::cout << cls << "\n";
+
+restart:
+#if 0
+   auto sel = unchecked. pick( );
+   if( istautology( sel ))
+      goto pick;
+   
+   pick = direct( pick );
+      // Direct the equalities.
+
+   auto pick_kl = pick. view_kleen( );
+
+   for( auto p = checked. begin( ); p != unchecked. end( ); ++ p )
+   {
+      auto kl = p -> view_kleene( );
+      for( size_t i = 0; i != pick_kl. size( ); ++ i )
+         for( size_t j = 0; j != kl. size( ); ++ j )
+         {
+            if( inconflict( pick_kl. sub(i), kk. sub(j))
+            {
+               
+
+
+
+            }
+
+
+         }      
+
+
+   }
+#endif
+
+   ;
 }
 
 
@@ -288,8 +279,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
             return res; 
          }
 
-         logic::rewritesystem rewr;
-         rewr. append( 
+         logic::rewriterule rewr( 
             logic::term( logic::op_exact, seq. getexactname( seqsize )), 
             val );
 
@@ -531,6 +521,9 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          auto errsize = err. size( );
 
+         std::cout << "not implemented k sozhaleniu\n";
+         throw std::logic_error( "bye" );
+#if 0
          logic::rewritesystem sys;
      
          auto kl = anf. value( ). view_kleene( );
@@ -596,6 +589,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
                }
             } 
          }
+#endif
 
          return anf. value( );
       }

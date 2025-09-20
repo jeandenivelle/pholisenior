@@ -32,6 +32,9 @@ namespace logic
    inline bool equal( const term& tm1, const term& tm2 )
       { return is_eq( tm1 <=> tm2 ); }
 
+   std::strong_ordering kbo( const term& tm1, const term& tm2 );
+      // Compare first by weight, then by <=> .
+
    bool equal( const term& t1, size_t lift1, 
                const term& t2, size_t lift2, size_t vardepth );
 

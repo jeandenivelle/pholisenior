@@ -297,13 +297,20 @@ void tests::simplify( )
    type OT2O = type( type_func, O, { O, T } );
  
    auto cls1 = term( logic::op_kleene_or,
-      { ! prop( 3_db ), 4_db, !3_db, 3_db } );
+      { 0_db, 2_db == 4_db, !3_db } );
 
    auto cls2 = term( logic::op_kleene_or,
-      { 0_db, 1_db, 2_db, 4_db } );
+      { 0_db, 4_db, 2_db, !3_db, prop( 4_db ) } );
 
-   std::cout << calc::istautology( cls1 ) << "\n";
+   auto conj = term( logic::op_kleene_and, { cls1, cls2 } );
+   std::cout << conj << "\n";
 
+   calc::clauseset cls;
+   bool b = cls. insert( conj );
+   std::cout << b << "\n\n";
+   std::cout << cls << "\n";
+   cls. eq_simplify( );
+   std::cout << cls << "\n";
 }
 
 

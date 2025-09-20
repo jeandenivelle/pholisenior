@@ -24,13 +24,10 @@ namespace calc
                          const logic::term& fm, const sequent& seq, 
                          std::string_view rule, errorstack& err ); 
 
-   bool inconflict( bool neg1, const logic::term& tm1,
-                    bool neg2, const logic::term& tm2 );
-
-   bool inconflict( const logic::term& tm1, const logic::term& tm2 );
-
    bool istautology( const logic::term& disj ); 
       // True if disj is (very obviously) a tautology.
+
+   logic::term simplify( const logic::term& tm );
  
    std::optional< logic::term >
    deduce( const proofterm& prf, sequent& seq, errorstack& err );
