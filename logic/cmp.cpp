@@ -71,8 +71,6 @@ logic::weight_type logic::weight( const term& t )
 std::strong_ordering 
 logic::operator <=> ( const type& tp1, const type& tp2 ) 
 {
-   std::cout << tp1 << " <=> " << tp2 << "\n";
-
    // Selector is still an enum type:
 
    if( auto c = ( tp1. sel( ) <=> tp2. sel( )); !is_eq(c)) 
@@ -128,7 +126,7 @@ logic::operator <=> ( const type& tp1, const type& tp2 )
 std::strong_ordering
 logic::operator <=> ( const term& t1, const term& t2 ) 
 {
-   std::cout << t1 << " <=> " << t2 << "\n";
+   // std::cout << t1 << " <=> " << t2 << "\n";
 
    // Selector is still an enum type:
 
@@ -190,7 +188,7 @@ logic::operator <=> ( const term& t1, const term& t2 )
                std::pair( &eq2.sub1( ), &eq2.sub2( )) :
                std::pair( &eq2.sub2( ), &eq2.sub1( ));
 
-         // First compare the bigger elements.
+         // First compare the bigger elements:
 
          if( auto c = *decr1. first <=> *decr2. first; !is_eq(c))
             return c; 
@@ -200,7 +198,7 @@ logic::operator <=> ( const term& t1, const term& t2 )
          if( auto c = *decr1. second <=> *decr2. second; !is_eq(c))
             return c;
 
-         // That should do the job:
+         // The job is finished.
 
          return std::strong_ordering::equal; 
       }

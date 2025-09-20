@@ -297,12 +297,12 @@ void tests::simplify( )
    type OT2O = type( type_func, O, { O, T } );
  
    auto cls1 = term( logic::op_kleene_or,
-      { 4_db, 3_db, 2_db } );
+      { ! prop( 3_db ), 4_db, !3_db, 3_db } );
 
    auto cls2 = term( logic::op_kleene_or,
       { 0_db, 1_db, 2_db, 4_db } );
 
-   std::cout << calc::merge( cls1, 0, cls2, 4 ) << "\n";
+   std::cout << calc::istautology( cls1 ) << "\n";
 
 }
 

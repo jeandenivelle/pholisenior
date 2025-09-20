@@ -12,42 +12,6 @@
 
 #include "printing.h"
 
-bool calc::iscontradiction( const logic::term& fm )
-{
-   switch( fm. sel( ))
-   {
-   case logic::op_kleene_and:
-      {
-         auto conj = fm. view_kleene( );
-         for( size_t i = 0; i != conj. size( ); ++ i )
-         {
-            if( iscontradiction( conj. sub(i)))
-               return true;
-         }
-         return false; 
-      }
-   
-   case logic::op_kleene_or:
-      {
-         auto disj = fm. view_kleene( );
-         for( size_t i = 0; i != disj. size( ); ++ i )
-         {
-            if( !iscontradiction( disj. sub(i)))
-               return false;
-         }
-         return true;
-      }
-
-   case logic::op_kleene_exists:
-      {
-         auto quant = fm. view_quant( ); 
-         return iscontradiction( quant. body( ));
-      }
-   }
-
-   return false;
-}
-
 
 bool 
 calc::inconflict( bool neg1, const logic::term& tm1,
@@ -102,60 +66,74 @@ calc::inconflict( const logic::term& tm1, const logic::term& tm2 )
    }
 }
 
-bool 
-calc::inconflict( std::vector< logic::term > & checked,
-                  std::vector< logic::term > & unchecked )
+
+// This is a very bad case of bloated implementation.
+
+bool calc::istautology( const logic::term& disj ) 
 {
-restart: 
-   if( unchecked. empty( ))
-      return false;
+   if( disj. sel( ) != logic::op_kleene_or )
+      throw std::logic_error( "calc::istautology : Not a Kleene disjunction" );
 
-   auto picked = std::move( unchecked. back( ));
-   unchecked. pop_back( ); 
+   auto kl = disj. view_kleene( );
 
-   std::cout << "picked: " << picked << "\n";
+   // We just do a few simple checks:
 
-   if( picked. sel( ) == logic::op_not )
+   for( size_t i = 0; i != kl. size( ); ++ i )
    {
-      const auto& sub = picked. view_unary( ). sub( );
-      if( sub. sel( ) == logic::op_equals )
+      if( kl. sub(i). sel( ) == logic::op_equals )
       {
-         auto eq = sub. view_binary( );
-         if( logic::equal( eq. sub1( ), eq. sub2( )) )
-            return true;  
+         auto eq = kl. sub(i). view_binary( );
+         if( equal( eq. sub1( ), eq. sub2( )) )
+            return true;
       }
    }
 
-   if( picked. sel( ) == logic::op_kleene_and )
-   {
-      auto kl = picked. view_kleene( );
-      for( size_t i = 0; i != kl. size( ); ++ i )
-         unchecked. push_back( kl. extr_sub(i) );
-      goto restart; 
-   }
+   // this is of course ridiculous, but it is an exercise
+   // in coding too:
 
-   if( picked. sel( ) == logic::op_kleene_or )
+   for( size_t i = 0; i != kl. size( ); ++ i )
    {
-      auto kl = picked. view_kleene( );
-      if( kl. size( ) == 0 )
-         return true;
-      if( kl. size( ) == 1 )
+      if( kl. sub(i). sel( ) == logic::op_not )
       {
-         unchecked. push_back( kl. extr_sub(0));
-         goto restart;
+         const auto& sub = kl. sub(i). view_unary( ). sub( );
+         if( sub. sel( ) == logic::op_prop || 
+             sub. sel( ) == logic::op_equals )
+         {
+            for( size_t j = 0; j != kl. size( ); ++ j )
+            {
+               if( i != j && equal( sub, kl. sub(j)) )
+                  return true;
+            }
+         }
+
+         if( sub. sel( ) == logic::op_prop )
+         {
+            const auto& subsub = sub. view_unary( ). sub( );
+
+            bool saw_subsub = false;
+            bool saw_notsubsub = false;
+ 
+            for( size_t j = 0; j != kl. size( ); ++ j )
+            {
+               if( equal( kl. sub(j), subsub ))
+                  saw_subsub = true;
+
+               if( kl. sub(j). sel( ) == logic::op_not &&
+                   equal( kl. sub(j). view_unary( ). sub( ), subsub ))
+               {
+                  saw_notsubsub = true;
+               }
+            }
+
+            if( saw_subsub && saw_notsubsub ) 
+               return true;
+         }
       }
-      goto restart;
    }
 
-   for( const auto& ch : checked )
-   {
-      if( inconflict( ch, picked ))
-         return true;
-   }
-
-   checked. push_back( std::move( picked ));
-   goto restart;
+   return false; 
 }
+
 
 std::optional< logic::term >
 calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
@@ -704,7 +682,8 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          std::vector< logic::term > checked;
          std::vector< logic::term > unchecked;
          unchecked. push_back( form. value( ));
-   
+  
+#if 0 
          bool c = inconflict( checked, unchecked );
 
          if( !c )
@@ -718,6 +697,8 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          return logic::term( logic::op_kleene_and, {
             logic::term( logic::op_kleene_or, { } ) } );
+#endif 
+         throw std::logic_error( "conflict rule was removed" );
       }
 
    case prf_fake:

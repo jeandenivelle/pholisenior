@@ -11,6 +11,7 @@
 #include "proofterm.h"
 #include "optform.h"
 
+
 namespace calc
 {
    errorstack::builder
@@ -23,43 +24,18 @@ namespace calc
                          const logic::term& fm, const sequent& seq, 
                          std::string_view rule, errorstack& err ); 
 
-   std::optional< logic::term >
-   subform( const logic::term& fm, size_t i, const sequent& seq, 
-            std::string_view rule, errorstack& err );
-      // Get fm[i] if it exists.
-
-   std::optional< logic::term >
-   uniquesubform( const logic::term& fm, const sequent& seq,
-                  std::string_view rule, errorstack& err );
-      // fm must be a Kleene disjunction of arity 1. 
-      // We get out its unique subformula.
-
-   logic::term replace( logic::term fm, size_t i, const logic::term& val );
-      // Assign fm[i] := val, fm must be a Kleene operator.
- 
-   logic::term remove( logic::term fm, size_t i );
-      // Remove i-th subformula. fm must be a Kleene operator. 
-      // We move the subformulas after i one position back.
-      // We could also swap with the last, which would be more efficient
-      // (constant time), but we want to preserve order as much as possible.
-
-   bool iscontradiction( const logic::term& fm );
-      // True if fm counts as contradition.
-      // It must be in ANF2 and contain an empty disjunction.
-
    bool inconflict( bool neg1, const logic::term& tm1,
                     bool neg2, const logic::term& tm2 );
 
    bool inconflict( const logic::term& tm1, const logic::term& tm2 );
 
-   bool inconflict( std::vector< logic::term > & checked,
-                    std::vector< logic::term > & unchecked );
-      // Return active is in conflict with either of checked.
-    
+   bool istautology( const logic::term& disj ); 
+      // True if disj is (very obviously) a tautology.
+ 
    std::optional< logic::term >
    deduce( const proofterm& prf, sequent& seq, errorstack& err );
-      // In case of error, we express our frustration into err, and 
-      // return nothing. Like with type checking,
+      // In case of failure, we vent our frustration into err, and 
+      // return nothing. As with type checking,
       // we may try to recover from these errors, and check
       // other parts of the proof. 
 }
