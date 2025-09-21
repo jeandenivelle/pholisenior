@@ -7,7 +7,6 @@
 #include "logic/cmp.h"
 #include "logic/inspections.h"
 
-#include "formulaset.h"
 #include "expander.h"
 #include "clauseset.h"
 
@@ -188,7 +187,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          auto kl = disj. value( ). view_kleene( );
          size_t seqsize = seq. size( );
          bool success = true;
-         formulaset intro;
+         clause intro;
 
          for( size_t i = 0; i != kl. size( ); ++ i )
          {
@@ -211,7 +210,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
             {
                auto disj = res. value( ). view_kleene( );
                for( size_t i = 0; i != disj. size( ); ++ i )
-                  intro. insert( disj. sub(i));  
+                  intro. push_back( disj. sub(i));  
             }
 
             seq. restore( seqsize );
@@ -220,9 +219,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          if( !success )
             return { };
 
-         return logic::term( logic::op_kleene_and,
-            { logic::term( logic::op_kleene_or, 
-                           intro. begin( ), intro. end( )) } );
+         return disjunction( intro );
       }
 
    case prf_expand:
@@ -598,7 +595,9 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
       {
          auto intro = prf. view_andintro( ); 
 
-         formulaset result;
+         auto result = 
+            logic::term( logic::op_kleene_and,
+                         std::initializer_list< logic::term > ( ));
 
          for( size_t i = 0; i != intro. size( ); ++ i )
          {
@@ -617,11 +616,10 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
             auto kl = conj. value( ). view_kleene( );
 
             for( size_t i = 0; i != kl. size( ); ++ i )
-               result. insert( kl. sub(i));
+               result. view_kleene( ). push_back( kl. sub(i));
          }
 
-         return logic::term( logic::op_kleene_and, 
-                             result. begin( ), result. end( ));
+         return result;
       }
 
    case prf_select:
@@ -639,7 +637,9 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          auto errsize = err. size( );
 
          auto kl = conj. value( ). view_kleene( );
-         formulaset result; 
+         auto result = logic::term( 
+              logic::op_kleene_and,
+              std::initializer_list< logic::term > ( )); 
 
          for( size_t i = 0; i != sel. size( ); ++ i )
          {
@@ -651,7 +651,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
                err. push( std::move( bld )); 
             }
             else
-               result. insert( kl. sub( sel. nr(i) ));
+               result. view_kleene( ). push_back( kl. sub( sel. nr(i) ));
          } 
 
          if( err. size( ) > errsize )
@@ -660,8 +660,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
             err. addheader( errsize, std::move( bld ));
          }
 
-         return logic::term( logic::op_kleene_and,
-                                result. begin( ), result. end( ));
+         return result;
       }
  
    case prf_conflict:

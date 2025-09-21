@@ -42,7 +42,7 @@ uint64_t calc::clauseset::res_simplify( )
                {
                   if( inconflict( *p, *in ) && subset( *from, p, *into, in )) 
                   {
-                     std::cout << *p << " <#> " << *in << "\n";
+                     std::cout << *p << " conflicts " << *in << "\n";
                      in = into -> erase( in );
                      ++ counter; 
                   }
@@ -110,7 +110,7 @@ uint64_t calc::clauseset::eq_simplify( )
 }
 
 uint64_t 
-calc::clauseset::full_simplify( )
+calc::clauseset::fully_simplify( )
 {
    remove_repeated( );
    remove_redundant( );

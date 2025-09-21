@@ -47,7 +47,7 @@ namespace calc
          // We use KBO for directing the equality, so it can be in the
          // other direction too.
 
-      uint64_t full_simplify( );
+      uint64_t fully_simplify( );
          // Keep on calling res_simplify and eq_simplify until no
          // more simplifications are possible.
 

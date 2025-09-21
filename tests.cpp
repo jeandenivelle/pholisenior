@@ -295,23 +295,28 @@ void tests::simplify( )
    type O2T = type( type_func, T, { O } );
    type O2O = type( type_func, O, { O } );
    type OT2O = type( type_func, O, { O, T } );
- 
-   auto cls1 = term( logic::op_kleene_or,
-      { 0_db, 2_db == 4_db, !3_db } );
 
-   auto cls2 = term( logic::op_kleene_or,
-      { 0_db, 4_db, 2_db, !3_db, prop( 4_db ), 4_db == 4_db } );
+   auto cl1 = term( logic::op_kleene_or,
+      { "A"_unchecked, "B"_unchecked, "C"_unchecked } );
+   auto cl2 = term( logic::op_kleene_or,
+      { ! "A"_unchecked , "B"_unchecked, "C"_unchecked } );
+   auto cl3 = term( logic::op_kleene_or,
+      { "b1"_unchecked == "b2"_unchecked, "S"_unchecked } );
+   auto cl4 = term( logic::op_kleene_or, 
+      { "b2"_unchecked == "b3"_unchecked, "S"_unchecked } );
+   auto cl5 = term( logic::op_kleene_or,
+      { ! "R"_unchecked } );
+   auto cl6 = term( logic::op_kleene_or,
+      { ! prop( "C"_unchecked ), "B"_unchecked } );
 
-   auto cls3 = term( logic::op_kleene_or, { 2_db } );
-
-   auto conj = term( logic::op_kleene_and, { cls3, cls1, cls2, cls3 } );
+   auto conj = term( logic::op_kleene_and, { cl1, cl5, cl2, cl6, cl3, cl4 } );
    std::cout << conj << "\n";
 
    calc::clauseset cls;
    bool b = cls. insert( conj );
    std::cout << b << "\n\n";
    std::cout << cls << "\n";
-   cls. remove_redundant( );
+   cls. fully_simplify( );
    std::cout << cls << "\n";
    std::cout << cls. conjunction( ) << "\n";
 
