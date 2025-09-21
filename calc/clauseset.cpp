@@ -109,6 +109,88 @@ uint64_t calc::clauseset::eq_simplify( )
    return counter;
 }
 
+uint64_t 
+calc::clauseset::full_simplify( )
+{
+   remove_repeated( );
+   remove_redundant( );
+   uint64_t counter = 0;
+restart:
+   auto s = res_simplify( ) + eq_simplify( );
+   if(s) 
+   {
+      counter += s;
+      goto restart;
+   }
+   remove_repeated( );
+   remove_redundant( );
+
+   return counter;
+}
+
+void calc::clauseset::remove_repeated( )
+{
+   for( auto& cl : set )
+      calc::remove_repeated( cl ); 
+}
+
+void calc::clauseset::remove_redundant( )
+{
+   // First remove tautologies:
+
+   auto it = set. begin( );
+   while( it != set. end( ))
+   {
+      if( istautology( *it ))
+         it = set. erase( it );
+      else
+         ++ it;
+   }
+
+   // Then subsumed:
+
+   for( auto it = set. begin( ); it != set. end( ); ++ it )
+   {
+      auto p = set. begin( );
+      while( p != set. end( ))
+      {
+         if( p != it && subset( *it, it -> end( ), *p, p -> end( )))
+            p = set. erase(p);
+         else
+            ++ p;
+      }
+   }
+}
+
+
+logic::term
+calc::clauseset::conjunction( ) const
+{
+   auto res = logic::term( logic::op_kleene_and,
+                           std::initializer_list< logic::term > ( ));
+   auto kl = res. view_kleene( );
+   for( const auto& cl : set )
+      kl. push_back( disjunction( cl )); 
+   return res;
+}
+
+void
+calc::clauseset::print( std::ostream& out ) const
+{
+   out << "Clause Set:\n";
+   for( const auto& cls : set )
+   {
+      out << "   ";
+      for( auto p = cls. begin( ); p != cls. end( ); ++ p )
+      {
+         if( p != cls. begin( ))
+            out << ", ";
+         out << *p;
+      }
+      out << "\n";
+   }
+   out << "\n";
+}
 
 bool
 calc::inconflict( short int pol1, const logic::term& tm1,
@@ -164,11 +246,9 @@ calc::inconflict( const logic::term& tm1, const logic::term& tm2 )
    }
 }
 
-
-
 bool 
-calc::contains( const logic::term& lit, const clauseset::clause& cls,
-                clauseset::clause::const_iterator skip )
+calc::contains( const logic::term& lit, 
+                const clause& cls, clause::const_iterator skip )
 {
    for( auto q = cls. begin( ); q != cls. end( ); ++ q )
    {
@@ -180,10 +260,8 @@ calc::contains( const logic::term& lit, const clauseset::clause& cls,
 }
 
 bool 
-calc::subset( const clauseset::clause& cls1,
-              clauseset::clause::const_iterator skip1,
-              const clauseset::clause& cls2,
-              clauseset::clause::const_iterator skip2 )
+calc::subset( const clause& cls1, clause::const_iterator skip1,
+              const clause& cls2, clause::const_iterator skip2 )
 {
    for( auto p1 = cls1. begin( ); p1 != cls1. end( ); ++ p1 )
    {
@@ -193,57 +271,77 @@ calc::subset( const clauseset::clause& cls1,
    return true; 
 }
 
-logic::term
-calc::merge( const logic::term& form1, size_t skip1,
-             const logic::term& form2, size_t skip2 )
+bool
+calc::certainly( short int pol, const logic::term& tm )
 {
-   if( !form1. option_is_kleene( ))
-      throw std::logic_error( "calc::merge: Not a Kleene operator" );
-
-   if( form1. sel( ) != form2. sel( ))
-      throw std::logic_error( "calc::merge: Operators differ" );
-
-   auto res = 
-      logic::term( form1. sel( ), std::initializer_list< logic::term > ( ));
-
-   auto kl = res. view_kleene( ); 
-
-   auto kl1 = form1. view_kleene( );
-   for( size_t i = 0; i != kl1. size( ); ++ i )
+   if( tm. sel( ) == logic::op_not )
    {
-#if 0
-      if( i != skip1 && !contains( kl1. sub(i), res, kl. size( ) ))
-         kl. push_back( kl1. sub(i));
-#endif
+      auto un = tm. view_unary( );
+      return certainly( -pol, un. sub( ));
    }
 
-   auto kl2 = form2. view_kleene( );
-   for( size_t i = 0; i != kl2. size( ); ++ i )
+   if( pol > 0 && tm. sel( ) == logic::op_prop )
    {
-#if 0
-      if( i != skip2 && !contains( kl2. sub(i), res, kl. size( ) ))
-         kl. push_back( kl2. sub(i));
-#endif
+      auto un = tm. view_unary( ); 
+      if( un. sub( ). sel( ) == logic::op_equals ||
+          un. sub( ). sel( ) == logic::op_prop )
+      {
+         return true;
+      }
    }
 
-   return res;      
+   if( pol > 0 && tm. sel( ) == logic::op_equals ) 
+   {
+      auto eq = tm. view_binary( );
+      if( equal( eq. sub1( ), eq. sub2( )))
+         return true;
+   }
+
+   return false;
 }
 
-void
-calc::clauseset::print( std::ostream& out ) const
+void calc::remove_repeated( clause& cls ) 
 {
-   out << "Clause Set:\n";
-   for( const auto& cls : set )
+   auto it = cls. begin( );
+   while( it != cls. end( ))
    {
-      out << "   ";
-      for( auto p = cls. begin( ); p != cls. end( ); ++ p )
+      bool skip = false;
+
+      if( certainly( -1, *it ))
+         skip = true;
+
+      for( auto p = cls. begin( ); p != it && !skip; ++ p )
       {
-         if( p != cls. begin( ))
-            out << ", ";
-         out << *p;
+         if( equal( *p, *it ))
+            skip = true;
       }
-      out << "\n";
+
+      if( skip )
+         it = cls. erase( it );
+      else
+         ++ it;
    }
-   out << "\n";
+}
+
+bool
+calc::istautology( const clause& cls )
+{
+   for( const auto& lit : cls ) 
+   {
+      if( certainly( 1, lit ))
+         return true;
+   }
+   return false;
+}
+
+logic::term
+calc::disjunction( const clause& cls )
+{
+   logic::term res = logic::term( logic::op_kleene_or, 
+                                  std::initializer_list< logic::term > ( )); 
+   auto kl = res. view_kleene( );
+   for( const auto& lit : cls )
+      kl. push_back( lit ); 
+   return res;
 }
 

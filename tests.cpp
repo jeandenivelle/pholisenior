@@ -300,17 +300,21 @@ void tests::simplify( )
       { 0_db, 2_db == 4_db, !3_db } );
 
    auto cls2 = term( logic::op_kleene_or,
-      { 0_db, 4_db, 2_db, !3_db, prop( 4_db ) } );
+      { 0_db, 4_db, 2_db, !3_db, prop( 4_db ), 4_db == 4_db } );
 
-   auto conj = term( logic::op_kleene_and, { cls1, cls2 } );
+   auto cls3 = term( logic::op_kleene_or, { 2_db } );
+
+   auto conj = term( logic::op_kleene_and, { cls3, cls1, cls2, cls3 } );
    std::cout << conj << "\n";
 
    calc::clauseset cls;
    bool b = cls. insert( conj );
    std::cout << b << "\n\n";
    std::cout << cls << "\n";
-   cls. eq_simplify( );
+   cls. remove_redundant( );
    std::cout << cls << "\n";
+   std::cout << cls. conjunction( ) << "\n";
+
 }
 
 

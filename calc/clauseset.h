@@ -16,9 +16,10 @@ namespace calc
    // so implementation must be simple.
    // We try to keep the clause set in order for predictability.
 
+   using clause = std::list< logic::term > ;
+
    struct clauseset
    {
-      using clause = std::list< logic::term > ;
 
       std::list< std::list< logic::term >> set;
 
@@ -46,43 +47,53 @@ namespace calc
          // We use KBO for directing the equality, so it can be in the
          // other direction too.
 
-      uint64_t remove_tautologies( );
+      uint64_t full_simplify( );
+         // Keep on calling res_simplify and eq_simplify until no
+         // more simplifications are possible.
 
-      void remove_subsumed( const logic::term& disj );
+      void remove_repeated( ); 
+         // Remove repeated literals, and obviously false literals.
+
+      void remove_redundant( );
          // Remove disjunctions subsumed by disj. 
 
+      logic::term conjunction( ) const;
+
       size_t size( ) const { return set. size( ); } 
-      logic::weight_type weight( ) const; 
-         // Total weight of everything that we have.
   
       void print( std::ostream& out ) const;
-
    };
-
 
    bool inconflict( short int pol1, const logic::term& tm1,
                     short int pol2, const logic::term& tm2 );
 
    bool inconflict( const logic::term& tm1, const logic::term& tm2 );
 
+   bool contains( const logic::term& lit, const clause& cls, 
+                  clause::const_iterator skip );
 
-   bool 
-   contains( const logic::term& lit, const clauseset::clause& cls, 
-             clauseset::clause::const_iterator skip );
-
-   bool subset( const clauseset::clause& cls1, 
-                clauseset::clause::const_iterator skip1,
-                const clauseset::clause& cls2, 
-                clauseset::clause::const_iterator skip2 );
+   bool subset( const clause& cls1, 
+                clause::const_iterator skip1,
+                const clause& cls2, 
+                   clause::const_iterator skip2 );
       // True if cls1 \ skip1 is a subset of cls2 \ skip2.
 
-   // Repeats are removed:
+   bool certainly( short int pol, const logic::term& tm );
+      // If pol > 0, certainly true.
+      // If pol < 0, certainly false.
 
-   logic::term
-   merge( const logic::term& form1, size_t skip1,
-          const logic::term& form2, size_t skip2 );
+   void remove_repeated( clause& cls );
+         // Remove repeated literals 
+         // and literals that are certainly false. 
+
+   bool istautology( const clause& cls );
+      // True if we contain a literal that is certainly true. 
+      // I do not expect that tautologies will occur in meaningful proofs.
+
+   logic::term disjunction( const clause& cls );
 
 }
+
 
 #endif
 
