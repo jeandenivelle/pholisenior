@@ -184,20 +184,23 @@ namespace logic
    {
       term from;
       term to; 
+     
+      uint64_t counter = 0; 
 
       rewriterule( const term& from, const term& to )
-         : from( from ), to( to )
+         : from( from ), to( to ) 
       { }
 
       rewriterule( term&& from, term&& to )
          : from( std::move( from )),
-           to( std::move( to ))
+           to( std::move( to )) 
       { }
 
       void swap( ) 
          { std::swap( from, to ); } 
 
-      term operator( ) ( const term& t, size_t vardepth, bool& change ) const;
+      term operator( ) ( const term& t, size_t vardepth, bool& change );
+         // Not const because of the counter.
 
       void print( std::ostream& out ) const;
    };

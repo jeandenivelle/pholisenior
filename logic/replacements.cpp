@@ -304,11 +304,12 @@ void logic::betareduction::print( std::ostream& out ) const
 
 logic::term
 logic::rewriterule::operator( ) ( const term& t, size_t vardepth,
-                                  bool& change ) const
+                                  bool& change ) 
 {
    if( equal( from, vardepth, t, 0, 0 ))
    {
       change = true;
+      ++ counter;
       return lift( to, vardepth );
    }
 

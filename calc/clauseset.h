@@ -29,21 +29,24 @@ namespace calc
 
       bool insert( const logic::term& tm ); 
          // True if insertion was successful,
-         // which requires that tm is in ANF2_times.
+         // which will be the case if tm is in ANF2_times.
+         // We are not checking for repetitions.
 
-      void res_simplify( );
+      uint64_t res_simplify( );
          // Do a resolution simplification.
          // We look for pairs A1 \/ R1,  A2 \/ R2 where
          // A1,A2 are in conflict, and R1 is a subset of R2.
          // In that case, we remove A2. 
  
-      void eq_simplify( ); 
+      uint64_t eq_simplify( ); 
          // Do a paramodulation simplification.
          // We look for pairs t1 == t2 \/ R1, A2[t1] \/ R2,
          // where R1 is a subset of R2. In that case,
          // we replace t1 by t2. 
          // We use KBO for directing the equality, so it can be in the
          // other direction too.
+
+      uint64_t remove_tautologies( );
 
       void remove_subsumed( const logic::term& disj );
          // Remove disjunctions subsumed by disj. 

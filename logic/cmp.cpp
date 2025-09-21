@@ -475,7 +475,6 @@ logic::kbo( const term& tm1, const term& tm2 )
    if( auto c = w1 <=> w2; !is_eq(c))
       return c;
 
-   std::cout << "it didn't help\n";
    return tm1 <=> tm2;
 }
 

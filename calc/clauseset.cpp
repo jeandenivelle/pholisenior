@@ -25,9 +25,10 @@ calc::clauseset::insert( const logic::term& tm )
    return true; 
 }
 
-void 
-calc::clauseset::res_simplify( )
+uint64_t calc::clauseset::res_simplify( )
 {
+   uint64_t counter = 0;
+
    for( auto from = set. begin( ); from != set. end( ); ++ from )
    {
       for( auto into = set. begin( ); into != set. end( ); ++ into ) 
@@ -43,6 +44,7 @@ calc::clauseset::res_simplify( )
                   {
                      std::cout << *p << " <#> " << *in << "\n";
                      in = into -> erase( in );
+                     ++ counter; 
                   }
                   else 
                      ++ in;
@@ -51,11 +53,15 @@ calc::clauseset::res_simplify( )
          } 
       }
    }
+
+   return counter;
 }
 
 
-void calc::clauseset::eq_simplify( )
+uint64_t calc::clauseset::eq_simplify( )
 {
+   uint64_t counter = 0;
+
    for( auto from = set. begin( ); from != set. end( ); ++ from )
    {
       for( auto into = set. begin( ); into != set. end( ); ++ into )
@@ -83,14 +89,15 @@ void calc::clauseset::eq_simplify( )
                           in != into -> end( ); ++ in ) 
                      {
                         // We first check for subset.
-                        // If yes, we rewrite without checking if
-                        // a replacement was made.
+                        // If yes, we try to rewrite, and count
+                        // how often it happened.
 
                         if( subset( *from, eq, *into, in ))
                         {
-                           std::cout << "attempting to rewrite " << *in << "\n";
+                           rewr. counter = 0;
                            *in = outermost( rewr, *in, 0 );
-                        } 
+                           counter += rewr. counter; 
+                        }
                      }
                   }
                }
@@ -98,6 +105,8 @@ void calc::clauseset::eq_simplify( )
          }
       }
    }
+
+   return counter;
 }
 
 
@@ -161,8 +170,6 @@ bool
 calc::contains( const logic::term& lit, const clauseset::clause& cls,
                 clauseset::clause::const_iterator skip )
 {
-   std::cout << "      contains " << lit << " skip " << *skip << "\n";
-
    for( auto q = cls. begin( ); q != cls. end( ); ++ q )
    {
       if( q != skip && equal( lit, *q ))
