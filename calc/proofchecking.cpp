@@ -663,15 +663,16 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          return result;
       }
  
-   case prf_conflict:
+   case prf_simplify:
       {
-         auto confl = prf. view_conflict( );
+         auto simp = prf. view_simplify( );
 
-         auto form = deduce( confl. parent( ), seq, err );
+         auto form = deduce( simp. parent( ), seq, err );
 
          if( !form. has_value( ))
             return form;
 
+         std::cout << "simplifying " << form. value( ) << "\n";
          std::vector< logic::term > checked;
          std::vector< logic::term > unchecked;
          unchecked. push_back( form. value( ));
@@ -681,7 +682,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
 
          if( !c )
          {
-            auto bld = printing::makeheader( seq, "conflict" );
+            auto bld = printing::makeheader( seq, "simplify" );
             bld << "formula does not contain a conflict:\n";
             bld << "  "; printing::pretty( bld, seq, form. value( ));
             bld << "\n";
@@ -691,7 +692,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          return logic::term( logic::op_kleene_and, {
             logic::term( logic::op_kleene_or, { } ) } );
 #endif 
-         throw std::logic_error( "conflict rule was removed" );
+         throw std::logic_error( "simplify rule is not implemented" );
       }
 
    case prf_fake:

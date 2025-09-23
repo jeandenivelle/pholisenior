@@ -45,7 +45,7 @@
 %option andintro { prf_andintro } => [ parent : proofterm ]
 %option select { prf_select } => parent : proofterm, [ nr : size_t ]
 
-%option conflict { prf_conflict } => parent : proofterm 
+%option simplify { prf_simplify } => parent : proofterm 
 
 %option fake { prf_fake } => goal : logic::term
 %option show { prf_show } => comment : std::string, prf : proofterm
@@ -220,11 +220,11 @@
             return; 
          }
 
-      case prf_conflict:
+      case prf_simplify:
          {
-            auto confl = view_conflict( );
-            out << ind << "conflict\n";
-            confl. parent( ). print( ind + 3, out );
+            auto simp = view_simplify( );
+            out << ind << "simplify\n";
+            simp. parent( ). print( ind + 3, out );
             return;
          }
 

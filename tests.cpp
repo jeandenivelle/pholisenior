@@ -476,11 +476,11 @@ void tests::smallproofs( logic::beliefstate& blfs, errorstack& err )
                      proofterm( prf_forallelim,
                         proofterm( prf_ident, identifier( ) + "hyp0001" ), 1,
                         { "z0001"_unchecked } ), 0,
-                  { { "ccc", proofterm( prf_conflict,
+                  { { "ccc", proofterm( prf_simplify,
                        proofterm( prf_andintro, 
                        { proofterm( prf_ident, identifier( ) + "aaa0001" ),
                          proofterm( prf_ident, identifier( ) + "ccc0001" ) } )) },
-                    { "ddd", proofterm( prf_conflict,
+                    { "ddd", proofterm( prf_simplify,
                        proofterm( prf_andintro, 
                        { proofterm( prf_ident, identifier( ) + "neg0001" ),
                          proofterm( prf_ident, identifier( ) + "ddd0001" ) } )) }} );
@@ -491,7 +491,7 @@ void tests::smallproofs( logic::beliefstate& blfs, errorstack& err )
                        { "z0001"_unchecked } ), 0,
                  { { "aaa", orelim2 },
                    { "bbb",
-                      proofterm( prf_conflict,
+                      proofterm( prf_simplify,
                          proofterm( prf_andintro,
                             { proofterm( prf_ident, identifier( ) + "neg0001" ),
                               proofterm( prf_ident, identifier( ) + "bbb0001" ) } ))
@@ -584,7 +584,7 @@ void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
    auto base = "base0001"_assumption;
    base = expand( "Q0001", 0, base );
    base = clausify( base );
-   base = conflict( base );
+   base = simplify( base );
    base = show( "base case", base );
 
    auto step = magcontr;
@@ -616,6 +616,8 @@ void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
    disj = proofterm( prf_show, "expanded disj", disj );
 
    auto prf2 = proofterm( prf_orelim, disj, 2, {{ "forall", prf3 }} );
+
+   prf2. print( indentation( ), std::cout ); 
  
    auto res = 
       deduce( proofterm( prf_existselim, exists, 0, "main", prf2 ), seq, err );

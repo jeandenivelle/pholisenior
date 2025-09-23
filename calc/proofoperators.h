@@ -46,28 +46,14 @@ namespace calc
    inline term operator != ( const term& t1, const term& t2 )
       { return ! ( t1 == t2 ); }
 
-   inline term forall( std::initializer_list< vartype > vars, const term& t )
-      { return term( op_forall, t, vars ); }
-
-   inline term exists( std::initializer_list< vartype > vars, const term& t )
-      { return term( op_exists, t, vars ); }
-
-   inline term apply( const term& f, std::initializer_list< term > args )
-      { return term( op_apply, f, args ); }
-
-   inline term lambda( std::initializer_list< vartype > vars, const term& t )
-      { return term( op_lambda, t, vars ); }
-
-   inline term let( const vartype& var, const term& val, const term& body )
-      { return term( op_let, var, val, body ); }
 #endif
 
    inline proofterm existselim( const proofterm& ex, size_t nr,
                                 const std::string& name, const proofterm& sub )
       { return proofterm( prf_existselim, ex, nr, name, sub ); }
  
-   inline proofterm conflict( const proofterm& prf )
-      { return proofterm( prf_conflict, prf ); }
+   inline proofterm simplify( const proofterm& prf )
+      { return proofterm( prf_simplify, prf ); }
 
    inline proofterm clausify( const proofterm& prf )
       { return proofterm( prf_clausify, prf ); }
