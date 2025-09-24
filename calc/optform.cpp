@@ -199,7 +199,7 @@ void calc::optform::fake( )
       return; 
 
    auto bld = printing::makeheader( seq, rule );
-   bld << "faked proof of:  ";
+   bld << "faking proof of:  ";
    pretty( bld );
    err. push( std::move( bld ));
 }

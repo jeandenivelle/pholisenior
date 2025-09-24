@@ -36,9 +36,6 @@
 %option forallelim { prf_forallelim } =>
    parent : proofterm, nrforall : size_t, [ value : logic::term ] 
 
-%option eqrepl { prf_eqrepl } =>
-   parent : proofterm, times : size_t, [ eqnr : size_t, leftright : bool ]
-
 %option define { prf_define } =>
    name : std::string, val : logic::term, parent : proofterm
 
@@ -195,29 +192,6 @@
             out << " from\n";
             elim. parent( ). print( ind + 3, out );
             return;
-         }
-
-      case prf_eqrepl:
-         {
-            auto repl = view_eqrepl( );
-            out << ind << "replace";
-            for( size_t i = 0; i != repl. size( ); ++ i )
-            {
-               if(i) 
-                  out << ", ";
-               else
-                  out << " ";
-
-               out << repl. eqnr(i) << ":";
-               if( repl. leftright(i))
-                  out << "L->R";
-               else
-                  out << "R->L";
-            } 
-            out << " trying " << repl. times( ) << " times"; 
-            out << " in\n";
-            repl. parent( ). print( ind + 3, out );
-            return; 
          }
 
       case prf_simplify:

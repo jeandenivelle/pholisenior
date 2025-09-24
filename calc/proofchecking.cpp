@@ -81,49 +81,6 @@ bool calc::istautology( const logic::term& disj )
    return false; 
 }
 
-logic::term calc::simplify( const logic::term& conj )
-{
-   clauseset cls;
-
-   cls. insert( conj );
-
-   std::cout << cls << "\n";
-
-restart:
-#if 0
-   auto sel = unchecked. pick( );
-   if( istautology( sel ))
-      goto pick;
-   
-   pick = direct( pick );
-      // Direct the equalities.
-
-   auto pick_kl = pick. view_kleen( );
-
-   for( auto p = checked. begin( ); p != unchecked. end( ); ++ p )
-   {
-      auto kl = p -> view_kleene( );
-      for( size_t i = 0; i != pick_kl. size( ); ++ i )
-         for( size_t j = 0; j != kl. size( ); ++ j )
-         {
-            if( inconflict( pick_kl. sub(i), kk. sub(j))
-            {
-               
-
-
-
-            }
-
-
-         }      
-
-
-   }
-#endif
-
-   ;
-}
-
 
 std::optional< logic::term >
 calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
@@ -505,92 +462,6 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          return res; 
       }
 
-   case prf_eqrepl:
-      {
-         auto eqrepl = prf. view_eqrepl( );
-         auto anf = optform( deduce( eqrepl. parent( ), seq, err ),
-                             "eq-repl", seq, err );
-
-         anf. musthave( logic::op_kleene_and );
-
-         if( !anf ) 
-            return { };   // Not a Kleene-and, bye bye! 
-
-         auto errsize = err. size( );
-
-         std::cout << "not implemented k sozhaleniu\n";
-         throw std::logic_error( "bye" );
-#if 0
-         logic::rewritesystem sys;
-     
-         auto kl = anf. value( ). view_kleene( );
-         std::vector< bool > equalities;
-         for( size_t i = 0; i != kl. size( ); ++ i )
-            equalities. push_back( false );  
-
-         for( size_t i = 0; i != eqrepl. size( ); ++ i )
-         {
-            if( eqrepl. eqnr(i) >= kl. size( ))
-            {
-               auto bld = errorstack::builder( );
-               bld << "selected equality " << eqrepl. eqnr(i);
-               bld << " >= " << kl. size( );
-               err. push( std::move( bld ));
-            }
-            else
-            {
-               auto disj = kl. sub( eqrepl. eqnr(i) );
-               if( disj. sel( ) != logic::op_kleene_or ||
-                   disj. view_kleene( ). size( ) != 1 )
-               {
-                  auto bld = errorstack::builder( );
-                  bld << "selected equality " << eqrepl. eqnr(i);
-                  bld << " is not an equality";
-                  err. push( std::move( bld ));
-               } 
-               else
-               {
-                  auto eq = disj. view_kleene( ). sub(0); 
-                  if( eq. sel( ) != logic::op_equals ) 
-                  {
-                     auto bld = errorstack::builder( );
-                     bld << "selected equality " << eqrepl. eqnr(i);
-                     bld << " is not an equality"; 
-                     err. push( std::move( bld ));
-                  } 
-                  else
-                  {
-                     auto bin = eq. view_binary( );
-                     if( eqrepl. leftright(i))
-                        sys. append( bin. sub1( ), bin. sub2( ));
-                     else
-                        sys. append( bin. sub2( ), bin. sub1( )); 
-
-                     equalities[ eqrepl. eqnr(i) ] = true;
-                  }
-               }
-            }
-         }
-
-         std::cout << sys << "\n";
-         for( auto b : equalities )
-            std::cout << b << " ";
-         std::cout << "\n";
-         for( size_t i = 0; i != kl. size( ); ++ i )
-         {
-            if( !equalities[i] )
-            {
-               for( size_t nr = 0; nr != eqrepl. times( ); ++ nr )
-               {
-                  kl. update_sub( i, outermost( sys, kl. extr_sub(i), 0 )); 
-               }
-            } 
-         }
-#endif
-
-         return anf. value( );
-      }
-
    case prf_andintro:
       {
          auto intro = prf. view_andintro( ); 
@@ -672,27 +543,10 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          if( !form. has_value( ))
             return form;
 
-         std::cout << "simplifying " << form. value( ) << "\n";
-         std::vector< logic::term > checked;
-         std::vector< logic::term > unchecked;
-         unchecked. push_back( form. value( ));
-  
-#if 0 
-         bool c = inconflict( checked, unchecked );
-
-         if( !c )
-         {
-            auto bld = printing::makeheader( seq, "simplify" );
-            bld << "formula does not contain a conflict:\n";
-            bld << "  "; printing::pretty( bld, seq, form. value( ));
-            bld << "\n";
-            err. push( std::move( bld ));
-         }
-
-         return logic::term( logic::op_kleene_and, {
-            logic::term( logic::op_kleene_or, { } ) } );
-#endif 
-         throw std::logic_error( "simplify rule is not implemented" );
+         clauseset set;
+         set. insert( form. value( ));
+         set. fully_simplify( );
+         return set. getformula( );
       }
 
    case prf_fake:

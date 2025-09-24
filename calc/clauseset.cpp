@@ -4,17 +4,46 @@
 #include "logic/replacements.h"
 
 
-bool 
-calc::clauseset::insert( const logic::term& tm )
+void calc::clauseset::insert( const logic::term& tm )
 {
-   if( tm. sel( ) != logic::op_kleene_and )
-      return false;
+   switch( tm. sel( ))
+   {
+   case logic::op_kleene_and:
+      {
+         auto kl = tm. view_kleene( );
+         for( size_t i = 0; i != kl. size( ); ++ i )
+            insert( kl. sub(i));
+         return; 
+      }
+
+   case logic::op_kleene_or:
+      {
+         auto kl = tm. view_kleene( );
+         auto clause = std::list< logic::term > ( );
+         for( size_t i = 0; i != kl. size( ); ++ i )
+            clause. push_back( kl. sub(i));
+         set. push_back( std::move( clause ));
+         return;
+      }
+
+   case logic::op_kleene_forall:
+      {
+         auto quant = tm. view_quant( );
+         if( quant. size( ) == 0 )
+            insert( quant. body( ));
+         return;
+      }
+         
+   }
+
+   std::cout << "clauseset::insert " << tm. sel( ) << "\n";
+   throw std::logic_error( "insert: unknown selector type" );
 
    auto kl = tm. view_kleene( );
    for( size_t i = 0; i != kl. size( ); ++ i )
    {
       if( kl. sub(i). sel( ) != logic::op_kleene_or )
-         return false;
+         return;
 
       auto cls = kl. sub(i). view_kleene( );
       set. push_back( std::list< logic::term > ( ));
@@ -22,7 +51,7 @@ calc::clauseset::insert( const logic::term& tm )
          set. back( ). push_back( cls. sub(j));
    }
 
-   return true; 
+   return; 
 }
 
 uint64_t calc::clauseset::res_simplify( )
@@ -164,7 +193,7 @@ void calc::clauseset::remove_redundant( )
 
 
 logic::term
-calc::clauseset::conjunction( ) const
+calc::clauseset::getformula( ) const
 {
    auto res = logic::term( logic::op_kleene_and,
                            std::initializer_list< logic::term > ( ));
@@ -181,12 +210,17 @@ calc::clauseset::print( std::ostream& out ) const
    for( const auto& cls : set )
    {
       out << "   ";
-      for( auto p = cls. begin( ); p != cls. end( ); ++ p )
+      if( cls. size( ) > 0 )
       {
-         if( p != cls. begin( ))
-            out << ", ";
-         out << *p;
+         for( auto p = cls. begin( ); p != cls. end( ); ++ p )
+         {
+            if( p != cls. begin( ))
+               out << ", ";
+            out << *p;
+         }
       }
+      else
+         out << "(empty)";
       out << "\n";
    }
    out << "\n";

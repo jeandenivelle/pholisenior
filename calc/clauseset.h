@@ -28,10 +28,8 @@ namespace calc
       clauseset& operator = ( clauseset&& ) noexcept = default;
          // Deleting copy.
 
-      bool insert( const logic::term& tm ); 
-         // True if insertion was successful,
-         // which will be the case if tm is in ANF2_times.
-         // We are not checking for repetitions.
+      void insert( const logic::term& tm ); 
+         // We insert what we understand.
 
       uint64_t res_simplify( );
          // Do a resolution simplification.
@@ -57,7 +55,7 @@ namespace calc
       void remove_redundant( );
          // Remove disjunctions subsumed by disj. 
 
-      logic::term conjunction( ) const;
+      logic::term getformula( ) const;
 
       size_t size( ) const { return set. size( ); } 
   

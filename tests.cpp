@@ -313,12 +313,11 @@ void tests::simplify( )
    std::cout << conj << "\n";
 
    calc::clauseset cls;
-   bool b = cls. insert( conj );
-   std::cout << b << "\n\n";
+   cls. insert( conj );
    std::cout << cls << "\n";
    cls. fully_simplify( );
    std::cout << cls << "\n";
-   std::cout << cls. conjunction( ) << "\n";
+   std::cout << cls. getformula( ) << "\n";
 
 }
 
@@ -599,8 +598,6 @@ void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
    goal2 = proofterm( prf_orelim, goal2, 0,
       { { "base", base }, { "step", step }} );
 
-   goal2 = proofterm( prf_show, "the main part", goal2 );
- 
    auto goal3 = expand( "Q0001", 0, "alt0003"_assumption );
    goal3 = show( "(the final goal, very easy I think)", goal3 );
 

@@ -27,8 +27,6 @@ namespace calc
    bool istautology( const logic::term& disj ); 
       // True if disj is (very obviously) a tautology.
 
-   logic::term simplify( const logic::term& tm );
- 
    std::optional< logic::term >
    deduce( const proofterm& prf, sequent& seq, errorstack& err );
       // In case of failure, we vent our frustration into err, and 
