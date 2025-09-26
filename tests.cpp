@@ -587,9 +587,9 @@ void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
    base = show( "base case", base );
 
    auto step = magcontr;
+   // step = existselim( expand( "Q0001", 0, "exists0001"_assumption ), 2, "before", step );
    step = show( "step case", step );
    step = existselim( "step0001"_assumption, 0, "exists", step );
-
 
    auto goal2 = "alt0002"_assumption;
    // goal2 = proofterm( prf_expand, identifier( ) + "Q0001", 0, goal2 );
@@ -671,58 +671,6 @@ void tests::prove_pluscom( )
    edit. show( std::cout, { } );
 #if 0
 #if 1  // Start proof plus::succ:rev
-   thm = bel. at( ind ). second. view_thm( ). form( );
-   edit = logic::proofeditor( &bel, ind, !thm );
-
-   edit. apply_exists( 0_db ); 
-   edit. apply_abbreviate( term( prf_and1, 0_db )); 
-
-   auto inductionhypothesis = 
-      implies( apply( "nat"_ident, 0_db ),
-                      apply( "plus"_ident, apply( "succ"_ident, 1_db ), 0_db ) ==
-                      apply( "succ"_ident, apply( "plus"_ident, 1_db, 0_db )) );
-   
-   edit. apply_abbreviate( term( prf_inst, term( sel_ident, identifier( ) + "peano" + "induction" ),
-                                            term( sel_lambda, inductionhypothesis, 
-                                               { { "y", type( sel_set ) }} ) + 2 ) );  
-   
-   edit. apply_disj( 0_db );
-
-   edit. apply_abbreviate( term( prf_inst, term( sel_ident, identifier( ) + "plus" + "zero" ),
-                                           4_db ) );
-   edit. apply_abbreviate( term( prf_inst, term( sel_ident, identifier( ) + "plus" + "zero" ),
-                                           term( sel_appl, "succ"_ident, { 5_db } )) );
-
-   edit. apply_disj( 0_db );
-
-   edit. apply_abbreviate( term( prf_inst, term( sel_ident, identifier( ) + "peano" + "succ"), 7_db ) );
-   
-   edit. apply_disj( 0_db );
-   
-   edit. apply_proof( term( prf_contr, 0_db, 7_db ) );
-   edit. setfocus( 0 );
-   edit. apply_proof( term( prf_contr, 0_db, 2_db ) );
-   edit. setfocus( 0 );
-
-   edit. apply_disj ( 2_db );
-
-   edit. apply_proof( term( prf_contr, 0_db, 6_db) );
-   edit. setfocus( 0 );
-
-   edit. apply_abbreviate( term( prf_repl, 0_db, 4_db ));
-   edit. apply_abbreviate( term( prf_repl, 2_db, 0_db ));
-   edit. apply_abbreviate( term( prf_and2, 0_db ) );
-
-   edit. apply_proof( term( prf_false, 0_db ) );
-   edit. setfocus( 0 );
-
-   edit. apply_disj( 0_db );
-
-   edit. apply_exists( 0_db );
-   
-   edit. apply_abbreviate( term( prf_and2, 0_db ) );
-   edit. apply_abbreviate( term( prf_and1, 0_db ) );
-   edit. apply_abbreviate( term( prf_and2, 1_db ) );
 
    edit. apply_abbreviate( term( prf_inst, term( sel_ident, identifier( ) + "plus" + "succ"), 10_db ) );
    edit. apply_disj( 0_db );
