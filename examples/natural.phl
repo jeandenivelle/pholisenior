@@ -7,9 +7,17 @@ end;
 def isclosed( s: Nat ) ( P: Form(Obj) ) :=
     P( s.0 ) & [ x: Obj ] P( x ) -> P( s. succ( x )) : Form;
 
+thm isclosed_prop : [ s : Nat, P : Form( Obj ) ] 
+   strict(P) -> # isclosed( s, P ); 
+
 def gen( s: Nat )( x : Obj ) :=
    [ P : Form( Obj ) ] { strict(P) } -> s. isclosed(P) -> P(x) : Form ;
 
+thm gen_prop : [ s : Nat, x : Obj ] # s. gen(x) ; 
+thm gen_0 :    [ s : Nat ] s. gen( s. 0 ) ; 
+thm gen_succ : [ s : Nat, x : Obj ] s. gen(x) -> s. gen( s. succ(x)) ;
+
+   
 thm induction : [ s: Nat, P: Form(Obj) ] 
    { stricton( s. gen, P ) } -> P( s.0 ) -> 
       ( [ x: Obj ] { s. gen(x) } -> P( x ) -> P( s. succ( x ))) -> 

@@ -66,7 +66,7 @@ void calc::optform::getuniquesub( )
    if( kl. size( ) != 1 )
    {
       auto bld = printing::makeheader( seq, rule );
-      bld << "formula must have arity one, but it is :";
+      bld << "formula must have arity one, but it is: ";
       pretty( bld );
       err. push( std::move( bld ));
 
@@ -90,7 +90,7 @@ void calc::optform::aritymustbe( size_t i )
    if( kl. size( ) != i )
    {
       auto bld = printing::makeheader( seq, rule );
-      bld << "formula must have arity " << i << ", but it is :";
+      bld << "formula must have arity " << i << ", but it is : ";
       pretty( bld );
       err. push( std::move( bld ));
    

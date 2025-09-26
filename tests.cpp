@@ -574,7 +574,7 @@ void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
       indhyp = lambda( {{ "n1", Nat }, { "n2", Nat }}, indhyp );
    }
 
-   auto magcontr = proofterm( prf_fake, logic::op_false );
+   auto fakecontr = proofterm( prf_fake, logic::op_false );
    auto exists = clausify( "initial0001"_assumption ); 
 
    auto prf3 = proofterm( prf_ident, identifier( ) + "forall0001" );
@@ -586,24 +586,37 @@ void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
    base = simplify( base );
    base = show( "base case", base );
 
-   auto step = magcontr;
-   // step = existselim( expand( "Q0001", 0, "exists0001"_assumption ), 2, "before", step );
-   step = show( "step case", step );
+   auto step = select( { 3 }, "exists0001"_assumption ); 
+   step = expand( "Q0001", 0, step );
+   step = clausify( step );
+   step = proofterm( prf_forallelim, step, 1, { "x0003"_unchecked, "x0004"_unchecked } );
+   step = simplify( step );
+
+   auto inst1 = proofterm( prf_forallelim, clausify( "gen_succ"_assumption ), 0, 
+                           { "s0001"_unchecked, "y0001"_unchecked } );
+   auto inst2 = proofterm( prf_forallelim, clausify( "gen_succ"_assumption ), 0,
+                           { "s0002"_unchecked, "y0002"_unchecked } );
+
+   step = orelim( clausify( expand( "Q0001", 0, "exists0001"_assumption )), 2, 
+                  "base", fakecontr,
+                  "step", existselim( "step0002"_assumption, 0, "aaaa", show( "little step", 
+                simplify( andintro( { step, "aaaa0001"_assumption, inst1, inst2 } )) )));
+   // I believe the proof is on the right track. We also need for minhomrel. 
+
    step = existselim( "step0001"_assumption, 0, "exists", step );
 
    auto goal2 = "alt0002"_assumption;
    // goal2 = proofterm( prf_expand, identifier( ) + "Q0001", 0, goal2 );
    goal2 = expand( "homrel", 0, goal2 );
    goal2 = clausify( goal2 );
-   goal2 = proofterm( prf_orelim, goal2, 0,
-      { { "base", base }, { "step", step }} );
+   goal2 = orelim( goal2, 0, "base", base, "step", step );
 
    auto goal3 = expand( "Q0001", 0, "alt0003"_assumption );
    goal3 = show( "(the final goal, very easy I think)", goal3 );
 
    prf3 = proofterm( prf_forallelim, prf3, 0, { inst } );
    prf3 = proofterm( prf_orelim, prf3, 0, 
-      { { "alt1", magcontr }, { "alt2", goal2 }, { "alt3", goal3 }} );
+      { { "alt1", fakecontr }, { "alt2", goal2 }, { "alt3", goal3 }} );
 
    prf3 = proofterm( prf_define, "Q", indhyp, prf3 );
 
@@ -652,75 +665,6 @@ void tests::unification( const logic::beliefstate& blfs, errorstack& err )
 }
 #endif
 
-#if 0
-void tests::prove_pluscom( )
-{
-   using namespace logic;
-#if 0
-   // Pluscom: 
-
-   return;
-
-   edit. apply_proof( term( prf_axiom, { 0_db, 1_db, 2_db } ));
-   // Unfinished Point 
-
-   edit. setfocus(2);
-
-   std::cout << edit. check. nr_unfinished( ) << "\n";
-
-   edit. show( std::cout, { } );
-#if 0
-#if 1  // Start proof plus::succ:rev
-
-   edit. apply_abbreviate( term( prf_inst, term( sel_ident, identifier( ) + "plus" + "succ"), 10_db ) );
-   edit. apply_disj( 0_db );
-   edit. apply_proof( term( prf_contr, 0_db, 10_db ) );
-   edit. setfocus( 0 );
-   edit. apply_abbreviate( term( prf_inst, 0_db, 6_db ) );
-   edit. apply_disj( 0_db );
-   edit. apply_proof( term( prf_contr, 0_db, term( prf_and1, 7_db ) ) );
-   edit. setfocus( 0 );
-
-   edit. apply_abbreviate( term( prf_inst, term( sel_ident, identifier( ) + "plus" + "succ"), apply( "succ"_ident, 14_db ) ) );
-   edit. apply_disj( 0_db );
-   edit. apply_abbreviate( term( prf_inst, term( sel_ident, identifier( ) + "peano" + "succ" ), 16_db ) );
-   edit. apply_disj( 0_db );
-   edit. apply_proof( term( prf_contr, 0_db, 16_db ) );
-   edit. setfocus( 0 );
-   edit. apply_proof( term( prf_contr, 0_db, 2_db ) );
-   edit. setfocus( 0 );
-   edit. apply_abbreviate( term( prf_inst, 0_db, 10_db ) );
-   edit. apply_disj( 0_db );
-   edit. apply_proof( term( prf_contr, 0_db, term( prf_and1, 11_db ) ) );
-   edit. setfocus( 0 );
-   
-   edit. apply_disj( 9_db );
-   edit. apply_proof( term( prf_contr, 0_db, term( prf_and1, 12_db ) ) );
-   edit. setfocus( 0 );
-
-   edit. apply_abbreviate( term( prf_repl, term( prf_repl, 0_db, 5_db ), 1_db ) );
-   edit. apply_abbreviate( term( prf_repl, 0_db, term( prf_and2, 10_db ) ) );
-   edit. apply_proof( term( prf_false, 0_db ) );
-   edit. setfocus( 0 );
-
-   edit. apply_exists( term( prf_and2, 4_db ), "y" );
-   edit. apply_abbreviate( term( prf_inst, 2_db, 1_db ) );
-   edit. apply_disj( 0_db );
-   edit. apply_proof( term( prf_contr, 0_db, term( prf_and1, 2_db ) ) );
-   edit. setfocus( 0 );
-   edit. apply_disj( 0_db );
-   edit. apply_proof( term( prf_contr, 0_db, term( prf_and1, 3_db ) ) );
-   edit. setfocus( 0 );
-   edit. apply_proof( term( prf_contr, 0_db, term( prf_and2, 3_db ) ) );
-   edit. setfocus( 0 );
-   edit. show( std::cout, { } );
-#endif
-#endif
-#endif
-}
-
-
-#endif
 
 void tests::truthtables( )
 {

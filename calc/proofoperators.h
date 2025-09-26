@@ -12,42 +12,14 @@
 namespace calc
 {
 
-#if 0
-   inline term prop( const term& t ) 
-      { return term( op_prop, t ); }
-
-   inline term operator ! ( const term& t ) 
-      { return term( op_not, t ); }
-
-   inline term operator || ( const term& t1, const term& t2 ) 
-      { return term( op_or, t1, t2 ); }
-
-   inline term operator && ( const term& t1, const term& t2 )
-      { return term( op_and, t1, t2 ); }
-
-   inline term lazy_and( const term& t1, const term& t2 )
-      { return term( op_lazy_and, t1, t2 ); }
-
-   inline term implies( const term& t1, const term& t2 )
-      { return term( op_implies, t1, t2 ); }
-
-   inline term lazy_implies( const term& t1, const term& t2 )
-      { return term( op_lazy_implies, t1, t2 ); }
-
-   inline term lazy_or( const term& t1, const term& t2 )
-      { return term( op_lazy_or, t1, t2 ); }
-
-   inline term equiv( const term& t1, const term& t2 )
-      { return term( op_equiv, t1, t2 ); }
-
-   inline term operator == ( const term& t1, const term& t2 )
-      { return term( op_equals, t1, t2 ); }
-
-   inline term operator != ( const term& t1, const term& t2 )
-      { return ! ( t1 == t2 ); }
-
-#endif
-
+   inline proofterm orelim( const proofterm& disj, size_t nr,
+                            const std::string& name1, const proofterm& sub1,
+                            const std::string& name2, const proofterm& sub2 )
+   {
+      return proofterm( prf_orelim, disj, nr, 
+                        {{ name1, sub1 }, { name2, sub2 }} );
+   }
+ 
    inline proofterm existselim( const proofterm& ex, size_t nr,
                                 const std::string& name, const proofterm& sub )
       { return proofterm( prf_existselim, ex, nr, name, sub ); }
@@ -62,11 +34,19 @@ namespace calc
    expand( const std::string& label, size_t nr, const proofterm& prf )
       { return proofterm( prf_expand, identifier( ) + label, nr, prf ); }
 
+   inline proofterm andintro( std::initializer_list< proofterm > sub ) 
+      { return proofterm( prf_andintro, sub ); } 
+
+   inline proofterm select( std::initializer_list< size_t > nr,
+                            const proofterm& prf )
+   {
+      return proofterm( prf_select, prf, nr ); 
+   }
+      
    inline proofterm show( const std::string& label, const proofterm& prf )
       { return proofterm( prf_show, label, prf ); }
 
 }
-
 
 inline calc::proofterm operator "" _assumption( const char* c, size_t len )
    { return calc::proofterm( calc::prf_ident, identifier() + c ); }

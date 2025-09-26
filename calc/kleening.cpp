@@ -116,26 +116,13 @@ logic::term calc::kleene_top( const logic::term& f, polarity pol )
          if( kl. size( ) == 1 )
             return kleene_top( kl. sub(0), pol );
 
-         throw 
-         std::logic_error( "kleene top: Kleene operators not implemented" );
-
-         if( pol == pol_pos )
-            return f; 
-         else
+         if( pol == pol_neg )
          {
-            // I think this cannot happen, but who knows?
-
-            auto res = term( demorgan( pol, f. sel( )),
-                             std::initializer_list< term > ( ));
-
-            auto fkl = f. view_kleene( );
-            auto reskl = res. view_kleene( );
-
-            for( size_t i = 0; i != fkl. size( ); ++ i )
-               reskl. push_back( apply( fkl. sub(i), pol ));  
-
-            return res;
+            throw 
+            std::logic_error( "kleene top: Kleene operator must be positive" );
          }
+
+         return f;
       }
 
    case op_forall:

@@ -120,6 +120,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          if( !fm. has_value( ))
             return { };
 
+         std::cout << "crashing:   " << fm. value( ) << "\n\n\n";
          auto res = optform( std::move( fm ), "clausify", seq, err );
          res. make_anf2( );
          return res. value( );
