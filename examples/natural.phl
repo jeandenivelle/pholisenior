@@ -17,7 +17,6 @@ thm gen_prop : [ s : Nat, x : Obj ] # s. gen(x) ;
 thm gen_0 :    [ s : Nat ] s. gen( s. 0 ) ; 
 thm gen_succ : [ s : Nat, x : Obj ] s. gen(x) -> s. gen( s. succ(x)) ;
 
-   
 thm induction : [ s: Nat, P: Form(Obj) ] 
    { stricton( s. gen, P ) } -> P( s.0 ) -> 
       ( [ x: Obj ] { s. gen(x) } -> P( x ) -> P( s. succ( x ))) -> 
@@ -35,8 +34,11 @@ def freegen( s1 : Nat ) :=
 def minhomrel( s1,s2: Nat ) :=
    inductive( prod( s1. gen, s2. gen ), homrel( s1, s2 )) : Form(Obj,Obj) ; 
 
-//   [ P: Form(Obj,Obj) ] { stricton( prod( s1. gen, s2. gen ), P ) } -> 
-//      homrel( s1, s2, P ) -> P( x1, x2 ) : Form ;
+thm minhomrel_pres : 
+   [ s1, s2 : Nat ] [ x1, x2: Obj ]
+      { s1. gen( x1 ) & s2. gen( x2 ) } ->       
+      minhomrel( s1, s2, x1, x2 ) 
+          -> minhomrel( s1, s2, s1. succ( x1 ), s2. succ( x2 ));
 
 thm just : [ s1,s2: Nat ] [ x1,x2: Obj ] 
    { s1. gen(x1) & s2.gen(x2) } -> minhomrel( s1, s2, x1, x2 ) -> 

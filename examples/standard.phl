@@ -134,10 +134,11 @@ thm find2 :
 
 def inductive( P : Form( Obj ), C : Form( Form( Obj )) ) ( x1 : Obj ) :=
    [ R : Form( Obj ) ] { stricton(P,R) } -> C(R) -> R(x1) : Form ;
+
 def inductive( P : Form( Obj, Obj ), C : Form( Form( Obj, Obj )) )
              ( x1, x2 : Obj ) :=
-   [ R : Form( Obj, Obj ) 
-   ] { stricton( P, R ) } -> C(R) -> R(x1,x2 ) : Form ;
+   [ R : Form( Obj, Obj ) ] 
+           { stricton( P, R ) } -> C(R) -> R(x1,x2 ) : Form ;
 
 eof
 

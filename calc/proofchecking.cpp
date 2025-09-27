@@ -120,7 +120,6 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          if( !fm. has_value( ))
             return { };
 
-         std::cout << "crashing:   " << fm. value( ) << "\n\n\n";
          auto res = optform( std::move( fm ), "clausify", seq, err );
          res. make_anf2( );
          return res. value( );
@@ -319,7 +318,7 @@ calc::deduce( const proofterm& prf, sequent& seq, errorstack& err )
          seq. assume( elim. name( ), exists. value( ));
 
          auto res = optform( deduce( elim. intro( ), seq, err ),
-                             "subresult of exists-elim", seq, err );
+                             "generic result of exists-elim", seq, err );
 
          // We require that the result is a singleton conjunction:
 

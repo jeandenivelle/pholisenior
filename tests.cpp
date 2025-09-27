@@ -450,6 +450,7 @@ void tests::betareduction( logic::beliefstate& blfs, errorstack& err )
 
 }
 
+
 void tests::smallproofs( logic::beliefstate& blfs, errorstack& err )
 {
    auto O = logic::type( logic::type_obj );
@@ -460,72 +461,127 @@ void tests::smallproofs( logic::beliefstate& blfs, errorstack& err )
 
    // This is the first proof that passed!
 
-   auto id = identifier( ) + "resolve";
+   if constexpr( false ) 
+   {
+      auto id = identifier( ) + "resolve";
 
-   const auto& f = blfs. getformulas( id );
-   std::cout << f. size( ) << "\n";
-   if( f. size( ) != 1 )
-      throw std::runtime_error( "cannot continue" );
+      const auto& f = blfs. getformulas( id );
+      std::cout << f. size( ) << "\n";
+      if( f. size( ) != 1 )
+         throw std::runtime_error( "cannot continue" );
 
-   auto seq = sequent( blfs );
-   seq. assume( "initial", ! blfs. at( f. front( )). view_thm( ). frm( ));
-   std::cout << seq << "\n";
+      auto seq = sequent( blfs );
+      seq. assume( "initial", ! blfs. at( f. front( )). view_thm( ). frm( ));
+      std::cout << seq << "\n";
 
-   auto orelim2 = proofterm( prf_orelim,
-                     proofterm( prf_forallelim,
-                        proofterm( prf_ident, identifier( ) + "hyp0001" ), 1,
-                        { "z0001"_unchecked } ), 0,
-                  { { "ccc", proofterm( prf_simplify,
-                       proofterm( prf_andintro, 
-                       { proofterm( prf_ident, identifier( ) + "aaa0001" ),
-                         proofterm( prf_ident, identifier( ) + "ccc0001" ) } )) },
-                    { "ddd", proofterm( prf_simplify,
-                       proofterm( prf_andintro, 
-                       { proofterm( prf_ident, identifier( ) + "neg0001" ),
-                         proofterm( prf_ident, identifier( ) + "ddd0001" ) } )) }} );
+      auto orelim2 = proofterm( prf_orelim,
+                        proofterm( prf_forallelim,
+                           proofterm( prf_ident, identifier( ) + "hyp0001" ), 1,
+                           { "z0001"_unchecked } ), 0,
+                     { { "ccc", proofterm( prf_simplify,
+                          proofterm( prf_andintro, 
+                          { proofterm( prf_ident, identifier( ) + "aaa0001" ),
+                            proofterm( prf_ident, identifier( ) + "ccc0001" ) } )) },
+                       { "ddd", proofterm( prf_simplify,
+                          proofterm( prf_andintro, 
+                          { proofterm( prf_ident, identifier( ) + "neg0001" ),
+                            proofterm( prf_ident, identifier( ) + "ddd0001" ) } )) }} );
 
-   auto orelim = proofterm( prf_orelim,
-                    proofterm( prf_forallelim,
-                       proofterm( prf_ident, identifier( ) + "hyp0001" ), 0,
-                       { "z0001"_unchecked } ), 0,
-                 { { "aaa", orelim2 },
-                   { "bbb",
-                      proofterm( prf_simplify,
-                         proofterm( prf_andintro,
-                            { proofterm( prf_ident, identifier( ) + "neg0001" ),
-                              proofterm( prf_ident, identifier( ) + "bbb0001" ) } ))
-                        }} );
+      auto orelim = proofterm( prf_orelim,
+                       proofterm( prf_forallelim,
+                          proofterm( prf_ident, identifier( ) + "hyp0001" ), 0,
+                          { "z0001"_unchecked } ), 0,
+                    { { "aaa", orelim2 },
+                      { "bbb",
+                         proofterm( prf_simplify,
+                            proofterm( prf_andintro,
+                               { proofterm( prf_ident, identifier( ) + "neg0001" ),
+                                 proofterm( prf_ident, identifier( ) + "bbb0001" ) } ))
+                           }} );
 
-   auto ref =
-      proofterm( prf_existselim, 
-         proofterm( prf_clausify,
-            proofterm( prf_ident, identifier( ) + "initial0001" )), 0, 
-         "hyp", proofterm( prf_existselim, 
-                   proofterm( prf_ident, identifier( ) + "hyp0001" ), 2,
-           "neg", orelim  ));
+      auto ref =
+         proofterm( prf_existselim, 
+            proofterm( prf_clausify,
+               proofterm( prf_ident, identifier( ) + "initial0001" )), 0, 
+            "hyp", proofterm( prf_existselim, 
+                      proofterm( prf_ident, identifier( ) + "hyp0001" ), 2,
+              "neg", orelim  ));
 
-   ref. print( indentation(0), std::cout );
+      ref. print( indentation(0), std::cout );
 
-   auto ff = deduce( ref, seq, err );
-   if( ff. has_value( ))
-      std::cout << "proved this formula: " << ff. value( ) << "\n";
+      auto ff = deduce( ref, seq, err );
+      if( ff. has_value( ))
+         std::cout << "proved this formula: " << ff. value( ) << "\n\n";
 
-   auto mag1 = proofterm( prf_fake, "hans"_unchecked );
-   auto mag2 = proofterm( prf_fake, "de"_unchecked ); 
-   auto mag3 = proofterm( prf_fake, "nivelle"_unchecked );
-   auto mag4 = proofterm( prf_fake, "hans"_unchecked == "jean"_unchecked );
+      auto fake1 = proofterm( prf_fake, "hans"_unchecked );
+      auto fake2 = proofterm( prf_fake, "de"_unchecked ); 
+      auto fake3 = proofterm( prf_fake, "nivelle"_unchecked );
+      auto fake4 = proofterm( prf_fake, "hans"_unchecked == "jean"_unchecked );
 
-   ref = proofterm( prf_andintro, { mag1, mag2, mag3, mag4 } );
+      ref = andintro( { fake1, fake2, fake3, fake4 } );
 
-   ref = proofterm( prf_cut, ref, "asm", 
-            proofterm( prf_select, proofterm( prf_ident, identifier( ) + "asm" ), {1} ));
+      ref = proofterm( prf_cut, ref, "asm", 
+               proofterm( prf_select, proofterm( prf_ident, identifier( ) + "asm" ), {1} ));
 
-   ref. print( indentation(0), std::cout );
+      ref. print( indentation(0), std::cout );
    
-   ff = deduce( ref, seq, err );
-   if( ff. has_value( ))
-      std::cout << "proved this formula: " << ff. value( ) << "\n";
+      ff = deduce( ref, seq, err );
+      if( ff. has_value( ))
+         std::cout << "proved this formula: " << ff. value( ) << "\n\n";
+   }
 
+
+   {
+      // second (or first) complete proof:
+
+      auto id = identifier( ) + "minhomrel_pres";
+
+      const auto& f = blfs. getformulas( id );
+      std::cout << f. size( ) << "\n";
+      if( f. size( ) != 1 )
+         throw std::runtime_error( "cannot continue minhomrel_pres" );
+     
+      auto seq = sequent( blfs ); 
+      seq. assume( "goal", ! blfs. at( f. front( )). view_thm( ). frm( ));
+      std::cout << seq << "\n";
+
+      auto ref = clausify( "goal0001"_assumption ); 
+
+      auto sub2 = "skolem0001"_assumption;
+      sub2 = select( {2}, sub2 );
+      sub2 = expand( "minhomrel", 0, sub2 ); 
+      sub2 = expand( "inductive", 0, sub2 );
+      sub2 = clausify( sub2 );
+      sub2 = proofterm( prf_forallelim, sub2, 0, { "R0001"_unchecked } );
+ 
+      auto sub = "skolem0001"_assumption;
+      sub = select( {3}, sub );
+      sub = expand( "minhomrel", 0, sub );
+      sub = expand( "inductive", 0, sub );
+      sub = clausify( sub );
+
+      auto homrel = "skolem0002"_assumption;
+      homrel = select( {1}, homrel );
+      homrel = expand( "homrel", 0, homrel );
+      homrel = clausify( homrel );
+      homrel = select( {1}, homrel );
+      homrel = proofterm( prf_forallelim, homrel, 0, { "x0001"_unchecked, "x0002"_unchecked } );
+
+      sub2 = andintro( { sub2, homrel, "skolem0002"_assumption, "skolem0001"_assumption } );
+      sub2 = simplify( sub2 );
+      sub2 = show( "FINAL SIMPLIFICATION", sub2 ); 
+
+      sub = proofterm( prf_existselim, sub, 0, "skolem", sub2 );
+      ref = proofterm( prf_existselim, ref, 0, "skolem", sub );
+
+      ref. print( indentation(0), std::cout );
+
+      auto ff = deduce( ref, seq, err );
+      if( ff. has_value( ))
+         std::cout << "proved this formula: " << ff. value( ) << "\n\n";
+      else
+         std::cout << "(proved nothing)\n\n";
+   }
 }
 
 

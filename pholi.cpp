@@ -98,11 +98,9 @@ int main( int argc, char* argv[] )
 
    // tests::truthtables( );
 
-   tests::bigproof( blfs, err );
+   tests::smallproofs( blfs, err );
 
    std::cout << err << "\n";
-
-   return 0;
 
    return 0;
 }
