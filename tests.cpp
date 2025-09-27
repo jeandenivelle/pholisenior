@@ -652,11 +652,14 @@ void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
                            { "s0001"_unchecked, "y0001"_unchecked } );
    auto inst2 = proofterm( prf_forallelim, clausify( "gen_succ"_assumption ), 0,
                            { "s0002"_unchecked, "y0002"_unchecked } );
+   auto inst3 = clausify( "minhomrel_pres"_assumption );
+   inst3 = proofterm( prf_forallelim, inst3, 0, { "s0001"_unchecked, "s0002"_unchecked, 
+                                                  "y0001"_unchecked, "y0002"_unchecked } );
 
    step = orelim( clausify( expand( "Q0001", 0, "exists0001"_assumption )), 2, 
-                  "base", fakecontr,
-                  "step", existselim( "step0002"_assumption, 0, "aaaa", show( "little step", 
-                simplify( andintro( { step, "aaaa0001"_assumption, inst1, inst2 } )) )));
+                  "base", show( "the base", fakecontr ),
+                  "step", existselim( "step0002"_assumption, 0, "aaaa", show( "the little step", 
+                simplify( andintro( { step, "aaaa0001"_assumption, inst1, inst2, inst3 } )) )));
    // I believe the proof is on the right track. We also need for minhomrel. 
 
    step = existselim( "step0001"_assumption, 0, "exists", step );
