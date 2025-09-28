@@ -132,11 +132,11 @@ thm find2 :
        QQQ := Q : Form( Obj, Obj )
     in Q( x1, find( partial( QQQ, x1 ))) ;
 
-def inductive( P : Form( Obj ), C : Form( Form( Obj )) ) ( x1 : Obj ) :=
+def minimal( P : Form( Obj ), C : Form( Form( Obj )) ) ( x1 : Obj ) :=
    [ R : Form( Obj ) ] { stricton(P,R) } -> C(R) -> R(x1) : Form ;
 
-def inductive( P : Form( Obj, Obj ), C : Form( Form( Obj, Obj )) )
-             ( x1, x2 : Obj ) :=
+def minimal( P : Form( Obj, Obj ), C : Form( Form( Obj, Obj )) )
+           ( x1, x2 : Obj ) :=
    [ R : Form( Obj, Obj ) ] 
            { stricton( P, R ) } -> C(R) -> R(x1,x2 ) : Form ;
 

@@ -32,9 +32,12 @@ def freegen( s1 : Nat ) :=
       homrel( s1, s2, R ) & linear( s1. gen, s2. gen, R ) : Form ;
 
 def minhomrel( s1,s2: Nat ) :=
-   inductive( prod( s1. gen, s2. gen ), homrel( s1, s2 )) : Form(Obj,Obj) ; 
+   minimal( prod( s1. gen, s2. gen ), homrel( s1, s2 )) : Form(Obj,Obj) ; 
 
-thm minhomrel_pres : 
+thm minhomrel_zero :
+   [ s1, s2 : Nat ] minhomrel( s1, s2, s1. 0, s2. 0 );
+
+thm minhomrel_succ : 
    [ s1, s2 : Nat ] [ x1, x2: Obj ]
       { s1. gen( x1 ) & s2. gen( x2 ) } ->       
       minhomrel( s1, s2, x1, x2 ) 

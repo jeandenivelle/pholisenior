@@ -534,12 +534,12 @@ void tests::smallproofs( logic::beliefstate& blfs, errorstack& err )
    {
       // second (or first) complete proof:
 
-      auto id = identifier( ) + "minhomrel_pres";
+      auto id = identifier( ) + "minhomrel_succ";
 
       const auto& f = blfs. getformulas( id );
       std::cout << f. size( ) << "\n";
       if( f. size( ) != 1 )
-         throw std::runtime_error( "cannot continue minhomrel_pres" );
+         throw std::runtime_error( "cannot continue minhomrel_succ" );
      
       auto seq = sequent( blfs ); 
       seq. assume( "goal", ! blfs. at( f. front( )). view_thm( ). frm( ));
@@ -550,14 +550,14 @@ void tests::smallproofs( logic::beliefstate& blfs, errorstack& err )
       auto sub2 = "skolem0001"_assumption;
       sub2 = select( {2}, sub2 );
       sub2 = expand( "minhomrel", 0, sub2 ); 
-      sub2 = expand( "inductive", 0, sub2 );
+      sub2 = expand( "minimal", 0, sub2 );
       sub2 = clausify( sub2 );
       sub2 = proofterm( prf_forallelim, sub2, 0, { "R0001"_unchecked } );
  
       auto sub = "skolem0001"_assumption;
       sub = select( {3}, sub );
       sub = expand( "minhomrel", 0, sub );
-      sub = expand( "inductive", 0, sub );
+      sub = expand( "minimal", 0, sub );
       sub = clausify( sub );
 
       auto homrel = "skolem0002"_assumption;
@@ -652,13 +652,24 @@ void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
                            { "s0001"_unchecked, "y0001"_unchecked } );
    auto inst2 = proofterm( prf_forallelim, clausify( "gen_succ"_assumption ), 0,
                            { "s0002"_unchecked, "y0002"_unchecked } );
-   auto inst3 = clausify( "minhomrel_pres"_assumption );
+   auto inst3 = clausify( "minhomrel_succ"_assumption );
    inst3 = proofterm( prf_forallelim, inst3, 0, { "s0001"_unchecked, "s0002"_unchecked, 
                                                   "y0001"_unchecked, "y0002"_unchecked } );
 
+   auto left1 = "exists0001"_assumption;
+   left1 = select( {3}, left1 );
+   left1 = expand( "Q0001", 0, left1 );
+   left1 = clausify( left1 );
+   left1 = proofterm( prf_forallelim, left1, 1, { "x0003"_unchecked, "x0004"_unchecked } );
+   auto thm = proofterm( prf_forallelim, clausify( "minhomrel_zero"_assumption ), 0, { "s0001"_unchecked, "s0002"_unchecked } );
+
+   left1 = andintro( { left1, thm, "exists0001"_assumption, "base0002"_assumption } );
+   left1 = simplify( left1 );
+   left1 = show( "little step to the left", left1 );
+
    step = orelim( clausify( expand( "Q0001", 0, "exists0001"_assumption )), 2, 
-                  "base", show( "the base", fakecontr ),
-                  "step", existselim( "step0002"_assumption, 0, "aaaa", show( "the little step", 
+                  "base", left1,
+                  "step", existselim( "step0002"_assumption, 0, "aaaa", show( "the little step to right", 
                 simplify( andintro( { step, "aaaa0001"_assumption, inst1, inst2, inst3 } )) )));
    // I believe the proof is on the right track. We also need for minhomrel. 
 
@@ -671,17 +682,17 @@ void tests::bigproof( logic::beliefstate& blfs, errorstack& err )
    goal2 = orelim( goal2, 0, "base", base, "step", step );
 
    auto goal3 = expand( "Q0001", 0, "alt0003"_assumption );
-   goal3 = show( "(the final goal, very easy I think)", goal3 );
+   goal3 = show( "(the final goal, contradicts main0001 I think)", goal3 );
 
    prf3 = proofterm( prf_forallelim, prf3, 0, { inst } );
    prf3 = proofterm( prf_orelim, prf3, 0, 
-      { { "alt1", fakecontr }, { "alt2", goal2 }, { "alt3", goal3 }} );
+      { { "alt1", show( "looks like a type condition", fakecontr ) }, { "alt2", goal2 }, { "alt3", goal3 }} );
 
    prf3 = proofterm( prf_define, "Q", indhyp, prf3 );
 
    auto disj = proofterm( prf_ident, identifier( ) + "main0001" );
    disj = expand( "minhomrel", 0, disj );
-   disj = expand( "inductive", 0, disj );
+   disj = expand( "minimal", 0, disj );
    disj = proofterm( prf_show, "expanded disj", disj );
 
    auto prf2 = proofterm( prf_orelim, disj, 2, {{ "forall", prf3 }} );
